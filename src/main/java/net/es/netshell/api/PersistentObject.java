@@ -133,10 +133,13 @@ public class PersistentObject implements Serializable {
         br = new BufferedReader(new FileReader(file));
         String line;
         while ((line = br.readLine()) != null) {
-            String[] items = line.split(":");
-            if (items.length == 2) {
-                if (items[0].equals("resourceClassName")) {
-                    return items[1];
+            String[] items = line.split(",");
+            for (String item : items) {
+                int pos = item.indexOf("resourceClassName");
+                if (pos > 0) {
+                    String[] values = item.split(":");
+                    br.close();
+                    return values[1].substring(1,values[1].length() -1);
                 }
             }
         }
@@ -171,6 +174,10 @@ public class PersistentObject implements Serializable {
         PersistentObject obj = null;
         try {
             String className = PersistentObject.getClassName(fileName);
+            if (className == null) {
+                // File does not exist.
+                return null;
+            }
             return PersistentObject.newObject(Class.forName(className),fileName);
 
         } catch (ClassNotFoundException e) {
@@ -179,6 +186,7 @@ public class PersistentObject implements Serializable {
             throw new InstantiationException(e.toString());
         }
     }
+
     public void setNewInstance(boolean isNewInstance) {
         this.isNewInstance = isNewInstance;
     }

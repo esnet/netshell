@@ -11,6 +11,7 @@ package net.es.netshell.boot;
 
 import net.es.netshell.api.DefaultValues;
 import net.es.netshell.api.NetShellException;
+import net.es.netshell.classloader.DynamicClassLoader;
 import net.es.netshell.configuration.NetShellConfiguration;
 import net.es.netshell.configuration.GlobalConfiguration;
 import net.es.netshell.kernel.exec.KernelThread;
@@ -120,6 +121,7 @@ public final class BootStrap implements Runnable {
 
         System.setProperty(SimpleLogger.DEFAULT_LOG_LEVEL_KEY, defaultLogLevel);
 
+
         BootStrap.bootStrap = new BootStrap(args);
         BootStrap.bootStrap.init();
         BootStrap.bootStrap.postInitialization();
@@ -181,6 +183,7 @@ public final class BootStrap implements Runnable {
     @Override
     public void run() {
         logger.info("Starting services");
+        Thread.currentThread().setContextClassLoader(new DynamicClassLoader());
         this.startServices();
     }
 

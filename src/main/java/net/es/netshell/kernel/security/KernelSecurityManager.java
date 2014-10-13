@@ -196,11 +196,14 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkCreateClassLoader() {
+        super.checkCreateClassLoader();
+        /***
         if (this.isPrivileged()) {
             super.checkCreateClassLoader();
             return;
         }
         throw new SecurityException("Not allowed to create a class loader");
+       **/
     }
 
 
@@ -371,18 +374,6 @@ public class KernelSecurityManager extends SecurityManager {
      * If the thread group argument is <i>not</i> the system thread group,
      * this method just returns silently.
      * <p/>
-     * Applications that want a stricter policy should override this
-     * method. If this method is overridden, the method that overrides
-     * it should additionally check to see if the calling thread has the
-     * <code>RuntimePermission("modifyThreadGroup")</code> permission, and
-     * if so, return silently. This is to ensure that code granted
-     * that permission (such as the JDK itself) is allowed to
-     * manipulate any thread.
-     * <p/>
-     * If this method is overridden, then
-     * <code>super.checkAccess</code> should
-     * be called by the first statement in the overridden method, or the
-     * equivalent security check should be placed in the overridden method.
      *
      * @param g the thread group to be checked.
      * @throws SecurityException    if the calling thread does not have
@@ -399,11 +390,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkAccess(ThreadGroup g) {
-        if (this.isPrivileged()) {
-            super.checkAccess(g);
-            return;
-        }
-        throw new SecurityException("Not Allowed");
+
+        super.checkAccess(g);
     }
 
     /**

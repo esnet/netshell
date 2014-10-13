@@ -408,7 +408,9 @@ public class UserShellCommands {
 
         if (args.length == 2) {
             UserShellCommands.displayACL(args[1],in,out,err);
+            return;
         }
-
+        PrintStream o = new PrintStream(out);
+        o.println("Not implemented yet");
     }
 }
