@@ -21,7 +21,7 @@ import jline.internal.Log;
 
 
 /**
- * ENOS Terminal emulation
+ * NetShell Terminal emulation
  */
 public class NetShellTerminal extends TerminalSupport {
 
