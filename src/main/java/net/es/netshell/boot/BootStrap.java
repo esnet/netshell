@@ -325,7 +325,6 @@ public final class BootStrap implements Runnable {
     @Override
     public void run() {
         logger.info("Starting services");
-        Thread.currentThread().setContextClassLoader(new DynamicClassLoader());
         this.startServices();
     }
 

@@ -34,7 +34,12 @@ public class DynamicClassLoader extends JarClassLoader {
         this.init();
     }
 
-    private void init () {
+
+    private void init() {
+
+    }
+
+    public  void initDefault () {
         DefaultJars defaultJars = DefaultJars.instance();
         if (defaultJars == null) {
             // Configuration file does not yet exist. Creates it.

@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Permission;
@@ -196,14 +197,18 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkCreateClassLoader() {
-        super.checkCreateClassLoader();
-        /***
+
         if (this.isPrivileged()) {
             super.checkCreateClassLoader();
             return;
         }
-        throw new SecurityException("Not allowed to create a class loader");
-       **/
+        ClassLoader cl = KernelThread.currentKernelThread().getThread().getContextClassLoader();
+        if (cl instanceof URLClassLoader) {
+            // ClassLoader is still system, allow to change.
+            return;
+        }
+        // throw new SecurityException("Not allowed to create a class loader");
+        return;
     }
 
 
