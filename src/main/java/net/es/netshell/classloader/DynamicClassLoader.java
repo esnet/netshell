@@ -49,8 +49,10 @@ public class DynamicClassLoader extends JarClassLoader {
                 logger.error("Cannot create DefaultJars object: " + e.getMessage());
             }
         } else {
-            for (String jar : defaultJars.getJars()) {
-                logger.info("Loads jar: " + jar);
+            if (defaultJars.getJars() != null) {
+                for (String jar : defaultJars.getJars()) {
+                    logger.info("Loads jar: " + jar);
+                }
             }
         }
 
