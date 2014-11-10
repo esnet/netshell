@@ -1,0 +1,10 @@
+{
+    "global": {
+	"defaultLogLevel":		"info",
+	"rootDirectory":		"/var/netshell/",
+	"securityManagerDisabled":	0,
+	"sshDisabled":			0,
+	"sshIdleTimeout":		3600000,
+	"sshPort":          8000
+    }
+}
