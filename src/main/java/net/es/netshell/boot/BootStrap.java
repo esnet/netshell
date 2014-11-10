@@ -15,6 +15,7 @@ import net.es.netshell.classloader.DynamicClassLoader;
 import net.es.netshell.configuration.NetShellConfiguration;
 import net.es.netshell.configuration.GlobalConfiguration;
 import net.es.netshell.kernel.exec.KernelThread;
+import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.security.AllowedSysCalls;
 import net.es.netshell.kernel.security.KernelSecurityManager;
 import net.es.netshell.osgi.HostActivator;
@@ -36,6 +37,7 @@ import org.slf4j.impl.SimpleLogger;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -325,6 +327,38 @@ public final class BootStrap implements Runnable {
         logger.info("Starting services");
         Thread.currentThread().setContextClassLoader(new DynamicClassLoader());
         this.startServices();
+    }
+
+    // Syscall to shut down the kernel, etc. gracefully.
+    public boolean shutdown() {
+        Method method = null;
+        try {
+            method = KernelThread.getSysCallMethod(this.getClass(), "do_shutdown");
+            KernelThread.doSysCall(this, method);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+
+    }
+    @SysCall(name = "do_shutdown")
+    public void do_shutdown() {
+        logger.info("do_shutdown entry");
+
+        try {
+            fr.stop();
+        }
+        catch (BundleException e) {
+            e.printStackTrace();
+        }
+
+        // Not sure if this is really going to work right.
+        System.exit(0);
+
     }
 
     public boolean test (String tt) {

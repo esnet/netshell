@@ -31,6 +31,7 @@ public final class AllowedSysCalls {
         allowedSysCallClasses.add(net.es.netshell.kernel.users.Users.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.container.Container.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.container.Containers.class);
+        allowedSysCallClasses.add(net.es.netshell.boot.BootStrap.class);
     }
 
     public static List<Class> getAllowedClasses() {

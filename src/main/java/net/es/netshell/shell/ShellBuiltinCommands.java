@@ -10,6 +10,7 @@
 package net.es.netshell.shell;
 
 import net.es.netshell.api.NetShellException;
+import net.es.netshell.boot.BootStrap;
 import net.es.netshell.shell.annotations.ShellCommand;
 
 import java.io.InputStream;
@@ -42,5 +43,14 @@ public class ShellBuiltinCommands {
             "With one argument, print detailed help on a given command.")
     public static void helpCommand(String[] args, InputStream in, OutputStream out, OutputStream err) throws NetShellException {
         throw new NetShellException("Built-in command not handled by shell");
+    }
+
+    @ShellCommand(name = "shutdown",
+            shortHelp = "Cleanly shutdown the system.",
+            longHelp = "", privNeeded = true)
+    public static void shutdownCommand(String[] args, InputStream in, OutputStream out, OutputStream err) throws NetShellException {
+
+        // TODO:  Do we need some sort of confirmation interaction here?
+        BootStrap.getBootStrap().shutdown();
     }
 }
