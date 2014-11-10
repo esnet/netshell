@@ -26,6 +26,7 @@ public class ShellInputStream extends InputStream {
     private OutputStream echoOut = null;
     private boolean last = false;
     private boolean doEcho = false;
+    private boolean eofHack = true;
     private ConsoleReader consoleReader = null;
 
     public boolean isDoCompletion() {
@@ -37,6 +38,30 @@ public class ShellInputStream extends InputStream {
     }
 
     private boolean doCompletion = true;
+
+    public boolean isDoEcho() {
+        return doEcho;
+    }
+
+    public void setDoEcho(boolean doEcho) {
+        this.doEcho = doEcho;
+    }
+
+    public OutputStream getEchoOut() {
+        return echoOut;
+    }
+
+    public void setEchoOut(OutputStream echoOut) {
+        this.echoOut = echoOut;
+    }
+
+    public boolean isEofHack() {
+        return eofHack;
+    }
+
+    public void setEofHack(boolean eofHack) {
+        this.eofHack = eofHack;
+    }
 
     private final Logger logger = LoggerFactory.getLogger(ShellInputStream.class);
 
@@ -68,7 +93,9 @@ public class ShellInputStream extends InputStream {
                     this.echoOut.write('\n');
                     this.echoOut.flush();
                 }
-                this.last = true;
+                if (eofHack) {
+                    this.last = true;
+                }
                 return 10;
         }
         return c;
