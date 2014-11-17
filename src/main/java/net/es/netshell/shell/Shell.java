@@ -128,7 +128,9 @@ public class Shell {
 	            } else if (command==null) {
 		            consoleReader.addCompleter(this.argCompleter);
 		            consoleReader.addCompleter(this.fileCompleter);
+                    ((ShellInputStream) this.in).setEofHack(true);
 		            String line = this.consoleReader.readLine(this.prompt);
+                    ((ShellInputStream) this.in).setEofHack(false);
 		            consoleReader.removeCompleter(this.argCompleter);
 		            consoleReader.removeCompleter(this.fileCompleter);
 		            if (line == null) {

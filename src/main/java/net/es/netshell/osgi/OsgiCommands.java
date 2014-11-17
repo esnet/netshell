@@ -38,6 +38,11 @@ public class OsgiCommands {
 
             PrintStream os = new PrintStream(out);
             PrintStream es = new PrintStream(err);
+            // Save the states of doEcho and eofHack for the input stream because we're going to set
+            // them to sane (for us) values.  It's possible these values migth already be set
+            // correctly upon entry.
+            boolean doEcho = ((ShellInputStream) in).isDoEcho();
+            boolean eofHack = ((ShellInputStream) in).isEofHack();
 
             try {
                 if (in instanceof ShellInputStream) {
@@ -80,8 +85,8 @@ public class OsgiCommands {
                     if (((ShellInputStream) in).getSourceInputStream() instanceof TabFilteringInputStream) {
                         ((TabFilteringInputStream) ((ShellInputStream) in).getSourceInputStream()).setFilters(false);
                     }
-                    ((ShellInputStream) in).setDoEcho(false);
-                    ((ShellInputStream) in).setEofHack(true);
+                    ((ShellInputStream) in).setDoEcho(doEcho);
+                    ((ShellInputStream) in).setEofHack(eofHack);
                 }
             }
         }

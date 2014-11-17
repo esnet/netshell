@@ -9,12 +9,15 @@
 
 package net.es.netshell.shell;
 
+import jline.console.ConsoleReader;
 import net.es.netshell.api.NetShellException;
 import net.es.netshell.boot.BootStrap;
 import net.es.netshell.shell.annotations.ShellCommand;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 
 public class ShellBuiltinCommands {
     /**
@@ -50,7 +53,19 @@ public class ShellBuiltinCommands {
             longHelp = "", privNeeded = true)
     public static void shutdownCommand(String[] args, InputStream in, OutputStream out, OutputStream err) throws NetShellException {
 
-        // TODO:  Do we need some sort of confirmation interaction here?
-        BootStrap.getBootStrap().shutdown();
+        // Confirm shutdown
+        ConsoleReader consoleReader = null;
+        try {
+            consoleReader = new ConsoleReader(in, out, new NetShellTerminal());
+            PrintStream o = new PrintStream(out);
+            String yorn = consoleReader.readLine("Really exit?");
+            if (yorn != null && yorn.equalsIgnoreCase(new String("yes"))) {
+                BootStrap.getBootStrap().shutdown();
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
     }
 }
