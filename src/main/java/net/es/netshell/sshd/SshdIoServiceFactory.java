@@ -48,6 +48,8 @@ public class SshdIoServiceFactory implements IoServiceFactory {
     private final FactoryManager manager;
     private final ExecutorService executor;
     private final IoProcessor<NioSession> ioProcessor;
+    private boolean closing = false;
+    private boolean closed = false;
 
     public static final int DEFAULT_NB_WORKER_THREADS = 20;
 
@@ -74,8 +76,10 @@ public class SshdIoServiceFactory implements IoServiceFactory {
 
     public CloseFuture close(boolean immediately) {
         try {
+            closing = true;
             executor.shutdownNow();
             executor.awaitTermination(5, TimeUnit.SECONDS);
+            closed = true;
         } catch (Exception e) {
             logger.debug("Exception caught while closing executor", e);
         }
@@ -92,4 +96,7 @@ public class SshdIoServiceFactory implements IoServiceFactory {
         }
         return FactoryManager.DEFAULT_NIO_WORKERS;
     }
+
+    public boolean isClosing() { return closing; }
+    public boolean isClosed() { return closed; }
 }
