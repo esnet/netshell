@@ -11,6 +11,7 @@ package net.es.netshell.kernel.security;
 
 import net.es.netshell.api.NetShellException;
 import net.es.netshell.boot.BootStrap;
+import net.es.netshell.classloader.DynamicClassLoader;
 import net.es.netshell.configuration.NetShellConfiguration;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.exec.annotations.SysCall;
@@ -205,6 +206,10 @@ public class KernelSecurityManager extends SecurityManager {
         ClassLoader cl = KernelThread.currentKernelThread().getThread().getContextClassLoader();
         if (cl instanceof URLClassLoader) {
             // ClassLoader is still system, allow to change.
+            return;
+        }
+        if (cl instanceof DynamicClassLoader) {
+            // The current classload is Netshell's.
             return;
         }
         // throw new SecurityException("Not allowed to create a class loader");
