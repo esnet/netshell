@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.AccessControlContext;
 import java.security.Permission;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,24 +38,23 @@ public class KernelSecurityManager extends SecurityManager {
 	private Path rootPath;
 	private final Logger logger = LoggerFactory.getLogger(KernelSecurityManager.class);
 	private static HashMap<String,Boolean> writeAccess = new HashMap<String,Boolean>();
+    private boolean isDebug = false;
 
 	public KernelSecurityManager() {
-
-		// See if SecurityManager should be disabled.  We need to be very conservative here in terms
-		// of letting admins turn this off.
-		if (NetShellConfiguration.getInstance().getGlobal().getSecurityManagerDisabled() != 0) {
-			logger.warn("NetShell SecurityManager is currently disabled.  No security checks will be run.  MUST NOT BE USED IN PRODUCTION.");
-			return;
-		}
 
 		this.preloadClasses();
 		this.initializePreAuthorized();
 
-		System.setSecurityManager(this);
-
 		// Figure out the NetShell root directory.
 		String rootdir = NetShellConfiguration.getInstance().getGlobal().getRootDirectory();
 		this.rootPath = Paths.get(rootdir).normalize();
+
+        if (NetShellConfiguration.getInstance().getGlobal().getSecurityManagerDisabled() != 0) {
+            logger.warn("NetShell SecurityManager is currently disabled.  No security checks will be run.  MUST NOT BE USED IN PRODUCTION.");
+            return;
+        } else {
+            System.setSecurityManager(this);
+        }
 	}
 
 	@Override
@@ -63,25 +63,31 @@ public class KernelSecurityManager extends SecurityManager {
 		// Threads that are not part of NetShell ThreadGroup are authorized
 		Thread currentThread = Thread.currentThread();
 		if (this.isPrivileged()) {
+            logger.debug("checkAccess(Thread " + t.getName() + " id= " + t.getId() + ") is privileged - OK");
 			return;
 		}
 
 		if ((currentThread.getThreadGroup() == null) ||
 				(KernelThread.currentKernelThread().isPrivileged()) ||
 				( !this.NetShellRootThreadGroup.parentOf(currentThread.getThreadGroup()))) {
+            logger.debug("checkAccess(Thread " + t.getName() + " id= " + t.getId() + ") not NetShell thread / privileged calling thread - OK");
 			return;
 		}
 		if (Thread.currentThread().getThreadGroup().parentOf(t.getThreadGroup())) {
 			// A thread can do whatever it wants on thread of the same user
+            logger.debug("checkAccess(Thread " + t.getName() + " id= " + t.getId() + ") same user - OK");
 			return;
 		}
 		if ( ! this.NetShellRootThreadGroup.parentOf(t.getThreadGroup())) {
 			// This is a non NetShell Thread. Allow since the only non NetShell thread that can be referenced to are
 			// from java library classes. This is safe.
+            logger.debug("checkAccess(Thread " + t.getName() + " id= " + t.getId() + ") not NetShell thread - OK");
 			return;
 		}
 
-		throw new SecurityException("Illegal Thread access from " + Thread.currentThread().getName() + " onto " +
+        logger.debug("checkAccess(Thread " + t.getName() + " id= " + t.getId() + ") Illegal Thread access from " + Thread.currentThread().getName() + " onto " +
+                t.getName());
+		throw new SecurityException("checkAccess(Thread " + t.getName() + " id= " + t.getId() + ") Illegal Thread access from " + Thread.currentThread().getName() + " onto " +
 				t.getName());
 	}
 
@@ -91,34 +97,38 @@ public class KernelSecurityManager extends SecurityManager {
 		// TODO: lomax@es.net the restriction on es.net classes sounds like a neat idea, but might not be
 		// neither realistic nor usefull. To revisit.
         if (false) {
-            throw new SecurityException();
+            logger.debug("checkPackageAccess(String " + p + ") Throw SecurityException");
+            throw new SecurityException("checkPackageAccess(String " + p + ")");
         }
+        logger.debug("checkPackageAccess(String " + p + " OK");
 	}
 
 	@Override
 	public void checkPermission(Permission perm) throws SecurityException {
+
         if (perm.getName().contains("exitVM")) {
+            logger.debug("checkPermission(Permission " + perm.getName() + " DENIED");
             throw new SecurityException("exit is denied");
         }
+        logger.debug("checkPermission(Permission " + perm.getName() + " OK");
 	}
 
 
 	@Override
 	public void checkWrite(String file) throws SecurityException {
-		logger.debug("checkWrite " + file );
 		for (Map.Entry<String, Boolean> s : KernelSecurityManager.writeAccess.entrySet()) {
 			if (s.getValue() && file.startsWith(s.getKey())) {
 				// Allowed by predefined access
-				logger.debug("Allowing write access by predefined access to " + file);
+                logger.debug("checkWrite(String " + file + ") Allowing write access by predefined access");
 				return;
 			} else if (!s.getValue() && file.equals(s.getKey())) {
 				// Request strict pathname
-				logger.debug("Allowing write access by predefined access to " + file);
+                logger.debug("checkWrite(String " + file + ") Allowing write access by predefined access to ");
 				return;
 			}
 		}
 		if (this.isPrivileged()) {
-			logger.debug("checkWrite allows " + file + " because thread is privileged");
+            logger.debug("checkWrite(String " + file + ") checkWrite allows because thread is privileged");
 			return;
 		}
 		try {
@@ -127,7 +137,7 @@ public class KernelSecurityManager extends SecurityManager {
 							!file.startsWith(this.rootPath.toFile().getCanonicalPath()))) {
 				// If the file is not within NetShell root dir, reject.
 				// TODO: this should be sufficient but perhaps needs to be revisited
-				logger.debug("reject write file " + file + " because the file is not an NetShell file");
+                logger.debug("checkWrite(String " + file + ") reject write file because the file is not an NetShell file");
 
 				throw new SecurityException("Cannot write file " + file);
 			}
@@ -138,13 +148,13 @@ public class KernelSecurityManager extends SecurityManager {
         FileACL acl = new FileACL(Paths.get(file));
 
         if (acl.canWrite(KernelThread.currentKernelThread().getUser().getName())) {
-            logger.debug("checkWrite allows " + file + " because NetShell User ACL for the user allows it.");
+            logger.debug("checkWrite(String " + file + ") checkWrite allows because NetShell User ACL for the user allows it.");
             return;
         }
 
-		logger.debug("checkWrite rejects " + file);
+        logger.debug("checkWrite(String " + file + ") checkWrite rejects");
 
-		throw new SecurityException("Not authorized to write file " + file);
+		throw new SecurityException("checkWrite(String " + file + ") Not authorized to write file");
 	}
 
 	public void checkWrite(FileDescriptor file) throws SecurityException {
@@ -154,26 +164,25 @@ public class KernelSecurityManager extends SecurityManager {
 
 	@Override
 	public void checkRead(String file) {
-		logger.debug("checkRead starts " + file);
 		if (this.rootPath == null || !file.startsWith(this.rootPath.toFile().getAbsolutePath())) {
 				// If the file is not within NetShell root dir, allow and rely on system permissions for read.
 				// TODO: this should be sufficient but perhaps needs to be revisited
-				logger.debug("checkRead ok " + file + " not an NetShell file. Rely on system access");
+				logger.debug("checkRead(String " + file + " ) not an NetShell file. Rely on system access OK");
 				return;
 			}
 		if (this.isPrivileged()) {
-			logger.debug("checkRead ok " + file + " because thread is privileged");
+            logger.debug("checkRead(String " + file + " ) OK because thread is privileged");
 			return;
 		}
 
         FileACL acl = new FileACL(Paths.get(file));
 
         if (acl.canRead()) {
-            logger.debug("checkRead ok " + file + " because user NetShell ACL allows it.");
+            logger.debug("checkRead(String " + file + " )  OK because user NetShell ACL allows it.");
             return;
         }
 
-		logger.debug("checkRead reject  " + file + " because thread is user, file is in NetShell rootdir and user ACL does not allows");
+        logger.debug("checkRead(String " + file + " ) DENIED because thread is user, file is in NetShell rootdir and user ACL does not allows");
 		throw new SecurityException(Thread.currentThread().getName() + "Not authorized to read file " + file);
 	}
 
@@ -200,18 +209,23 @@ public class KernelSecurityManager extends SecurityManager {
     public void checkCreateClassLoader() {
 
         if (this.isPrivileged()) {
+            logger.debug("checkCreateClassLoader() privileged thread invoker super class");
+            if (isDebug) { if (false) return; };
             super.checkCreateClassLoader();
             return;
         }
         ClassLoader cl = KernelThread.currentKernelThread().getThread().getContextClassLoader();
         if (cl instanceof URLClassLoader) {
             // ClassLoader is still system, allow to change.
+            logger.debug("checkCreateClassLoader() is still system: NetShell bootstrap, allow to change");
             return;
         }
         if (cl instanceof DynamicClassLoader) {
             // The current classload is Netshell's.
+            logger.debug("checkCreateClassLoader() current is DynamicClassLoader - allow to change");
             return;
         }
+        logger.debug("checkCreateClassLoader() DENIED not allowed to create a new ClassLoader");
         // throw new SecurityException("Not allowed to create a class loader");
         return;
     }
@@ -281,26 +295,30 @@ public class KernelSecurityManager extends SecurityManager {
 
     @Override
     public boolean checkTopLevelWindow(Object window) {
-        return super.checkTopLevelWindow(window);
+        if (isDebug) { return true; };
+        boolean res = super.checkTopLevelWindow(window);
+        logger.debug("checkCreateClassLoader() privileged thread invoker super class result= " + res);
+        return res;
     }
 
     @Override
     public void checkAwtEventQueueAccess() {
+        logger.debug("checkAwtEventQueueAccess() invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkAwtEventQueueAccess();
     }
 
     @Override
     public void checkExit(int status) {
-        super.checkExit(status);
-        throw new SecurityException("Cannot quit NetShell");
+        logger.debug("checkExit (int " + status + ") cannot exit NetShell");
+        if (isDebug) { if (false) return; };
+        throw new SecurityException("checkExit (int " + status + ") Cannot exit NetShell");
     }
 
     @Override
     public void checkExec(String cmd) {
-        if (KernelThread.currentKernelThread().isPrivileged()) {
-            return;
-        }
-        throw new ExitSecurityException("Cannot execute UNIX processes");
+        logger.debug("checkExec (String " + cmd + ") cannot execute host processes");
+        throw new ExitSecurityException("Cannot execute host processes");
 	}
 
     /**
@@ -327,7 +345,9 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public Object getSecurityContext() {
-        return super.getSecurityContext();
+        Object res = super.getSecurityContext();
+        logger.debug("getSecurityContext() invoke superclass OK result= " + res);
+        return res;
     }
 
     /**
@@ -363,7 +383,21 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkPermission(Permission perm, Object context) {
-        super.checkPermission(perm, context);
+        logger.debug("checkPermission(Permission " + perm + ", Object " + context + " invoke superclass");
+        // There might be a better solution, but OSGI Felix requires allPerm.
+        if (perm.getClass().getCanonicalName().startsWith("org.apache.felix")) {
+            return;
+        }
+
+        if (isDebug) {
+            try {
+              super.checkPermission(perm, context);
+            } catch (Exception e) {
+                logger.debug("checkPermission(Permission " + perm + ", Object " + context + " invoke superclass DENIED " + e);
+            }
+        } else {
+            super.checkPermission(perm, context);
+        }
     }
 
 
@@ -400,9 +434,11 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkAccess(ThreadGroup g) {
-
+        logger.debug("checkAccess(ThreadGroup " + g + " ) invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkAccess(g);
     }
+
 
     /**
      * Throws a <code>SecurityException</code> if the
@@ -434,10 +470,13 @@ public class KernelSecurityManager extends SecurityManager {
     @Override
     public void checkLink(String lib) {
         if (this.isPrivileged()) {
+            logger.debug("checkLink(String " + lib + " ) thread is privileged, invoke superclass");
+            if (isDebug) { if (false) return; };
             super.checkLink(lib);
             return;
         }
-        throw new SecurityException("Not Allowed");
+        logger.debug("checkLink(String " + lib + " DENIED");
+        throw new SecurityException("checkLink(String \" + lib + \" ) DENIED");
     }
 
     /**
@@ -464,6 +503,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkRead(FileDescriptor fd) {
+        logger.debug("checkRead(FileDescriptor " + fd + " ) invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkRead(fd);
     }
 
@@ -499,6 +540,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkRead(String file, Object context) {
+        logger.debug("checkRead(String file= " + file + ", Object context= " + context + " ) invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkRead(file, context);
     }
 
@@ -527,6 +570,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkDelete(String file) {
+        logger.debug("checkDelete(String file= " + file + " ) invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkDelete(file);
     }
 
@@ -561,6 +606,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkConnect(String host, int port) {
+        logger.debug("checkConnect(String host= " + host + " port= " + port + " invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkConnect(host, port);
     }
 
@@ -605,6 +652,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkConnect(String host, int port, Object context) {
+        logger.debug("checkConnect(String host= " + host + " port= " + port + " context= " + context + " invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkConnect(host, port, context);
     }
 
@@ -631,6 +680,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkListen(int port) {
+        logger.debug("checkListen (port=  " + port + ") invoke superclass");
+        { if (false) return; };
         super.checkListen(port);
     }
 
@@ -661,6 +712,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkAccept(String host, int port) {
+        logger.debug("checkAccept (host= " + host + " port=  " + port + ") invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkAccept(host, port);
     }
 
@@ -688,6 +741,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkMulticast(InetAddress maddr) {
+        logger.debug("checkMulticast(InetAddress " + maddr.toString() + " invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkMulticast(maddr);
     }
 
@@ -716,6 +771,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkPropertiesAccess() {
+        logger.debug("checkPropertiesAccess() invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkPropertiesAccess();
     }
 
@@ -747,6 +804,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkPropertyAccess(String key) {
+        logger.debug("checkPropertiesAccess(String key= " + key + " ) invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkPropertyAccess(key);
     }
 
@@ -771,6 +830,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkPrintJobAccess() {
+        logger.debug("checkPrintJobAccess() invoke superclass");
+        if (isDebug) { if (false) return; };;
         super.checkPrintJobAccess();
     }
 
@@ -794,6 +855,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkSystemClipboardAccess() {
+        logger.debug("checkSystemClipboardAccess() invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkSystemClipboardAccess();
     }
 
@@ -827,6 +890,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkPackageDefinition(String pkg) {
+        logger.debug("checkPackageDefinition(String pkg= " + pkg + " invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkPackageDefinition(pkg);
     }
 
@@ -855,6 +920,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkSetFactory() {
+        logger.debug("checkSetFactory() invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkSetFactory();
     }
 
@@ -886,6 +953,8 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkMemberAccess(Class<?> clazz, int which) {
+        logger.debug("checkMemberAccess(Class class= " + clazz + " int which= " + which + " invoke superclass");
+        if (isDebug) { if (false) return; };
         super.checkMemberAccess(clazz, which);
     }
 
@@ -920,9 +989,60 @@ public class KernelSecurityManager extends SecurityManager {
     @Override
     public void checkSecurityAccess(String target) {
         if (this.isPrivileged()) {
+            logger.debug("checkSecurityAccess(String target= " + target + " ) thread is privileged invoke superclass");
+            if (isDebug) { if (false) return; };
             super.checkSecurityAccess(target);
             return;
         }
-        throw new SecurityException("Not Allowed");
+        logger.debug("checkSecurityAccess(String target= " + target + " DENIED");
+        throw new SecurityException("checkSecurityAccess(String target= " + target + " DENIED");
+    }
+
+    @Override
+    public boolean getInCheck() {
+        return super.getInCheck();
+    }
+
+    @Override
+    protected Class[] getClassContext() {
+        logger.debug("getClassContext() invoke superclass");
+        Class[] res = super.getClassContext();
+        logger.debug("getClassContext() invoke superclass returns= " + res);
+        return res;
+    }
+
+    @Override
+    protected ClassLoader currentClassLoader() {
+        return super.currentClassLoader();
+    }
+
+    @Override
+    protected Class<?> currentLoadedClass() {
+        return super.currentLoadedClass();
+    }
+
+    @Override
+    protected int classDepth(String name) {
+        return super.classDepth(name);
+    }
+
+    @Override
+    protected int classLoaderDepth() {
+        return super.classLoaderDepth();
+    }
+
+    @Override
+    protected boolean inClass(String name) {
+        return super.inClass(name);
+    }
+
+    @Override
+    protected boolean inClassLoader() {
+        return super.inClassLoader();
+    }
+
+    @Override
+    public void checkMulticast(InetAddress maddr, byte ttl) {
+        super.checkMulticast(maddr, ttl);
     }
 }

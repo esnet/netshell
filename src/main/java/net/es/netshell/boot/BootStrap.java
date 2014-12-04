@@ -33,7 +33,6 @@ import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.impl.SimpleLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,8 +42,6 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import org.apache.felix.main.AutoProcessor;
-
-import javax.xml.ws.Service;
 
 /**
  * Created by lomax on 2/20/14.
@@ -119,6 +116,11 @@ public final class BootStrap implements Runnable {
         // Set default logging level.
         // TODO:  This doesn't work.  It appears that setting the default logging level has no effect, possibly because all the various loggers have already been created?
         String defaultLogLevel = NetShellConfiguration.getInstance().getGlobal().getDefaultLogLevel();
+        Logger rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        if (rootLogger instanceof ch.qos.logback.classic.Logger) {
+            ((ch.qos.logback.classic.Logger) rootLogger).setLevel(ch.qos.logback.classic.Level.toLevel(defaultLogLevel));
+        }
+
 
         // Make sure the root directory exists and that we can write to it.
         File root = new File(BootStrap.rootPath.toString());
@@ -137,8 +139,6 @@ public final class BootStrap implements Runnable {
         }
 
         NetShellConfiguration netShellConfiguration = NetShellConfiguration.getInstance();
-
-        System.setProperty(SimpleLogger.DEFAULT_LOG_LEVEL_KEY, defaultLogLevel);
 
 
         BootStrap.bootStrap = new BootStrap(args);
