@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ ENOS, Copyright (c) $today.date, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All rights reserved.
+  ~
+  ~ If you have questions about your rights to use or distribute this software, please contact Berkeley Lab's Technology Transfer Department at TTD@lbl.gov.
+  ~
+  ~ NOTICE.  This software is owned by the U.S. Department of Energy.  As such, the U.S. Government has been granted for itself and others acting on its behalf a paid-up, nonexclusive, irrevocable, worldwide license in the Software to reproduce, prepare derivative works, and perform publicly and display publicly.  Beginning five (5) years after the date permission to assert copyright is obtained from the U.S. Department of Energy, and subject to any subsequent five (5) year renewals, the U.S. Government is granted for itself and others acting on its behalf a paid-up, nonexclusive, irrevocable, worldwide license in the Software to reproduce, prepare derivative works, distribute copies to the public, perform publicly and display publicly, and to permit others to do so.
+  -->
+
+<features name="net.es.netshell-1.0.0" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0">
+
+    <feature name="netshell" version="1.0.0-SNAPSHOT" description="ESnet NetShell">
+        <bundle>mvn:joda-time/joda-time/2.3</bundle>
+        <bundle>mvn:org.jgrapht/jgrapht-core/0.9.0</bundle>
+        <bundle>wrap:mvn:org.jgrapht/jgrapht-ext/0.9.0</bundle>
+        <bundle>wrap:mvn:jgraph/jgraph/5.8.3.1</bundle>
+        <bundle>mvn:commons-codec/commons-codec/1.9</bundle>
+        <bundle>wrap:mvn:org.xeustechnologies/jcl-core/2.5</bundle>
+        <bundle>mvn:org.bouncycastle/bcprov-jdk15on</bundle>
+        <bundle>mvn:org.bouncycastle/bcpkix-jdk15on</bundle>
+        <bundle>wrap:mvn:org.tinyjee.jgraphx/jgraphx/2.0.0.1</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
+        <bundle>mvn:com.rabbitmq/amqp-client/3.3.5</bundle>
+        <bundle>mvn:net.es/netshell/1.0-SNAPSHOT</bundle>
+    </feature>
+    <feature name="netshell-python" version="1.0.0-SNAPSHOT" description="ESnet NetShell Python Bundle">
+        <bundle>wrap:mvn:org.python/jython-standalone/2.5.3$Export-Package=!jline,*</bundle>
+        <bundle>mvn:net.es/netshell-python/1.0-SNAPSHOT</bundle>
+    </feature>
+</features>
