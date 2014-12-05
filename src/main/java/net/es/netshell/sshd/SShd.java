@@ -248,12 +248,13 @@ public class SShd {
 
     public void start() throws IOException {
 
-        // Set a custom IOServiceFactoryFactory in order to control the creation of the threads in the
-        // ThreadPool.
-        System.setProperty(IoServiceFactoryFactory.class.getName(), SshdServiceFactoryFactory.class.getName());
         // Create and configure SSH server object.
         // Timeouts on the SSH session get set here via the SshServer properties map.
         this.sshServer = SshServer.setUpDefaultServer();
+
+        // Set a custom IOServiceFactoryFactory in order to control the creation of the threads in the
+        // ThreadPool.
+        this.sshServer.setIoServiceFactoryFactory(new SshdServiceFactoryFactory());
 
         int sshPort = NetShellConfiguration.getInstance().getGlobal().getSshPort();
         this.sshServer.setPort(sshPort);

@@ -17,9 +17,11 @@
     <groupId>net.es</groupId>
     <artifactId>netshell</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
     <properties>
         <kernel.version>0.0.1-SNAPSHOT</kernel.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <repositories>
@@ -70,12 +72,6 @@
         </dependency>
         
         <dependency>
-            <groupId>org.python</groupId>
-            <artifactId>jython-standalone</artifactId>
-            <version>2.5.2</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
             <version>3.1</version>
@@ -85,7 +81,7 @@
         <dependency>
             <groupId>org.apache.sshd</groupId>
             <artifactId>sshd-core</artifactId>
-            <version>0.11.0</version>
+            <version>0.12.0</version>
         </dependency>
 
         <dependency>
@@ -124,6 +120,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.tinyjee.jgraphx</groupId>
+            <artifactId>jgraphx</artifactId>
+            <version>2.0.0.1</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-json</artifactId>
             <version>1.18.1</version>
@@ -133,6 +135,17 @@
             <artifactId>jersey-client</artifactId>
             <version>1.18.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+            <version>1.9.13</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.9.13</version>
+        </dependency>
+
         <!-- iso time -->
         <dependency>
             <groupId>joda-time</groupId>
@@ -176,29 +189,35 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.dstovall</groupId>
-                <artifactId>onejar-maven-plugin</artifactId>
-                <version>1.4.4</version>
-                <executions>
-                    <execution>
-                        <configuration>
-                            <mainClass>net.es.netshell.boot.BootStrap</mainClass>
-                            <!-- Optional -->
-                            <onejarVersion>0.97</onejarVersion>
-                            <!-- Optional, use only if you need to include native libraries (dll's) -->
-
-                            <!-- Optional, default is false -->
-                            <attachToBuild>true</attachToBuild>
-                            <!-- Optional, default is "onejar" -->
-                            <classifier>onejar</classifier>
-                        </configuration>
-                        <goals>
-                            <goal>one-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.5.3</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Name>ESnet NetShell</Bundle-Name>
+                        <Bundle-Version>1.0-SNAPSHOT</Bundle-Version>
+                        <Bundle-Activator>net.es.netshell.boot.BootActivator</Bundle-Activator>
+                        <Export-Package>net.es.netshell.api,
+                            net.es.netshell.boot,
+                            net.es.netshell.classloader,
+                            net.es.netshell.configuration,
+                            net.es.netshell.kernel.container,
+                            net.es.netshell.kernel.exec,
+                            net.es.netshell.kernel.exec.annotations,
+                            net.es.netshell.kernel.security,
+                            net.es.netshell.kernel.users,
+                            net.es.netshell.osgi,
+                            net.es.netshell.rabbitmq,
+                            net.es.netshell.shell,
+                            net.es.netshell.shell.annotations,
+                            net.es.netshell.sshd
+                        </Export-Package>
+                        <Import-Package>*</Import-Package>
+                    </instructions>
+                </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -219,6 +238,7 @@
                   <artifactId>wagon-ssh</artifactId>
              </extension>
         </extensions>
+        <sourceDirectory>java</sourceDirectory>
     </build>
 
 </project>

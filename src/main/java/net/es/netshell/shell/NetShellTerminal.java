@@ -17,7 +17,7 @@ package net.es.netshell.shell;
 
 
 import jline.TerminalSupport;
-import jline.internal.Log;
+// import jline.internal.Log;
 
 
 /**
@@ -64,7 +64,8 @@ public class NetShellTerminal extends TerminalSupport {
             super.setEchoEnabled(enabled);
         }
         catch (Exception e) {
-            Log.error("Failed to ", (enabled ? "enable" : "disable"), " echo", e);
+//            Log.error("Failed to ", (enabled ? "enable" : "disable"), " echo", e);
+            e.printStackTrace();
         }
     }
 
