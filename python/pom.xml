@@ -106,7 +106,6 @@
                   <artifactId>wagon-ssh</artifactId>
              </extension>
         </extensions>
-        <sourceDirectory>java</sourceDirectory>
     </build>
 
 </project>
