@@ -21,6 +21,8 @@
         <bundle>wrap:mvn:org.tinyjee.jgraphx/jgraphx/2.0.0.1</bundle>
         <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
         <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
+	<bundle>mvn:ch.qos.logback/logback-core/1.1.2</bundle>
+	<bundle>mvn:ch.qos.logback/logback-classic/1.1.2</bundle>
         <bundle>mvn:com.rabbitmq/amqp-client/3.3.5</bundle>
         <bundle>mvn:net.es/netshell/1.0-SNAPSHOT</bundle>
     </feature>
