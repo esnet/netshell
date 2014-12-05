@@ -23,6 +23,9 @@ public class HostActivator implements BundleActivator {
 
     public void stop(BundleContext c) {
         context = null;
+
+        // TODO:  Stop any login sessions, sshd, etc.
+
     }
 
     public BundleContext getBundleContext() {

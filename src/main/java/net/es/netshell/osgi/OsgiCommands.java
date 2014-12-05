@@ -33,7 +33,13 @@ public class OsgiCommands {
             longHelp = "Send EOF on the shell to exit the gogo shell and return to the top-level\n" +
                     "ENOS shell.")
     public static void gogo(String[] args, InputStream in, OutputStream out, OutputStream err) {
-        Object obj = BootStrap.getBootStrap().getMediator().getCommandProcessor(ServiceMediator.NO_WAIT);
+        Object obj = null;
+        try {
+            obj = BootStrap.getBootStrap().getMediator().getCommandProcessor(ServiceMediator.NO_WAIT);
+        }
+        catch (NullPointerException npe) {
+            npe.printStackTrace();
+        }
         if (obj != null) {
 
             PrintStream os = new PrintStream(out);

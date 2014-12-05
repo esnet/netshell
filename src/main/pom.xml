@@ -72,12 +72,6 @@
         </dependency>
         
         <dependency>
-            <groupId>org.python</groupId>
-            <artifactId>jython-standalone</artifactId>
-            <version>2.5.3</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
             <version>3.1</version>
@@ -210,26 +204,24 @@
                         <Bundle-Name>ESnet NetShell</Bundle-Name>
                         <Bundle-Version>1.0-SNAPSHOT</Bundle-Version>
                         <Bundle-Activator>net.es.netshell.boot.BootActivator</Bundle-Activator>
-                        <Private-Package>net.es.netshell.*</Private-Package>
+                        <Export-Package>net.es.netshell.api,
+                            net.es.netshell.boot,
+                            net.es.netshell.classloader,
+                            net.es.netshell.configuration,
+                            net.es.netshell.kernel.container,
+                            net.es.netshell.kernel.exec,
+                            net.es.netshell.kernel.exec.annotations,
+                            net.es.netshell.kernel.security,
+                            net.es.netshell.kernel.users,
+                            net.es.netshell.osgi,
+                            net.es.netshell.rabbitmq,
+                            net.es.netshell.shell,
+                            net.es.netshell.shell.annotations,
+                            net.es.netshell.sshd
+                        </Export-Package>
                         <Import-Package>*</Import-Package>
                     </instructions>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.karaf.tooling</groupId>
-                <artifactId>features-maven-plugin</artifactId>
-                <version>2.2.5</version>
-                <executions>
-                    <execution>
-                        <id>create-kar</id>
-                        <goals>
-                            <goal>create-kar</goal>
-                        </goals>
-                        <configuration>
-                            <featuresFile>${project.basedir}/src/main/resources/features.xml</featuresFile>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -251,6 +243,7 @@
                   <artifactId>wagon-ssh</artifactId>
              </extension>
         </extensions>
+        <sourceDirectory>java</sourceDirectory>
     </build>
 
 </project>

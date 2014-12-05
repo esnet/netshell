@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -34,10 +35,26 @@ public class ShellCommandsFactory {
             ShellCommand command = method.getAnnotation(ShellCommand.class);
             if (command != null) {
                 // This method is command.
-                logger.debug("Adding Shell command {}", command.name());
+                logger.info("Adding Shell command {}", command.name());
                 ShellCommandsFactory.shellCommands.put(command.name(),method);
             }
         }
+    }
+
+    public static void unregisterShellModule (Class shellModule) {
+        final Logger logger = LoggerFactory.getLogger(ShellCommandsFactory.class);
+
+        Method[] methods = shellModule.getMethods();
+
+        for (Method method : methods) {
+
+            ShellCommand command = method.getAnnotation(ShellCommand.class);
+            if (command != null) {
+                logger.info("Removing Shell command {}", command.name());
+                ShellCommandsFactory.shellCommands.values().removeAll(Collections.singleton(command.name()));
+            }
+        }
+
     }
 
     public static Method getCommandMethod (String command) {

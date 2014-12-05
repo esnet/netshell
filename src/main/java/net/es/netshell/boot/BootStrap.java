@@ -22,12 +22,10 @@ import net.es.netshell.kernel.security.KernelSecurityManager;
 import net.es.netshell.osgi.HostActivator;
 import net.es.netshell.osgi.OsgiCommands;
 import net.es.netshell.osgi.ServiceMediator;
-import net.es.netshell.python.PythonShell;
+// import net.es.netshell.python.PythonShell;
 import net.es.netshell.rabbitmq.RMQShellCommands;
 import net.es.netshell.shell.*;
 import net.es.netshell.sshd.SShd;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
@@ -177,7 +175,7 @@ public final class BootStrap implements Runnable {
 
     private void addShellModules() {
         ShellCommandsFactory.registerShellModule(ShellBuiltinCommands.class);
-        ShellCommandsFactory.registerShellModule(PythonShell.class);
+/*        ShellCommandsFactory.registerShellModule(PythonShell.class); */
         ShellCommandsFactory.registerShellModule(UserShellCommands.class);
         ShellCommandsFactory.registerShellModule(ContainerShellCommands.class);
 	    ShellCommandsFactory.registerShellModule(RMQShellCommands.class);
