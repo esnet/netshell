@@ -11,7 +11,6 @@ package net.es.netshell.boot;
 
 import net.es.netshell.api.DefaultValues;
 import net.es.netshell.api.NetShellException;
-import net.es.netshell.classloader.DynamicClassLoader;
 import net.es.netshell.configuration.NetShellConfiguration;
 import net.es.netshell.configuration.GlobalConfiguration;
 import net.es.netshell.kernel.exec.KernelThread;
@@ -28,7 +27,6 @@ import net.es.netshell.sshd.SShd;
 import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 import org.slf4j.Logger;
@@ -58,7 +56,7 @@ public final class BootStrap implements Runnable {
     // We need to be sure the global configuration gets instantiated before the security manager,
     // because the former controls the initialization actions of the latter.
     private static final GlobalConfiguration masterConfiguration = NetShellConfiguration.getInstance().getGlobal();
-    private static final KernelSecurityManager securityManager = new KernelSecurityManager();
+    private static KernelSecurityManager securityManager = null;
 
     public final static Path rootPath = BootStrap.toRootRealPath();
 
@@ -100,7 +98,7 @@ public final class BootStrap implements Runnable {
 
     public void init() {
 
-
+        BootStrap.securityManager = new KernelSecurityManager();
         BootStrap.thread = new Thread(BootStrap.getBootStrap().getSecurityManager().getNetShellRootThreadGroup(),
                                       this,
                                       "NetShell Bootstrap");
@@ -358,9 +356,5 @@ public final class BootStrap implements Runnable {
         // Not sure if this is really going to work right.
         System.exit(0);
 
-    }
-
-    public boolean test (String tt) {
-       return false;
     }
 }

@@ -11,7 +11,6 @@ package net.es.netshell.kernel.security;
 
 import net.es.netshell.api.NetShellException;
 import net.es.netshell.boot.BootStrap;
-import net.es.netshell.classloader.DynamicClassLoader;
 import net.es.netshell.configuration.NetShellConfiguration;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.exec.annotations.SysCall;
@@ -24,7 +23,6 @@ import java.net.InetAddress;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.AccessControlContext;
 import java.security.Permission;
 import java.util.HashMap;
 import java.util.Map;
@@ -207,29 +205,10 @@ public class KernelSecurityManager extends SecurityManager {
      */
     @Override
     public void checkCreateClassLoader() {
-
-        if (this.isPrivileged()) {
-            logger.debug("checkCreateClassLoader() privileged thread invoker super class");
-            if (isDebug) { if (false) return; };
-            super.checkCreateClassLoader();
-            return;
-        }
-        ClassLoader cl = KernelThread.currentKernelThread().getThread().getContextClassLoader();
-        if (cl instanceof URLClassLoader) {
-            // ClassLoader is still system, allow to change.
-            logger.debug("checkCreateClassLoader() is still system: NetShell bootstrap, allow to change");
-            return;
-        }
-        if (cl instanceof DynamicClassLoader) {
-            // The current classload is Netshell's.
-            logger.debug("checkCreateClassLoader() current is DynamicClassLoader - allow to change");
-            return;
-        }
-        logger.debug("checkCreateClassLoader() DENIED not allowed to create a new ClassLoader");
-        // throw new SecurityException("Not allowed to create a class loader");
-        return;
+        logger.debug("checkCreateClassLoader() invoke superclass");
+        if (isDebug) { if (false) return; };
+        super.checkCreateClassLoader();
     }
-
 
 	@Override
 	public ThreadGroup getThreadGroup() {
@@ -385,7 +364,8 @@ public class KernelSecurityManager extends SecurityManager {
     public void checkPermission(Permission perm, Object context) {
         logger.debug("checkPermission(Permission " + perm + ", Object " + context + " invoke superclass");
         // There might be a better solution, but OSGI Felix requires allPerm.
-        if (perm.getClass().getCanonicalName().startsWith("org.apache.felix")) {
+        if ((perm.getClass().getCanonicalName().startsWith("org.apache.felix") ||
+                (perm.getClass().getCanonicalName().startsWith("org.osgi")))) {
             return;
         }
 

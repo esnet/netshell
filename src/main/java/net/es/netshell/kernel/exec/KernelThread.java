@@ -17,7 +17,6 @@ package net.es.netshell.kernel.exec;
 import net.es.netshell.api.NetShellException;
 import net.es.netshell.api.FileUtils;
 import net.es.netshell.boot.BootStrap;
-import net.es.netshell.classloader.DynamicClassLoader;
 import net.es.netshell.kernel.container.Container;
 import net.es.netshell.kernel.container.ContainerACL;
 import net.es.netshell.kernel.exec.annotations.SysCall;
@@ -92,7 +91,6 @@ public final class  KernelThread {
             }
             KernelThread.kernelThreads.put(this.thread, this);
         }
-        this.getThread().setContextClassLoader(new DynamicClassLoader());
     }
 
     /**
@@ -370,10 +368,6 @@ public final class  KernelThread {
         } else {
             throw new SecurityException("cannot access.");
         }
-    }
-
-    private void setClassLoader() {
-        Thread.currentThread().setContextClassLoader(new DynamicClassLoader());
     }
 }
 
