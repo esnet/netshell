@@ -10,7 +10,6 @@
 <features name="net.es.netshell-1.0.0" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0">
 
     <feature name="netshell" version="1.0.0-SNAPSHOT" description="ESnet NetShell">
-        <bundle>wrap:mvn:org.python/jython-standalone/2.5.2$Export-Package=!jline,*</bundle>
         <bundle>mvn:joda-time/joda-time/2.3</bundle>
         <bundle>mvn:org.jgrapht/jgrapht-core/0.9.0</bundle>
         <bundle>wrap:mvn:org.jgrapht/jgrapht-ext/0.9.0</bundle>
@@ -24,5 +23,9 @@
         <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
         <bundle>mvn:com.rabbitmq/amqp-client/3.3.5</bundle>
         <bundle>mvn:net.es/netshell/1.0-SNAPSHOT</bundle>
+    </feature>
+    <feature name="netshell-python" version="1.0.0-SNAPSHOT" description="ESnet NetShell Python Bundle">
+        <bundle>wrap:mvn:org.python/jython-standalone/2.5.3$Export-Package=!jline,*</bundle>
+        <bundle>mvn:net.es/netshell-python/1.0-SNAPSHOT</bundle>
     </feature>
 </features>

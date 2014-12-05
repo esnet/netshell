@@ -15,7 +15,7 @@ import jline.console.completer.ArgumentCompleter;
 import jline.console.completer.StringsCompleter;
 import net.es.netshell.boot.BootStrap;
 import net.es.netshell.kernel.exec.KernelThread;
-import net.es.netshell.python.PythonShell;
+// import net.es.netshell.python.PythonShell;
 import net.es.netshell.shell.annotations.ShellCommand;
 
 import java.io.File;
@@ -104,7 +104,7 @@ public class Shell {
 
         // Initialize command completion with commands from modules.
         Set<String> commandNames = ShellCommandsFactory.getCommandNames();
-	    String files[] = new File(Paths.get(BootStrap.rootPath.toString() + KernelThread.currentKernelThread().getCurrentDirectory()).toString()).list();
+        String files[] = new File(Paths.get(BootStrap.rootPath.toString() + KernelThread.currentKernelThread().getCurrentDirectory()).toString()).list();
 
 	    this.stringsCompleter = new StringsCompleter(commandNames);
 	    this.fileCompleter = new StringsCompleter(files);
@@ -199,6 +199,7 @@ public class Shell {
 
                 method = ShellCommandsFactory.getCommandMethod(args[0]);
                 if (method == null) {
+/*
                     // Try to see if a python program exist with that name
                     String path = PythonShell.getProgramPath(args[0]);
                     if (path != null) {
@@ -222,6 +223,7 @@ public class Shell {
                         }
 	                    continue;
                     }
+*/
                     // Nonexistent command
                     this.print(args[0] + " is an invalid command");
                     continue;
