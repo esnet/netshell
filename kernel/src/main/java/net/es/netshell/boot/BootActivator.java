@@ -26,8 +26,10 @@ public class BootActivator implements BundleActivator, Runnable {
     public void start(BundleContext b) {
         System.out.println("Hello NetShell");
 
-        // Set (some?) options that would normally have come from start-netshell.sh.
-        System.setProperty(PropertyKeys.NETSHELL_CONFIGURATION, "./netshell.json");
+        // If nobody specified a location for the configuration file, set one.
+        if (System.getProperty(PropertyKeys.NETSHELL_CONFIGURATION) == null) {
+            System.setProperty(PropertyKeys.NETSHELL_CONFIGURATION, "./netshell.json");
+        }
         Thread t = new Thread(this);
         t.start();
     }
