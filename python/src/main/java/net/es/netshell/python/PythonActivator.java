@@ -19,7 +19,7 @@ import java.util.Set;
  */
 public class PythonActivator implements BundleActivator{
 
-    BundleContext bundleContext;
+    static BundleContext bundleContext;
 
     public void start(BundleContext b) {
         System.out.println("Hello Python");
@@ -31,5 +31,9 @@ public class PythonActivator implements BundleActivator{
     public void stop(BundleContext b) {
         ShellCommandsFactory.unregisterShellModule(PythonShell.class);
         System.out.println("Goodbye Python");
+    }
+
+    static public BundleContext getBundleContext() {
+        return bundleContext;
     }
 }

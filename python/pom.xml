@@ -82,7 +82,7 @@
                         <Bundle-Version>1.0-SNAPSHOT</Bundle-Version>
                         <Bundle-Activator>net.es.netshell.python.PythonActivator</Bundle-Activator>
                         <Export-Package>net.es.netshell.python</Export-Package>
-                        <Import-Package>*</Import-Package>
+                        <Import-Package>net.es.netshell.api,*</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

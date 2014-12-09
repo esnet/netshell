@@ -25,6 +25,7 @@ import net.es.netshell.osgi.ServiceMediator;
 import net.es.netshell.rabbitmq.RMQShellCommands;
 import net.es.netshell.shell.*;
 import net.es.netshell.sshd.SShd;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
@@ -46,7 +47,7 @@ public final class BootStrap implements Runnable {
     private static Thread thread;
     private Framework fr = null;
     private ServiceMediator mediator = null;
-    private HostActivator activator = null;
+    private BundleContext bundleContext;
 
     // We need to be sure the global configuration gets instantiated before the security manager,
     // because the former controls the initialization actions of the latter.
@@ -91,6 +92,10 @@ public final class BootStrap implements Runnable {
         return securityManager;
     }
 
+    public BundleContext getBundleContext() {
+        return bundleContext;
+    }
+
     public void init() {
 
         BootStrap.securityManager = new KernelSecurityManager();
@@ -102,7 +107,7 @@ public final class BootStrap implements Runnable {
         BootStrap.thread.start();
 
     }
-    public static void main(String[] args) throws NetShellException {
+    public static void main(String[] args, BundleContext bundleContext) throws NetShellException {
 
         final Logger logger = LoggerFactory.getLogger(BootStrap.class);
 
@@ -134,15 +139,16 @@ public final class BootStrap implements Runnable {
         NetShellConfiguration netShellConfiguration = NetShellConfiguration.getInstance();
 
 
-        BootStrap.bootStrap = new BootStrap(args);
+        BootStrap.bootStrap = new BootStrap(args, bundleContext);
         BootStrap.bootStrap.init();
         BootStrap.bootStrap.postInitialization();
 
         logger.info("Bootstrap thread exits");
     }
 
-    private BootStrap (String[] args) {
+    private BootStrap (String[] args, BundleContext bundleContext) {
         this.args = args;
+        this.bundleContext = bundleContext;
     }
 
 
