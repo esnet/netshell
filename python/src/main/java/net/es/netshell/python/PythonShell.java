@@ -288,11 +288,7 @@ public class PythonShell {
         // For example we can do this with all the packages we import.
         // Another approach is to do this with all the packages that are
         // exported by certain other bundles.
-        //
-        // TODO:  For now we're just working with all packages we import.
-        /* String[] packages = saveImportedPackageNames(); */
-
-        String[] packages = { "net.es.netshell.api", "net.es.netshell.kernel", "net.es.netshell.kernel.exec", "net.es.netshell.kernel.security", "net.es.netshell.kernel.users", "net.es.netshell.shell"};
+        String[] packages = saveImportedPackageNames();
         for(String p : packages) {
             sys.add_package(p);
         }
@@ -341,17 +337,31 @@ public class PythonShell {
     }
 
     /**
-     * Break apart a comma-separated list of package names and add to an ongoing array of names
+     * Break apart a list of package names and add to an ongoing array of names
      * We also have to strip out some optional OSGi attributes that are added to the name
      * of each package.
      */
     static private void parsePackageNames(String packages, ArrayList<String> names) {
         System.out.println("parsePackageNames(" + packages + ")");
-        String p = packages;
-        p.replaceAll(";[^;]*[,$]", "");
+
+        // Use a couple of regex substitutions to get down to just the package names.
+        // First, some of the optional attributes can be quoted, and inside the quotes
+        // can be commas (which outside the quotes are actually the delimiters between
+        // the package names).  So we first get rid of anything that's quoted, noting
+        // that we really don't need any of these attributes anyway.
+        String p = packages.replaceAll("\"[^\"]*\"", "");
+
+        // Once that's done, we know that anything between a semicolon and a comma is
+        // attribute and something that we can throw away.
+        p = p.replaceAll(";[^,]*", "");
         System.out.println("p = " + p);
+
+        // Now, everything that's left is really a comma-separated list of package
+        // names so we can split on the commas.
         String[] ps = p.split(",");
         for (String s : ps) {
+
+            // But we also need to trim some gunk away.
             names.add(s.trim());
         }
     }
