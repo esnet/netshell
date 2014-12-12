@@ -17,7 +17,6 @@ import net.es.netshell.shell.ShellInputStream;;
 import net.es.netshell.shell.TabFilteringInputStream;
 import net.es.netshell.shell.annotations.ShellCommand;
 
-
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,9 +42,6 @@ public class PythonShell {
     private static final Logger logger = LoggerFactory.getLogger(PythonShell.class);
     private static HashMap<InputStream,PyDictionary> locals = new HashMap<InputStream, PyDictionary>();
 
-    Bundle[] bundles;
-    private String[] packageNames;
-
     /**
      * Modified ClassLoader used to give Jython access to classes made available via OSGi.
      */
@@ -61,9 +57,13 @@ public class PythonShell {
     public static class JythonBundlesClassLoader extends ClassLoader {
         private Bundle [] bundles;
 
-        public JythonBundlesClassLoader(Bundle [] b, ClassLoader parent) {
+        public JythonBundlesClassLoader(Bundle [] buns, ClassLoader parent) {
             super(parent);
-            bundles = b;
+            bundles = buns;
+
+            for (Bundle b : buns) {
+                logger.info("Looking at bundle {}", b.getSymbolicName());
+            }
         }
 
         protected Class findClass(String className) throws ClassNotFoundException {
@@ -268,35 +268,36 @@ public class PythonShell {
         PySystemState sys = py.getSystemState();
 
         // Set the class loader to know it has a parent class loader.
-        sys.setClassLoader(new JythonClassLoader(PythonShell.class.getClassLoader()));
+        BundleContext bc = BootStrap.getBootStrap().getBundleContext();
+        Bundle [] bundles = bc.getBundles();
+
+        sys.setClassLoader(new JythonBundlesClassLoader(bundles, PythonShell.class.getClassLoader()));
+        // sys.setClassLoader(new JythonClassLoader(PythonShell.class.getClassLoader()));
         // sys.setClassLoader(PythonShell.class.getClassLoader());
         // sys.setClassLoader(new JythonBundlesClassLoader(BootStrap.getBootStrap()));
-        try {
-            System.out.println("PySystemState ClassLoader: " + sys.getClass().getClassLoader().getClass().getName());
-            System.out.println("Thread ClassLoader: " + Thread.currentThread().getContextClassLoader().getClass().getName());
-            System.out.println("PythonShell ClassLoader: " + PythonShell.class.getClassLoader().getClass().getName());
-            System.out.println("PythonShell ClassLoader parent: " + PythonShell.class.getClassLoader().getParent().getClass().getName());
-        }
-        catch (NullPointerException npe) {
-            System.out.println("Something was null");
-        }
-        System.out.println("Jython class loader now: " + sys.getClassLoader().getClass().getName());
-        System.out.println("Jython class loader parent now: " + sys.getClassLoader().getParent().getClass().getName());
+//        try {
+//            System.out.println("PySystemState ClassLoader: " + sys.getClass().getClassLoader().getClass().getName());
+//            System.out.println("Thread ClassLoader: " + Thread.currentThread().getContextClassLoader().getClass().getName());
+//            System.out.println("PythonShell ClassLoader: " + PythonShell.class.getClassLoader().getClass().getName());
+//            System.out.println("PythonShell ClassLoader parent: " + PythonShell.class.getClassLoader().getParent().getClass().getName());
+//        }
+//        catch (NullPointerException npe) {
+//            System.out.println("Something was null");
+//        }
+        logger.debug("Jython class loader now: " + sys.getClassLoader().getClass().getName());
+        logger.debug("Jython class loader parent now: " + sys.getClassLoader().getParent().getClass().getName());
 
         // Let the Jython package manager know about Java classes
         // visible via OSGi.  There are a couple of ways to do this.
         // For example we can do this with all the packages we import.
         // Another approach is to do this with all the packages that are
         // exported by certain other bundles.
-        String[] packages = saveImportedPackageNames();
+        // String[] packages = saveImportedPackageNames();
+        String [] packages = saveExportedPackageNames(bundles);
         for(String p : packages) {
-            sys.add_package(p);
+             sys.add_package(p);
+            logger.info("Add package {}", p);
         }
-
-        for (String p : packages) {
-            System.out.println("  " + p);
-        }
-
 
     }
 
@@ -342,7 +343,7 @@ public class PythonShell {
      * of each package.
      */
     static private void parsePackageNames(String packages, ArrayList<String> names) {
-        System.out.println("parsePackageNames(" + packages + ")");
+//        System.out.println("parsePackageNames(" + packages + ")");
 
         // Use a couple of regex substitutions to get down to just the package names.
         // First, some of the optional attributes can be quoted, and inside the quotes
@@ -354,7 +355,7 @@ public class PythonShell {
         // Once that's done, we know that anything between a semicolon and a comma is
         // attribute and something that we can throw away.
         p = p.replaceAll(";[^,]*", "");
-        System.out.println("p = " + p);
+//        System.out.println("p = " + p);
 
         // Now, everything that's left is really a comma-separated list of package
         // names so we can split on the commas.
