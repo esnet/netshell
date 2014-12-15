@@ -980,6 +980,7 @@ public class KernelSecurityManager extends SecurityManager {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public boolean getInCheck() {
         return super.getInCheck();
     }
@@ -992,37 +993,48 @@ public class KernelSecurityManager extends SecurityManager {
         return res;
     }
 
+    /**
+     * Deprecated classes need to be redefined because they can still be used by java code.
+     * @return
+     */
     @Override
+    @SuppressWarnings("deprecation")
     protected ClassLoader currentClassLoader() {
         return super.currentClassLoader();
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     protected Class<?> currentLoadedClass() {
         return super.currentLoadedClass();
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     protected int classDepth(String name) {
         return super.classDepth(name);
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     protected int classLoaderDepth() {
         return super.classLoaderDepth();
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     protected boolean inClass(String name) {
         return super.inClass(name);
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     protected boolean inClassLoader() {
         return super.inClassLoader();
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void checkMulticast(InetAddress maddr, byte ttl) {
         super.checkMulticast(maddr, ttl);
     }
