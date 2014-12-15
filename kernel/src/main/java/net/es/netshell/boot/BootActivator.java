@@ -39,6 +39,7 @@ public class BootActivator implements BundleActivator, Runnable {
     }
 
     public void stop(BundleContext b) {
+
         System.out.println("Goodbye NetShell");
     }
 
