@@ -22,9 +22,9 @@ import java.util.concurrent.Callable;
  */
 public class SSHConnection {
 
-	private String username = "admin";
-	private String hostName = "summer1.es.net";
-	private String password = "netshell";
+	private String username = "user";
+	private String hostName = "host.example.net";
+	private String password = "password";
 	private String privKeyLocation = ".ssh/test2";
 	private String selfQueue;
 	private String command = "GET_TOPOLOGY";
@@ -115,7 +115,7 @@ public class SSHConnection {
 		} finally {
 			client.stop();
 
-			BrokerInfo info = new BrokerInfo("summer1.es.net", "david2", "123", 5672, false);
+			BrokerInfo info = new BrokerInfo("host.example.net", "user2", "password2", 5672, false);
 			Consume thisrecv = new Consume(info, selfQueue);
 			thisrecv.consumeMessage();
 		}

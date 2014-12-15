@@ -159,6 +159,8 @@
             <version>1.1-SNAPSHOT</version>
         </dependency>
 
+        <!-- bouncycastle.  To prevent some OSGi breakage and interactions with the Karaf modules,
+        we need to make the bouncycastle packages optional package imports. -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
@@ -199,7 +201,8 @@
                         <Bundle-Name>ESnet NetShell</Bundle-Name>
                         <Bundle-Version>1.0-SNAPSHOT</Bundle-Version>
                         <Bundle-Activator>net.es.netshell.boot.BootActivator</Bundle-Activator>
-                        <Export-Package>net.es.netshell.api,
+                        <Export-Package>
+                            net.es.netshell.api,
                             net.es.netshell.boot,
                             net.es.netshell.classloader,
                             net.es.netshell.configuration,
@@ -214,7 +217,10 @@
                             net.es.netshell.shell.annotations,
                             net.es.netshell.sshd
                         </Export-Package>
-                        <Import-Package>*</Import-Package>
+                        <Import-Package>
+                            org.bouncycastle.openssl;version="[1.50,2)";resolution:=optional,
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
