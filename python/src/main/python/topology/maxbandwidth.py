@@ -1,7 +1,7 @@
-from net.es.enos.api import ModifiedDijkstra
-from net.es.enos.api import TopologyFactory
+from net.es.netshell.api import ModifiedDijkstra
+from net.es.netshell.api import TopologyFactory
 from net.es.enos.esnet import OSCARSReservations
-from net.es.enos.api import TopologyProvider
+from net.es.netshell.api import TopologyProvider
 from org.joda.time import DateTime
 
 # Create graph with bandwidth weights rather than network metrics

@@ -1,5 +1,5 @@
 from org.jgrapht.alg import DijkstraShortestPath
-from net.es.enos.api import TopologyFactory,TopologyProvider
+from net.es.netshell.api import TopologyFactory,TopologyProvider
 from net.es.enos.esnet import OSCARSReservations
 from org.joda.time import DateTime
 import sys

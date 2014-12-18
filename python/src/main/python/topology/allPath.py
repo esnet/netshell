@@ -1,7 +1,7 @@
 from org.jgrapht.alg import DijkstraShortestPath
 
 from net.es.enos.esnet import ESnetLink
-from net.es.enos.api import TopologyFactory
+from net.es.netshell.api import TopologyFactory
 
 #
 # Created by davidhua on 6/10/14.
