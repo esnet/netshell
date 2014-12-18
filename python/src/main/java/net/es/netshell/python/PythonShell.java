@@ -13,6 +13,7 @@ import net.es.netshell.boot.BootStrap;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.security.ExitSecurityException;
 import net.es.netshell.kernel.users.User;
+import net.es.netshell.osgi.OsgiBundlesClassLoader;
 import net.es.netshell.shell.ShellInputStream;;
 import net.es.netshell.shell.TabFilteringInputStream;
 import net.es.netshell.shell.annotations.ShellCommand;
@@ -48,43 +49,6 @@ public class PythonShell {
     public static class JythonClassLoader extends ClassLoader {
         public JythonClassLoader(ClassLoader parent) {
             super(parent);
-        }
-    }
-
-    /**
-     * Modified ClassLoader that looks in a bunch of bundles for a class if it's not locally findable.
-     */
-    public static class JythonBundlesClassLoader extends ClassLoader {
-        private Bundle [] bundles;
-
-        public JythonBundlesClassLoader(Bundle [] buns, ClassLoader parent) {
-            super(parent);
-            bundles = buns;
-
-            for (Bundle b : buns) {
-                logger.info("Looking at bundle {}", b.getSymbolicName());
-            }
-        }
-
-        protected Class findClass(String className) throws ClassNotFoundException {
-            try {
-                // First try the default class loader
-                return super.findClass(className);
-            }
-            catch (ClassNotFoundException e) {
-                // Look for the class from the bundles.
-                // XXX Security issue here?
-                for (Bundle b : bundles) {
-                    try {
-                        return b.loadClass(className);
-                    }
-                    catch (ClassNotFoundException e2) {
-                        // ignore
-                    }
-                }
-                // Can't find the class, re-throw the exception
-                throw e;
-            }
         }
     }
 
@@ -271,7 +235,7 @@ public class PythonShell {
         BundleContext bc = BootStrap.getBootStrap().getBundleContext();
         Bundle [] bundles = bc.getBundles();
 
-        sys.setClassLoader(new JythonBundlesClassLoader(bundles, PythonShell.class.getClassLoader()));
+        sys.setClassLoader(new OsgiBundlesClassLoader(bundles, PythonShell.class.getClassLoader()));
         // sys.setClassLoader(new JythonClassLoader(PythonShell.class.getClassLoader()));
         // sys.setClassLoader(PythonShell.class.getClassLoader());
         // sys.setClassLoader(new JythonBundlesClassLoader(BootStrap.getBootStrap()));

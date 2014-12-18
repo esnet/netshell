@@ -9,8 +9,12 @@
 
 package net.es.netshell.api;
 
+import net.es.netshell.boot.BootStrap;
+import net.es.netshell.osgi.OsgiBundlesClassLoader;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.jgrapht.graph.DefaultListenableGraph;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -35,8 +39,14 @@ public class TopologyFactory extends PersistentObject {
     @JsonIgnore
     private static Object instanceLock = new Object();
 
-    public TopologyFactory() throws IOException {
+    private OsgiBundlesClassLoader loader = null;
 
+    public TopologyFactory() throws IOException {
+        // Need to set up a bundle class loader so we can find topology providers in other bundles.
+        BundleContext bc = BootStrap.getBootStrap().getBundleContext();
+        Bundle[] bundles = bc.getBundles();
+
+        this.loader = new OsgiBundlesClassLoader(bundles, TopologyFactory.class.getClassLoader());
     }
 
     private void startProviders() {
@@ -51,7 +61,7 @@ public class TopologyFactory extends PersistentObject {
     private void startProvider(TopologyProviderDescriptor provider) {
         try {
             TopologyProvider topologyProvider =
-                    (TopologyProvider) Class.forName(provider.getClassName()).newInstance();
+                    (TopologyProvider) this.loader.findClass(provider.getClassName()).newInstance();
 
             this.topologyProviders.put(provider.getType(),topologyProvider);
 
