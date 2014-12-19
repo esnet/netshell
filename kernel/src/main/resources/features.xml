@@ -25,7 +25,7 @@
         <bundle>mvn:net.es/netshell-kernel/1.0-SNAPSHOT</bundle>
     </feature>
     <feature name="netshell-python" version="1.0.0-SNAPSHOT" description="ESnet NetShell Python Bundle">
-        <bundle>wrap:mvn:org.python/jython-standalone/2.5.3$Export-Package=!jline,*</bundle>
+        <bundle>wrap:mvn:org.python/jython-standalone/2.5.2$Export-Package=!jline,*</bundle>
         <bundle>mvn:net.es/netshell-python/1.0-SNAPSHOT</bundle>
     </feature>
 </features>
