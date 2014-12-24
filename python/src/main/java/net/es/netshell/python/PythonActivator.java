@@ -27,6 +27,11 @@ public class PythonActivator implements BundleActivator{
         bundleContext = b;
 
         ShellCommandsFactory.registerShellModule(PythonShell.class);
+        // The python shell bundle requires to load OSGi and Karaf jar files when it first execute a python
+        // command or script. This can be done only by a privileged thread.
+        // Therefore, the following line forces the python shell execution at initialization time which is
+        // performed by a privileged thread.
+        PythonShell.startPython(new String[] {"python","print 'initialize python environment'"},System.in, System.out, System.err);
     }
     public void stop(BundleContext b) {
         ShellCommandsFactory.unregisterShellModule(PythonShell.class);

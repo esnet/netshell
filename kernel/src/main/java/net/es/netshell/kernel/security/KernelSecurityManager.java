@@ -290,7 +290,7 @@ public class KernelSecurityManager extends SecurityManager {
     @Override
     public void checkExit(int status) {
         logger.debug("checkExit (int " + status + ") cannot exit NetShell");
-        if (isDebug) { if (false) return; };
+        if (isDebug) { if (true) return; };
         if (isPrivileged()) return;
         throw new SecurityException("checkExit (int " + status + ") Cannot exit NetShell");
     }

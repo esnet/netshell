@@ -139,7 +139,9 @@ public class PythonShell {
                 console.setIn(in);
                 osgiSetup(console);
                 // Start the interactive session
-                ((ShellInputStream) in).setEofHack(true);
+                if (in instanceof ShellInputStream) {
+                    ((ShellInputStream) in).setEofHack(true);
+                }
                 console.interact();
                 ((ShellInputStream) in).setEofHack(false);
             }
