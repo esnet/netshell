@@ -243,7 +243,7 @@ public class Shell {
                     this.print(e.toString());
                     continue;
                 } catch (InvocationTargetException e) {
-                   this.print( e.getTargetException().toString());
+                   this.print( e.toString());
                    continue;
                 } catch (Exception e) {
                     // This is a catch all. Make sure that the thread recovers in a correct state
