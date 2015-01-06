@@ -87,8 +87,10 @@ public class PythonShell {
                 osgiSetup(python);
                 python.exec("import sys");
                 python.exec("sys.path = sys.path + ['" + BootStrap.rootPath.resolve("bin/") + "']");
-                python.exec("sys.path = sys.path + ['" + KernelThread.currentKernelThread().getUser().getHomePath()
+                if (KernelThread.currentKernelThread().getUser() != null) {
+                    python.exec("sys.path = sys.path + ['" + KernelThread.currentKernelThread().getUser().getHomePath()
                             + "']");
+                }
                 try {
                     err.flush();
                 } catch (IOException e) {
@@ -110,7 +112,12 @@ public class PythonShell {
                 python.setOut(out);
                 python.setErr(err);
                 osgiSetup(python);
-                logger.info("Executes file " + args[1] + " for user " + KernelThread.currentKernelThread().getUser().getName());
+                if (KernelThread.currentKernelThread().getUser() != null) {
+                    logger.info("Executes file " + args[1] + " for user " + KernelThread.currentKernelThread().getUser().getName());
+                }
+                else {
+                    logger.info("Executes file " + args[1] + " (no user defined)");
+                }
                 String filePath;
                 if (args[1].startsWith(BootStrap.rootPath.toString())) {
                     // The file path already contains the NetShell Root.
@@ -174,19 +181,21 @@ public class PythonShell {
 
     private static void execProfile(PyDictionary locals, InputStream in, OutputStream out, OutputStream err) {
         User user = KernelThread.currentKernelThread().getUser();
-        Path homeDir = user.getHomePath();
-        File profile = Paths.get(homeDir.toString(),"profile.py").toFile();
-        if (!profile.exists()) {
-            // No profile, nothing to do
-            return;
+        if (user != null) {
+            Path homeDir = user.getHomePath();
+            File profile = Paths.get(homeDir.toString(), "profile.py").toFile();
+            if (!profile.exists()) {
+                // No profile, nothing to do
+                return;
+            }
+            // Execute the profile
+            PythonInterpreter python = new PythonInterpreter(locals);
+            python.setIn(in);
+            python.setOut(out);
+            python.setErr(err);
+            logger.info("Executes file " + profile.toString() + " for user " + KernelThread.currentKernelThread().getUser().getName());
+            python.execfile(profile.toString());
         }
-        // Execute the profile
-        PythonInterpreter python = new PythonInterpreter(locals);
-        python.setIn(in);
-        python.setOut(out);
-        python.setErr(err);
-        logger.info("Executes file " + profile.toString() + " for user " + KernelThread.currentKernelThread().getUser().getName());
-        python.execfile(profile.toString());
     }
 
     public static String getProgramPath(String cmd) {
