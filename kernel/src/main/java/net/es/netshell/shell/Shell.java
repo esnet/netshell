@@ -86,11 +86,13 @@ public class Shell {
         this.setPrompt(kernelThread.getUser().getName() + "@NetShell> ");
 
         this.out = new ShellOutputStream(out);
-        try {
-            this.out.write(Shell.banner.getBytes());
-            this.out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (command == null) {
+            try {
+                this.out.write(Shell.banner.getBytes());
+                this.out.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         this.in = new TabFilteringInputStream(this.in);
