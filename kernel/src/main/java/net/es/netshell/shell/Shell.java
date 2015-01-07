@@ -17,6 +17,9 @@ import net.es.netshell.boot.BootStrap;
 import net.es.netshell.kernel.exec.KernelThread;
 // import net.es.netshell.python.PythonShell;
 import net.es.netshell.shell.annotations.ShellCommand;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 
 import java.io.File;
 import java.io.IOException;
@@ -201,36 +204,53 @@ public class Shell {
 
                 method = ShellCommandsFactory.getCommandMethod(args[0]);
                 if (method == null) {
-/*
-                    // Try to see if a python program exist with that name
-                    String path = PythonShell.getProgramPath(args[0]);
-                    if (path != null) {
-                        // There is a python command of that name execute it. A new String[] with the first
-                        // element set to "python" must be created in order to simulate the python command line.
-                        String[] newArgs = new String[args.length + 1];
-                        newArgs[0] = "python";
-                        // Set the full path
-                        newArgs[1] = path;
 
-	                    // Place old args into newArgs.
-	                    for (int i = 1; i< args.length; i++) {
-		                    newArgs[i+1] = args[i];
-	                    }
+                    // No shell command exists.  We support running Python programs as direct
+                    // shell commands with unqualified pathnames.  First see if we have the
+                    // Python shell (from the netshell-python module) available.
+                    // We check every time we need this, because the netshell-python module
+                    // can (at least in theory) come and go, in a dynamic OSGi environment.
+                    // There are probably better ways to implement this, for example using
+                    // some of the dependency injection frameworks.
+                    BundleContext context = BootStrap.getBootStrap().getBundleContext();
+                    ServiceReference ref = context.getServiceReference(PythonShellService.class.getName());
+                    if (ref != null) {
 
-                        try {
-                            PythonShell.startPython(newArgs, this.in, this.out, this.out);
-                        } catch (Exception e) {
-                            // This is a catch all. Make sure that the thread recovers in a correct state
-                            this.print( e.toString());
+                        // Found an instance of the PythonShellService that we can use.
+                        PythonShellService ps = (PythonShellService) context.getService(ref);
+
+                        // Try to see if a python program exist with that name
+                        String path = ps.getProgramPath(args[0]);
+                        if (path != null) {
+                            // There is a python command of that name execute it. A new String[] with the first
+                            // element set to "python" must be created in order to simulate the python command line.
+                            String[] newArgs = new String[args.length + 1];
+                            newArgs[0] = "python";
+                            // Set the full path
+                            newArgs[1] = path;
+
+                            // Place old args into newArgs.
+                            for (int i = 1; i< args.length; i++) {
+                                newArgs[i+1] = args[i];
+                            }
+
+                            try {
+                                ps.startPython(newArgs, this.in, this.out, this.out);
+                            } catch (Exception e) {
+                                // This is a catch all. Make sure that the thread recovers in a correct state
+                                this.print( e.toString());
+                            }
+                            continue;
                         }
-	                    continue;
                     }
-*/
+
                     // Nonexistent command
                     this.print(args[0] + " is an invalid command");
                     continue;
                 }
                 try {
+
+                    // We found a shell command, prepare to invoke it.
                     ShellCommand command = method.getAnnotation(ShellCommand.class);
 	                if (command.forwardLines()) {
                         method.invoke(null, args, this.in, this.out, this.out);

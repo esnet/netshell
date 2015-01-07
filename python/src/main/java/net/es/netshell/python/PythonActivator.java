@@ -8,11 +8,13 @@
 
 package net.es.netshell.python;
 
+import net.es.netshell.shell.PythonShellService;
 import net.es.netshell.shell.ShellCommandsFactory;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
-import java.util.Set;
+import java.util.Hashtable;
 
 /**
  * Created by bmah on 12/4/14.
@@ -27,11 +29,19 @@ public class PythonActivator implements BundleActivator{
         bundleContext = b;
 
         ShellCommandsFactory.registerShellModule(PythonShell.class);
+
+        // Register us as a service with OSGi, so the Shell class in the main
+        // netshell-kernel module can find us.
+        Hashtable<String, String> props = new Hashtable<String, String>();
+        // props.put("foo", "bar");
+        ServiceRegistration s =
+                bundleContext.registerService(PythonShellService.class.getName(), new PythonShellServiceImpl(), props);
+
         // The python shell bundle requires to load OSGi and Karaf jar files when it first execute a python
         // command or script. This can be done only by a privileged thread.
         // Therefore, the following line forces the python shell execution at initialization time which is
         // performed by a privileged thread.
-        PythonShell.startPython(new String[] {"python","print 'initialize python environment'"},System.in, System.out, System.err);
+        PythonShell.startPython(new String[]{"python", "print 'initialize python environment'"}, System.in, System.out, System.err);
     }
     public void stop(BundleContext b) {
         ShellCommandsFactory.unregisterShellModule(PythonShell.class);
