@@ -247,27 +247,15 @@ public class PythonShell {
         Bundle [] bundles = bc.getBundles();
 
         sys.setClassLoader(new OsgiBundlesClassLoader(bundles, PythonShell.class.getClassLoader()));
-        // sys.setClassLoader(new JythonClassLoader(PythonShell.class.getClassLoader()));
-        // sys.setClassLoader(PythonShell.class.getClassLoader());
-        // sys.setClassLoader(new JythonBundlesClassLoader(BootStrap.getBootStrap()));
-//        try {
-//            System.out.println("PySystemState ClassLoader: " + sys.getClass().getClassLoader().getClass().getName());
-//            System.out.println("Thread ClassLoader: " + Thread.currentThread().getContextClassLoader().getClass().getName());
-//            System.out.println("PythonShell ClassLoader: " + PythonShell.class.getClassLoader().getClass().getName());
-//            System.out.println("PythonShell ClassLoader parent: " + PythonShell.class.getClassLoader().getParent().getClass().getName());
-//        }
-//        catch (NullPointerException npe) {
-//            System.out.println("Something was null");
-//        }
         logger.debug("Jython class loader now: " + sys.getClassLoader().getClass().getName());
         logger.debug("Jython class loader parent now: " + sys.getClassLoader().getParent().getClass().getName());
 
         // Let the Jython package manager know about Java classes
         // visible via OSGi.  There are a couple of ways to do this.
-        // For example we can do this with all the packages we import.
-        // Another approach is to do this with all the packages that are
-        // exported by certain other bundles.
-        // String[] packages = saveImportedPackageNames();
+        // For example we can do this with all packages that are exported
+        // by certain other bundles (saveExportedPackageNames), or
+        // we can do this with all the packages we import
+        // (saveImportedPackageNames).
         String [] packages = saveExportedPackageNames(bundles);
         for(String p : packages) {
              sys.add_package(p);
