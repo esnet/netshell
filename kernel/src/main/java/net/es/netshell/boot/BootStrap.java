@@ -30,6 +30,7 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.lang.Thread;
 
 import java.io.File;
 import java.io.IOException;
@@ -173,7 +174,6 @@ public final class BootStrap implements Runnable {
 
         // Add Shell Modules
         addShellModules();
-
         // Initialize SystemCalls
         KernelThread.initSysCalls(AllowedSysCalls.getAllowedClasses());
 
@@ -229,6 +229,15 @@ public final class BootStrap implements Runnable {
         logger.info("do_shutdown entry");
 
         try {
+            // Stop SSHD
+            int sshDisabled = NetShellConfiguration.getInstance().getGlobal().getSshDisabled();
+            if (sshDisabled == 0) {
+                this.sshd = SShd.getSshd();
+                    this.sshd.stop();
+            }
+            BootStrap.thread.interrupt();
+
+            // Stop the framework
             fr.stop();
         }
         catch (BundleException e) {

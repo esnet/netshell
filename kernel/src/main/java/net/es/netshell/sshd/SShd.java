@@ -297,4 +297,12 @@ public class SShd {
         this.sshServer.setCommandFactory(new SshdScpCommandFactory());
         this.sshServer.start();
     }
+
+    public void stop() {
+        try {
+            this.sshServer.stop();
+        } catch (InterruptedException e) {
+            logger.error("Cannot stop SSHD");
+        }
+    }
 }

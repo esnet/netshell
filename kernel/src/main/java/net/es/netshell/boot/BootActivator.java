@@ -27,7 +27,7 @@ public class BootActivator implements BundleActivator, Runnable {
      * @param b
      */
     public void start(BundleContext b) {
-        System.out.println("Hello NetShell");
+        System.out.println("NetShell is starting");
 
         // If nobody specified a location for the configuration file, set one.
         if (System.getProperty(PropertyKeys.NETSHELL_CONFIGURATION) == null) {
@@ -41,6 +41,7 @@ public class BootActivator implements BundleActivator, Runnable {
     public void stop(BundleContext b) {
 
         System.out.println("Goodbye NetShell");
+        BootStrap.getBootStrap().shutdown();
     }
 
     public void run() {

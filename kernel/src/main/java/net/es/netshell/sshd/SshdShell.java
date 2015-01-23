@@ -121,6 +121,7 @@ public class SshdShell extends Shell implements Command, SessionAware, FileSyste
     }
 
     public void run() {
+
         if (this.scpCommand == null) {
             // SSH
             this.startShell();
