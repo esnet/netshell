@@ -219,6 +219,7 @@
                         </Export-Package>
                         <Import-Package>
                             org.bouncycastle.openssl;version="[1.50,2)";resolution:=optional,
+                            org.apache.felix.service.command;version="[0.10.0,1.0.0)",
                             *
                         </Import-Package>
                     </instructions>
