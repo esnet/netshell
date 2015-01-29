@@ -46,7 +46,6 @@ public final class BootStrap implements Runnable {
     private String[] args = null;
     private SShd sshd = null;
     private static Thread thread;
-    private Framework fr = null;
     private ServiceMediator mediator = null;
     private BundleContext bundleContext;
 
@@ -228,7 +227,6 @@ public final class BootStrap implements Runnable {
     public void do_shutdown() {
         logger.info("do_shutdown entry");
 
-        try {
             // Stop SSHD
             int sshDisabled = NetShellConfiguration.getInstance().getGlobal().getSshDisabled();
             if (sshDisabled == 0) {
@@ -236,13 +234,6 @@ public final class BootStrap implements Runnable {
                     this.sshd.stop();
             }
             BootStrap.thread.interrupt();
-
-            // Stop the framework
-            fr.stop();
-        }
-        catch (BundleException e) {
-            e.printStackTrace();
-        }
 
         // Not sure if this is really going to work right.
         System.exit(0);
