@@ -36,9 +36,14 @@ OpenDaylight Integration
 2.  Copy the ```system/org/opendaylight``` and ```system/org/openexi``` directories from the
     Karaf instance packed with the OpenDaylight distribution to the the one used for NetShell.
 
-3.  Start up the target Karaf instance and execute the commands generated above.
+3.  Review ```etc/custom.properties``` from ODL and copy / modify ```etc/custom.properties```
+    in the target Karaf instance accordingly.  /// Weeellll...not sure about that. ///
 
-4.  Within the Karaf instance, load the ODL features of interest, for example:
+4.  Start up the target Karaf instance and execute the commands generated above.
 
-        feature:install odl-restconf odl-l2switch-switch odl-mdsal-apidocs odl-dlux-core
+5.  Within the Karaf instance, load the ODL features of interest, for example:
+
+        feature:install odl-dlux-core odl-l2switch-all odl-l2switch-all
+
+        
 
