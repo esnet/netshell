@@ -6,6 +6,10 @@ Kernel and companion software that support ENOS applications.
 NetShell Quickstart
 -------------------
 
+These steps install NetShell into a generic Karaf container.  For use with a customized
+Karaf container that is an artifact of an OpenDaylight integration build, see the "OpenDaylight
+Integration" section of this document.
+
 1.  Build and install netshell-kernel (and netshell-python if desired).
     This will result in JAR artifacts being copied to the local Maven repository / cache.
     It will also result in an XML features file being copied.
@@ -65,8 +69,10 @@ The following steps are required regardless of the version of ODL used as a star
     If running with Karaf 3.0.2 or later, this definition should be commented out; it was apparently a
     workaround for a bug in an older version of Karaf.
 
-3.  There are some indications that ODL does not play well with the NetShell security manager.  If this is
-    believed to be a problem, this can be disabled by copying the ```netshell.json``` file from the NetShell
+3.  In some circumstances, ODL does not play well with the NetShell security manager (the exact conditions
+    are not completely known).  If this is
+    believed to be a problem, the security manager can be disabled by copying the ```netshell.json```
+    file from the NetShell
     source tree to the top level of the ODL Karaf installation and setting the value of the
     ```securityManagerDisabled``` parameter to 1.
 
