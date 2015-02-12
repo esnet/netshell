@@ -227,9 +227,5 @@ public final class BootStrap implements Runnable {
                     this.sshd.stop();
             }
             BootStrap.thread.interrupt();
-
-        // Not sure if this is really going to work right.
-        System.exit(0);
-
     }
 }
