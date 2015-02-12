@@ -57,8 +57,9 @@ The following steps are required regardless of the version of ODL used as a star
 
 1.  Edit ```etc/custom.properties``` within the ODL Karaf distribution to remove or comment out the definition
     of ```karaf.framework```.  As of this writing, NetShell requires use of the default Felix OSGi framework,
-    and is not compatible with the Equinox OSGi framework.  So far it appears that ODL runs correctly using
-    Equinox.
+    and is not compatible with the Equinox OSGi framework (a runtime exception happens when the
+    netshell-bundle is activated, having to do with setting up the embedded SSH server).
+    So far it appears that ODL runs correctly using Equinox.
 
 2.  Edit ```etc/custom.properties``` and note the definition of ```org.osgi.framework.system.capabilities```.
     If running with Karaf 3.0.2 or later, this definition should be commented out; it was apparently a
