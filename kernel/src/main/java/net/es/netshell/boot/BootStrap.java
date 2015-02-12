@@ -18,10 +18,6 @@ import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.security.AllowedSysCalls;
 import net.es.netshell.kernel.security.KernelSecurityManager;
-import net.es.netshell.osgi.HostActivator;
-import net.es.netshell.osgi.OsgiCommands;
-import net.es.netshell.osgi.ServiceMediator;
-// import net.es.netshell.python.PythonShell;
 import net.es.netshell.rabbitmq.RMQShellCommands;
 import net.es.netshell.shell.*;
 import net.es.netshell.sshd.SShd;
@@ -46,7 +42,6 @@ public final class BootStrap implements Runnable {
     private String[] args = null;
     private SShd sshd = null;
     private static Thread thread;
-    private ServiceMediator mediator = null;
     private BundleContext bundleContext;
 
     // We need to be sure the global configuration gets instantiated before the security manager,
@@ -155,8 +150,6 @@ public final class BootStrap implements Runnable {
     public static BootStrap getBootStrap() {
         return BootStrap.bootStrap;
     }
-
-    public ServiceMediator getMediator() { return this.mediator; }
 
     public void startServices() {
 

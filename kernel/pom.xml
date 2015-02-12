@@ -165,15 +165,22 @@
 
         <!-- Felix / OSGi -->
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.main</artifactId>
-            <version>4.4.1</version>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>4.3.1</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.gogo.runtime</artifactId>
-            <version>0.12.1</version>
-        </dependency>
+
+        <!--        <dependency>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.apache.felix.main</artifactId>
+                    <version>4.4.1</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.apache.felix.gogo.runtime</artifactId>
+                    <version>0.12.1</version>
+                </dependency>
+                -->
 
     </dependencies>
 
@@ -209,7 +216,7 @@
                         </Export-Package>
                         <Import-Package>
                             org.bouncycastle.openssl;version="[1.50,2)";resolution:=optional,
-                            org.apache.felix.service.command;version="[0.10.0,1.0.0)",
+<!--                            org.apache.felix.service.command;version="[0.10.0,1.0.0)", -->
                             *
                         </Import-Package>
                     </instructions>
