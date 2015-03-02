@@ -59,30 +59,42 @@ If using a custom-build ODL integration build:
 
 The following steps are required regardless of the version of ODL used as a starting point:
 
-1.  Edit ```etc/custom.properties``` within the ODL Karaf distribution to remove or comment out the definition
-    of ```karaf.framework```.  As of this writing, NetShell requires use of the default Felix OSGi framework,
-    and is not compatible with the Equinox OSGi framework (a runtime exception happens when the
-    netshell-bundle is activated, having to do with setting up the embedded SSH server).
-    So far it appears that ODL runs correctly using Equinox.
-
-2.  Edit ```etc/custom.properties``` and note the definition of ```org.osgi.framework.system.capabilities```.
+1.  Edit ```etc/custom.properties``` and note the definition of ```org.osgi.framework.system.capabilities```.
     If running with Karaf 3.0.2 or later, this definition should be commented out; it was apparently a
     workaround for a bug in an older version of Karaf.
 
-3.  In some circumstances, ODL does not play well with the NetShell security manager (the exact conditions
+2.  In some circumstances, ODL does not play well with the NetShell security manager (the exact conditions
     are not completely known).  If this is
     believed to be a problem, the security manager can be disabled by copying the ```netshell.json```
     file from the NetShell
     source tree to the top level of the ODL Karaf installation and setting the value of the
     ```securityManagerDisabled``` parameter to 1.
 
-4.  Start up the ODL Karaf container from the top-level directory of the ODL Karaf installation with ```bin/karaf```.
+3.  Start up the ODL Karaf container from the top-level directory of the ODL Karaf installation with ```bin/karaf```.
 
-5.  Within the Karaf instance, load the ODL features of interest.  A typical set of features that provides a
+4.  Within the Karaf instance, load the ODL features of interest.  A typical set of features that provides a
     layer-2 learning bridge plus the DLUX GUI is:
 
         feature:install odl-dlux-core odl-openflowplugin-all odl-l2switch-all
 
-6.  Follow the instructions in "NetShell Quickstart" above to load and run the NetShell modules.
+5.  Features necessary for NetShell integration can be loaded as follows:
+
+        feature:install odl-adsal-compatibility odl-nsf-managers
+
+6.  To make the embedded SSH server start up correctly, it is necessary to refresh the bindings of one
+    of the bundles.
+
+        bundle:refresh -f org.apache.sshd.core
+
+    This is necessary so that the org.apache.sshd.core contains correct bindings for
+    the org.apache.mina.service package.  These bindings are necessary for NetShell's embedded SSH
+    server; failure to get this right results in a a runtime exception at NetShell startup time.
+
+7.  Follow the instructions in "NetShell Quickstart" above to load and run the base NetShell modules.
+
+8.  To load the NetShell OpenDaylight bundle (at least until a feature is created for it):
+
+        bundle:load mvn:mvn:net.es/netshell-odl/1.0-SNAPSHOT
+
 
 
