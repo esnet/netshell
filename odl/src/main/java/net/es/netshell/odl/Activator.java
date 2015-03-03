@@ -83,7 +83,7 @@ public class Activator extends ComponentActivatorAbstractBase {
             // SwitchManager service is used for enumerating switches and ports
             c.add(createContainerServiceDependency(containerName).
                     setService(ISwitchManager.class).
-                    setCallbacks("setFlowProgrammerService", "unsetFlowProgrammerService").
+                    setCallbacks("setSwitchManager", "unsetSwitchManager").
                     setRequired(true));
 
         }
