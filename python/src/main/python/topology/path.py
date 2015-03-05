@@ -8,7 +8,7 @@ import sys
 if len(command_args) != 4:
     # Syntax error
     print "Syntax error: path src@domain dst@domain"
-    print "    example: path lbl-mr2@es.net bnl-mr3@es.net"
+    print "    example: path lbl-mr2@es.net bnl-mr2@es.net"
     sys.exit()
 
 
