@@ -14,9 +14,12 @@ import java.util.List;
 
 import org.opendaylight.controller.sal.core.Node;
 import org.opendaylight.controller.sal.core.NodeConnector;
+import org.opendaylight.controller.sal.flowprogrammer.Flow;
 import org.opendaylight.controller.sal.flowprogrammer.IFlowProgrammerService;
 import org.opendaylight.controller.sal.packet.*;
 
+import org.opendaylight.controller.sal.utils.Status;
+import org.opendaylight.controller.sal.utils.StatusCode;
 import org.opendaylight.controller.switchmanager.ISwitchManager;
 import org.opendaylight.controller.switchmanager.Switch;
 import org.slf4j.Logger;
@@ -107,12 +110,39 @@ public class PacketHandler implements IListenDataPacket {
 
     // Methods to be invoked from Python or other parts of netshell/ENOS.
     // Get all switches
-   public List<Switch> getNetworkDevices() {
+    public List<Switch> getNetworkDevices() {
         List<Switch> switches = null;
         if (switchManager != null) {
             switches = switchManager.getNetworkDevices();
         }
         return switches;
+    }
+
+    // Push a flow
+    public Status addFlow(Node node, Flow flow) {
+        Status stat = new Status(StatusCode.NOSERVICE);
+        if (flowProgrammerService != null) {
+            stat = flowProgrammerService.addFlow(node, flow);
+        }
+        return stat;
+    }
+
+    // Modify a flow
+    public Status modifyFlow(Node node, Flow oldFlow, Flow newFlow) {
+        Status stat = new Status(StatusCode.NOSERVICE);
+        if (flowProgrammerService != null) {
+            stat = flowProgrammerService.modifyFlow(node, oldFlow, newFlow);
+        }
+        return stat;
+    }
+
+    // Remove a flow
+    public Status removeFlow(Node node, Flow flow) {
+        Status stat = new Status(StatusCode.NOSERVICE);
+        if (flowProgrammerService != null) {
+            stat = flowProgrammerService.removeFlow(node, flow);
+        }
+        return stat;
     }
 
 }
