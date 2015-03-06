@@ -8,8 +8,6 @@
 
 package net.es.netshell.odl;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 
 import org.opendaylight.controller.sal.core.Node;
@@ -26,35 +24,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class is derived from numerous OpenDaylight examples.  It doesn't
- * do much, but it was useful in getting the ODL "plumbing" to work
- * correctly.  While we will need to have a class that implements IListenDataPacket
- * in netshell, its receiveDataPacket function might not look a whole lot like this one.
+ * This class is an interface to the OpenFlow controller functionality in
+ * OpenDaylight.
  */
-public class PacketHandler implements IListenDataPacket {
-
+public class Controller {
     // This is a quasi-singleton.  In theory there can be multiple of these objects
     // in a system, but in practice it seems that each one of these is associated
     // with a single instance of the OSGi bundle, which basically just means just
     // one per system.  So we can somewhat safely say there should be at most one
     // instance, and keep a class member variable pointing to that one instance.
-    static private volatile PacketHandler instance = null;
+    static private volatile Controller instance = null;
 
     // The constructor needs to save a pointer to this object as "the" instance.
     // If there is more than one object construction attempted, that's bad.
-    public PacketHandler() {
+    public Controller() {
         if (instance == null) {
             instance = this;
         }
         else {
-            throw new RuntimeException("Attempt to create multiple " + PacketHandler.class.getName());
+            throw new RuntimeException("Attempt to create multiple " + Controller.class.getName());
         }
     }
 
-    public static PacketHandler getInstance() { return instance; }
+    public static Controller getInstance() { return instance; }
 
     // Logging
-    static final private Logger logger = LoggerFactory.getLogger(PacketHandler.class);
+    static final private Logger logger = LoggerFactory.getLogger(Controller.class);
 
     // Methods and callbacks for other ODL services to tell us that they exist and how to call them.
     // These were registered by Activator::configureInstance().
@@ -98,18 +93,41 @@ public class PacketHandler implements IListenDataPacket {
         }
     }
 
+    // Methods to be invoked from Python or other parts of netshell/ENOS.
+    // Get all switches
+    public List<Switch> getNetworkDevices() {
+        List<Switch> switches = null;
+        if (switchManager != null) {
+            switches = switchManager.getNetworkDevices();
+        }
+        return switches;
+    }
 
-    // Callback to us on PACKET_IN.
-    @Override
-    public PacketResult receiveDataPacket(RawPacket inPkt) {
-        logger.info("Received data packet");
+    // Push a flow
+    public Status addFlow(Node node, Flow flow) {
+        Status stat = new Status(StatusCode.NOSERVICE);
+        if (flowProgrammerService != null) {
+            stat = flowProgrammerService.addFlow(node, flow);
+        }
+        return stat;
+    }
 
-        NodeConnector ingressConnector = inPkt.getIncomingNodeConnector();
-        Node node = ingressConnector.getNode();
+    // Modify a flow
+    public Status modifyFlow(Node node, Flow oldFlow, Flow newFlow) {
+        Status stat = new Status(StatusCode.NOSERVICE);
+        if (flowProgrammerService != null) {
+            stat = flowProgrammerService.modifyFlow(node, oldFlow, newFlow);
+        }
+        return stat;
+    }
 
-        // Decode the packet
-        Packet l2pkt = dataPacketService.decodeDataPacket(inPkt);
-        return PacketResult.IGNORED;
+    // Remove a flow
+    public Status removeFlow(Node node, Flow flow) {
+        Status stat = new Status(StatusCode.NOSERVICE);
+        if (flowProgrammerService != null) {
+            stat = flowProgrammerService.removeFlow(node, flow);
+        }
+        return stat;
     }
 
 }

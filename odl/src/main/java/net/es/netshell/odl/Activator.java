@@ -50,7 +50,10 @@ public class Activator extends ComponentActivatorAbstractBase {
     public Object[] getImplementations() {
         logger.info("Getting implementations");
 
-        Object[] result = {PacketHandler.class};
+        Object[] result = {
+                Controller.class,
+                PacketHandler.class
+        };
         return result;
     }
 
@@ -66,6 +69,28 @@ public class Activator extends ComponentActivatorAbstractBase {
 
             // Export interfaces
             c.setInterface(new String[]{IListenDataPacket.class.getName()}, props);
+
+            // Register services that we depend on
+            // DataPacketService is needed for encoding / decoding and sending data packets
+            c.add(createContainerServiceDependency(containerName).
+                    setService(IDataPacketService.class).
+                    setCallbacks("setDataPacketService", "unsetDataPacketService").
+                    setRequired(true));
+
+            // FlowProgrammerService is needed for inserting flows
+            c.add(createContainerServiceDependency(containerName).
+                    setService(IFlowProgrammerService.class).
+                    setCallbacks("setFlowProgrammerService", "unsetFlowProgrammerService").
+                    setRequired(true));
+
+            // SwitchManager service is used for enumerating switches and ports
+            c.add(createContainerServiceDependency(containerName).
+                    setService(ISwitchManager.class).
+                    setCallbacks("setSwitchManager", "unsetSwitchManager").
+                    setRequired(true));
+
+        }
+        else if (imp.equals(Controller.class)) {
 
             // Register services that we depend on
             // DataPacketService is needed for encoding / decoding and sending data packets
