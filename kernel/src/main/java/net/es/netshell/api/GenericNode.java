@@ -6,7 +6,7 @@ import java.util.List;
  * Created by lomax on 3/6/15.
  */
 public class GenericNode extends Node {
-    List<GenericPort> ports;
+    private List<GenericPort> ports;
 
     public List<GenericPort> getPorts() {
         return ports;
@@ -15,4 +15,5 @@ public class GenericNode extends Node {
     public void setPorts(List<GenericPort> ports) {
         this.ports = ports;
     }
+
 }
