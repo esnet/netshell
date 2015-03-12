@@ -61,7 +61,6 @@ public class PythonShell {
     )
     public static void startPython (String[] args, InputStream in, OutputStream out, OutputStream err) {
 
-        final Logger logger = LoggerFactory.getLogger(PythonShell.class);
         if (in instanceof ShellInputStream) {
             if (((ShellInputStream) in).getSourceInputStream() instanceof TabFilteringInputStream) {
                 ((TabFilteringInputStream) ((ShellInputStream) in).getSourceInputStream()).setFilters(true);
@@ -81,6 +80,9 @@ public class PythonShell {
                 PythonShell.locals.put(in,sessionLocals);
                 // Sets the default search path
                 PythonInterpreter python = new PythonInterpreter(sessionLocals);
+
+                logger.debug("Created new PythonInterpreter for setting up locals and search path");
+
                 python.setIn(in);
                 python.setOut(out);
                 python.setErr(err);
