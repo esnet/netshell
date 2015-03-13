@@ -111,19 +111,6 @@ public class GenericTopologyProvider extends TopologyProvider {
         return this.nodes.get(urn);
     }
 
-    public static String idToName (String id) {
-        return id.split(":")[4];
-    }
-
-    public static String idToDomain (String id) {
-        return id.split(":")[3];
-    }
-    public static String idToDescription (String id) {
-        return id.split(":")[5];
-    }
-    public static String idToLinkId (String id) {
-        return id.split(":")[6];
-    }
 
     @Override
     public HashMap<String, Node> getNodes() {
