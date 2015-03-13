@@ -78,6 +78,9 @@ public class PythonShell {
                 // First python for this session. Create locals
                 sessionLocals = new PyDictionary();
                 PythonShell.locals.put(in,sessionLocals);
+                // Don't try to import site.py.  The move from Jython 2.5.2 to 2.7beta4 seems to
+                // require this, because it appears that we can't find site.py and blow up.
+                org.python.core.Options.importSite = false;
                 // Sets the default search path
                 PythonInterpreter python = new PythonInterpreter(sessionLocals);
 
