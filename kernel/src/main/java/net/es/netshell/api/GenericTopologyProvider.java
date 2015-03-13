@@ -128,4 +128,9 @@ public class GenericTopologyProvider extends TopologyProvider {
     public HashMap<String, Node> getNodeByPort() {
         return nodeByPort;
     }
+
+    public GenericGraphViewer getGraphViewer(WeightType weightType) throws IOException {
+        GenericGraphViewer viewer = new GenericGraphViewer(this.getGraph(weightType));
+        return viewer;
+    }
 }

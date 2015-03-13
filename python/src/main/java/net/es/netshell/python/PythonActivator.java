@@ -41,7 +41,7 @@ public class PythonActivator implements BundleActivator{
         // command or script. This can be done only by a privileged thread.
         // Therefore, the following line forces the python shell execution at initialization time which is
         // performed by a privileged thread.
-        PythonShell.startPython(new String[]{"python", "print 'initialize python environment'"}, System.in, System.out, System.err);
+        // lomax@es.net TODO
     }
     public void stop(BundleContext b) {
         ShellCommandsFactory.unregisterShellModule(PythonShell.class);
