@@ -9,6 +9,10 @@ import java.util.List;
 public class GenericPort extends Port {
     List<GenericLink> links;
 
+    public GenericPort(String name) {
+        super(name);
+    }
+
     public List<GenericLink> getLinks() {
         return links;
     }

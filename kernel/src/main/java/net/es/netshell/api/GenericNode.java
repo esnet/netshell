@@ -8,6 +8,9 @@ import java.util.List;
 public class GenericNode extends Node {
     private List<GenericPort> ports;
 
+    public GenericNode(String name) {
+        super(name);
+    }
     public List<GenericPort> getPorts() {
         return ports;
     }

@@ -23,6 +23,10 @@ public class Port extends Resource {
     @JsonIgnore
     private Node node;
 
+    public Port(String name) {
+        super(name);
+    }
+
     /**
      * Returns the Node from where the port belongs to
      * @return
