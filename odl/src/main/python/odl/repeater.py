@@ -12,11 +12,11 @@ from java.util import LinkedList
 
 from net.es.netshell.odl import Controller
 
-from org.opendaylight.controller.sal.core import Node;
-from org.opendaylight.controller.sal.core import NodeConnector;
+from org.opendaylight.controller.sal.core import Node
+from org.opendaylight.controller.sal.core import NodeConnector
 
-from org.opendaylight.controller.sal.match import Match;
-from org.opendaylight.controller.sal.match import MatchType;
+from org.opendaylight.controller.sal.match import Match
+from org.opendaylight.controller.sal.match import MatchType
 
 from org.opendaylight.controller.sal.action import Action
 from org.opendaylight.controller.sal.action import Output
