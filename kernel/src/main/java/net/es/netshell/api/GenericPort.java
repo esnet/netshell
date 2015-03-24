@@ -1,5 +1,6 @@
 package net.es.netshell.api;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,6 +12,7 @@ public class GenericPort extends Port {
 
     public GenericPort(String name) {
         super(name);
+        this.links = new ArrayList<GenericLink>();
     }
 
     public List<GenericLink> getLinks() {

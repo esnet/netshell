@@ -1,5 +1,6 @@
 package net.es.netshell.api;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,6 +11,7 @@ public class GenericNode extends Node {
 
     public GenericNode(String name) {
         super(name);
+        this.ports = new ArrayList<GenericPort>();
     }
     public List<GenericPort> getPorts() {
         return ports;

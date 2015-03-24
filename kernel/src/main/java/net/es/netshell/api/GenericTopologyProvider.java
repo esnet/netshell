@@ -78,7 +78,6 @@ public class GenericTopologyProvider extends TopologyProvider {
                                                         DateTime end,
                                                         WeightType weightType) throws IOException {
 
-
         GenericGraph graph = new GenericGraph();
 
         // Add vertices

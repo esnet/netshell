@@ -39,5 +39,16 @@ public class GenericGraph extends DefaultListenableGraph<Node, Link> implements 
     public void setEdgeWeight(Link link, double weight) {
         link.setWeight(weight);
     }
+
+    @JsonIgnore
+    public GenericNode getGenericNode(String name) {
+        for (Object obj : this.vertexSet().toArray()) {
+            GenericNode node = (GenericNode) obj;
+            if (node.getResourceName().equals(name)) {
+                return (GenericNode) node;
+            }
+        }
+        return null;
+    }
 }
 
