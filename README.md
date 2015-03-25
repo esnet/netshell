@@ -75,7 +75,7 @@ The following steps are required regardless of the version of ODL used as a star
 4.  Within the Karaf instance, load the ODL features of interest.  A typical set of features that provides a
     layer-2 learning bridge plus the DLUX GUI is:
 
-        feature:install odl-dlux-core odl-openflowplugin-all odl-l2switch-all
+        feature:install odl-dlux-core odl-openflowplugin-all 
 
 5.  Features necessary for NetShell integration can be loaded as follows:
 
