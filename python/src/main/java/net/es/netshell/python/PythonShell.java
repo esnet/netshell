@@ -42,6 +42,8 @@ import org.slf4j.LoggerFactory;
 public class PythonShell {
     private static final Logger logger = LoggerFactory.getLogger(PythonShell.class);
     private static HashMap<InputStream,PyDictionary> locals = new HashMap<InputStream, PyDictionary>();
+    public static String INIT_SCRIPT = "/etc/init.py";
+    public static String PROFILE_SCRIPT = "/etc/profile.py";
 
     /**
      * Modified ClassLoader used to give Jython access to classes made available via OSGi.
@@ -50,6 +52,13 @@ public class PythonShell {
         public JythonClassLoader(ClassLoader parent) {
             super(parent);
         }
+    }
+
+    public static void runInit() {
+        String args[] = new String[2];
+        args[1] = PythonShell.INIT_SCRIPT;
+
+        PythonShell.startPython(args, System.in, System.out, System.err);
     }
 
     @ShellCommand(
@@ -101,6 +110,18 @@ public class PythonShell {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                // Execute the global profile.py
+                String filePath = BootStrap.rootPath.toString() + PythonShell.PROFILE_SCRIPT;
+                if (! new File(filePath).exists()) {
+                    try {
+                        err.write((PythonShell.PROFILE_SCRIPT + " not found.\n").getBytes());
+                        err.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    python.execfile(filePath);
+                }
             }
         }
         logger.debug("Starting Python");
@@ -131,7 +152,11 @@ public class PythonShell {
                     // Need to prefix the file path with NetShell Root.
                     filePath = BootStrap.rootPath.toString() + args[1];
                 }
-                python.execfile(filePath);
+                if (! new File(filePath).exists()) {
+                    err.write((args[1] + " not found.\n").getBytes());
+                } else {
+                    python.execfile(filePath);
+                }
 
             } else {
                 // This is an interactive session

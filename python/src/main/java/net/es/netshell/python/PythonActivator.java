@@ -42,6 +42,7 @@ public class PythonActivator implements BundleActivator{
         // Therefore, the following line forces the python shell execution at initialization time which is
         // performed by a privileged thread.
         // lomax@es.net TODO
+        PythonShell.runInit();
     }
     public void stop(BundleContext b) {
         ShellCommandsFactory.unregisterShellModule(PythonShell.class);
