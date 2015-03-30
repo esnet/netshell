@@ -18,6 +18,8 @@ public class GenericLink extends Link {
         String name = srcNode.getResourceName() + ":" + srcPort.getResourceName() + ":" +
                       dstNode.getResourceName() + ":" + dstPort.getResourceName();
         this.setResourceName(name);
+        this.srcPort.addLink(this);
+        this.dstPort.addLink(this);
     }
 
     public GenericNode getSrcNode() {

@@ -8,7 +8,7 @@ import java.util.List;
 
  */
 public class GenericPort extends Port {
-    List<GenericLink> links;
+    ArrayList<GenericLink> links;
 
     public GenericPort(String name) {
         super(name);
@@ -20,6 +20,14 @@ public class GenericPort extends Port {
     }
 
     public void setLinks(List<GenericLink> links) {
-        this.links = links;
+        this.links = (ArrayList) links;
+    }
+
+    public void addLink(GenericLink link) {
+        this.links.add(link);
+    }
+
+    public void removeLink(GenericLink link) {
+        this.links.remove(link);
     }
 }
