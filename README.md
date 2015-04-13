@@ -65,9 +65,9 @@ The following steps are required regardless of the version of ODL used as a star
 
 2.  In some circumstances, ODL does not play well with the NetShell security manager (the exact conditions
     are not completely known).  If this is
-    believed to be a problem, the security manager can be disabled by copying the ```netshell.json```
-    file from the NetShell
-    source tree to the top level of the ODL Karaf installation and setting the value of the
+    believed to be a problem, the security manager can be disabled by creating a ```netshell.json```
+    file 
+    in the top level of the ODL Karaf installation and setting the value of the
     ```securityManagerDisabled``` parameter to 1.
 
 3.  Start up the ODL Karaf container from the top-level directory of the ODL Karaf installation with ```bin/karaf```.
@@ -94,7 +94,7 @@ The following steps are required regardless of the version of ODL used as a star
 
 8.  To load the NetShell OpenDaylight bundle (at least until a feature is created for it):
 
-        bundle:load mvn:mvn:net.es/netshell-odl/1.0-SNAPSHOT
+        bundle:install mvn:mvn:net.es/netshell-odl/1.0-SNAPSHOT
 
 
 
