@@ -33,6 +33,26 @@ import org.slf4j.LoggerFactory;
  */
 public class PacketHandler implements IListenDataPacket {
 
+    /**
+     * Callback function to pass a RawPacket to some of our code.  It's designed
+     * to get a thread of control back into Python...the idea is to define and
+     * instantiate an instance of a Python class that implements this interface.
+     *
+     * There needs to be some authorization around the getter and setter here.
+     */
+    public interface Callback {
+        public PacketResult callback(RawPacket rawPacket);
+    }
+    private Callback packetInCallback;
+
+    public Callback getPacketInCallback() {
+        return packetInCallback;
+    }
+
+    public void setPacketInCallback(Callback packetInCallback) {
+        this.packetInCallback = packetInCallback;
+    }
+
     // This is a quasi-singleton.  In theory there can be multiple of these objects
     // in a system, but in practice it seems that each one of these is associated
     // with a single instance of the OSGi bundle, which basically just means just
@@ -109,6 +129,14 @@ public class PacketHandler implements IListenDataPacket {
 
         // Decode the packet
         Packet l2pkt = dataPacketService.decodeDataPacket(inPkt);
+
+        // Invoke the callback if it exists.  Otherwise just let OpenFlow
+        // continue processing.
+        if (packetInCallback != null) {
+            PacketResult rc;
+            rc = packetInCallback.callback(inPkt);
+            return rc;
+        }
         return PacketResult.IGNORED;
     }
 
