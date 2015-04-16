@@ -140,4 +140,9 @@ public class PacketHandler implements IListenDataPacket {
         return PacketResult.IGNORED;
     }
 
+    // Decode a packet
+    public Packet decodeDataPacket(RawPacket rp) {
+        return dataPacketService.decodeDataPacket(rp);
+    }
+
 }
