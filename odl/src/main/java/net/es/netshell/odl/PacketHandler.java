@@ -140,9 +140,26 @@ public class PacketHandler implements IListenDataPacket {
         return PacketResult.IGNORED;
     }
 
-    // Decode a packet
+    // Decode a raw packet
     public Packet decodeDataPacket(RawPacket rp) {
-        return dataPacketService.decodeDataPacket(rp);
+        if (dataPacketService != null) {
+            return dataPacketService.decodeDataPacket(rp);
+        }
+        return null;
     }
 
+    // Encode a packet to raw format
+    public RawPacket encodeDataPacket(Packet p) {
+        if (dataPacketService != null) {
+            return dataPacketService.encodeDataPacket(p);
+        }
+        return null;
+    }
+
+    // Transmit raw packet
+    public void transmitDataPacket(RawPacket rp) {
+        if (dataPacketService != null) {
+            dataPacketService.transmitDataPacket(rp);
+        }
+    }
 }
