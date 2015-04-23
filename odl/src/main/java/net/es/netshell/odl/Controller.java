@@ -152,4 +152,13 @@ public class Controller {
         return stat;
     }
 
+    // Remove all flows on one node
+    public Status removeAllFlows(Node node) {
+        Status stat = new Status(StatusCode.NOSERVICE);
+        if (flowProgrammerService != null) {
+            stat = flowProgrammerService.removeAllFlows(node);
+        }
+        return stat;
+    }
+
 }
