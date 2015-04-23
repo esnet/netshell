@@ -96,5 +96,9 @@ The following steps are required regardless of the version of ODL used as a star
 
         bundle:install mvn:mvn:net.es/netshell-odl/1.0-SNAPSHOT
 
-
+    There is a lightly-tested feature for this bundle (if we want to express dependencies,
+    it would install those as well, but there aren't any listed yet):
+    
+        feature:install netshell-odl
+        
 
