@@ -9,6 +9,7 @@
 package net.es.netshell.odl;
 
 import java.util.List;
+import java.util.Set;
 
 import org.opendaylight.controller.sal.core.Node;
 import org.opendaylight.controller.sal.core.NodeConnector;
@@ -103,6 +104,27 @@ public class Controller {
         return switches;
     }
 
+    // Get all ports (a.k.a. NodeConnectors) on a switch
+    public Set<NodeConnector> getNodeConnectors(Node node) {
+        Set<NodeConnector> ports = null;
+        if (switchManager != null) {
+            ports = switchManager.getNodeConnectors(node);
+        }
+        return ports;
+    }
+
+    // Get a specific port (a.k.a. NodeConnector) on a switch given its name
+    // The node name is, at least in mininet-land, of the form "s1-eth1".
+    // There does not appear to be a way to get this information from the
+    // NodeConnector.
+    public NodeConnector getNodeConnector(Node node, String nodeConnectorName) {
+        NodeConnector nc = null;
+        if (switchManager != null) {
+            nc = switchManager.getNodeConnector(node, nodeConnectorName);
+        }
+        return nc;
+    }
+
     // Push a flow
     public Status addFlow(Node node, Flow flow) {
         Status stat = new Status(StatusCode.NOSERVICE);
@@ -126,6 +148,15 @@ public class Controller {
         Status stat = new Status(StatusCode.NOSERVICE);
         if (flowProgrammerService != null) {
             stat = flowProgrammerService.removeFlow(node, flow);
+        }
+        return stat;
+    }
+
+    // Remove all flows on one node
+    public Status removeAllFlows(Node node) {
+        Status stat = new Status(StatusCode.NOSERVICE);
+        if (flowProgrammerService != null) {
+            stat = flowProgrammerService.removeAllFlows(node);
         }
         return stat;
     }

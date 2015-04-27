@@ -44,7 +44,7 @@ If using a stock ODL distribution:
     As of this writing the current version is Helium-SR2.  Unpack it.
 
 2.  Also download and unpack a stock version of Karaf corresponding to the ODL distribution.  As of this
-    writing, Helium-SR2 was packaged in a Karaf 3.0.1 container.
+    writing, Helium-SR3 was packaged in a Karaf 3.0.1 container.
 
 3.  Copy the file ```etc/org.ops4j.pax.url.mvn.cfg``` from the stock Karaf distribution into the ODL
     distribution.  This change restores the default search behavior for finding bundles in Maven
@@ -55,7 +55,7 @@ If using a custom-build ODL integration build:
 
 1.  Download the custom ODL build.  This build will have the stock ```etc/ops4j.pax.url.mvn.cfg``` file
     mentioned above.  It may also have a newer Karaf and / or newer ODL components.  As of this writing,
-    bmah@es.net has a build that is a snapshot of what will become Helium-SR3, using Karaf 3.0.2.
+    bmah@es.net has a pre-release build of Helium-SR3, using Karaf 3.0.2.
 
 The following steps are required regardless of the version of ODL used as a starting point:
 
@@ -65,15 +65,15 @@ The following steps are required regardless of the version of ODL used as a star
 
 2.  In some circumstances, ODL does not play well with the NetShell security manager (the exact conditions
     are not completely known).  If this is
-    believed to be a problem, the security manager can be disabled by copying the ```netshell.json```
-    file from the NetShell
-    source tree to the top level of the ODL Karaf installation and setting the value of the
+    believed to be a problem, the security manager can be disabled by creating a ```netshell.json```
+    file 
+    in the top level of the ODL Karaf installation and setting the value of the
     ```securityManagerDisabled``` parameter to 1.
 
 3.  Start up the ODL Karaf container from the top-level directory of the ODL Karaf installation with ```bin/karaf```.
 
-4.  Within the Karaf instance, load the ODL features of interest.  A typical set of features that provides a
-    layer-2 learning bridge plus the DLUX GUI is:
+4.  Within the Karaf instance, load the ODL features of interest.  A use set of features that provides
+    OpenFlow support plus the DLUX GUI is:
 
         feature:install odl-dlux-core odl-openflowplugin-all 
 
@@ -94,7 +94,11 @@ The following steps are required regardless of the version of ODL used as a star
 
 8.  To load the NetShell OpenDaylight bundle (at least until a feature is created for it):
 
-        bundle:load mvn:mvn:net.es/netshell-odl/1.0-SNAPSHOT
+        bundle:install mvn:mvn:net.es/netshell-odl/1.0-SNAPSHOT
 
-
+    There is a lightly-tested feature for this bundle (if we want to express dependencies,
+    it would install those as well, but there aren't any listed yet):
+    
+        feature:install netshell-odl
+        
 
