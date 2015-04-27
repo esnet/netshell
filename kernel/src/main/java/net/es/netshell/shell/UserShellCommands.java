@@ -12,6 +12,7 @@ package net.es.netshell.shell;
 import jline.console.ConsoleReader;
 import net.es.netshell.api.FileUtils;
 import net.es.netshell.kernel.exec.KernelThread;
+import net.es.netshell.kernel.networking.NetworkInterfaces;
 import net.es.netshell.kernel.security.FileACL;
 import net.es.netshell.kernel.users.UserProfile;
 import net.es.netshell.kernel.users.Users;
@@ -20,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -33,7 +36,7 @@ public class UserShellCommands {
         Logger logger = LoggerFactory.getLogger(UserShellCommands.class);
         logger.info("adduser with {} arguments", args.length);
 
-        boolean newUser = false;
+        CommandResponse cmd;
         PrintStream o = new PrintStream(out);
 
         // Argument checking
@@ -44,13 +47,15 @@ public class UserShellCommands {
 
         UserProfile newProfile = new UserProfile(args[1], args[2], args[3], args[4], args[5], args[6]);
 
-        newUser = Users.getUsers().createUser(newProfile);
+        cmd = Users.getUsers().createUser(newProfile);
 
-        if (newUser) {
-            o.print("New User created!");
-        } else {
-            o.print("Unable to create new user");
-        }
+        //if (cmd.isSuccess()) {
+        //    o.print("New User created!");
+        //} else {
+        //    o.print("Unable to create new user");
+        //}
+
+        o.print(cmd.getMessage());
 
     }
 
@@ -413,4 +418,39 @@ public class UserShellCommands {
         PrintStream o = new PrintStream(out);
         o.println("Not implemented yet");
     }
+
+    @ShellCommand(name = "ipconfig",
+            shortHelp = "Configure interface",
+            longHelp = "Configure interface address \n" +
+                    "ipconfig interface-name address\n",
+            privNeeded = true)
+
+    static public void ipconfig(String[] args, InputStream in, OutputStream out, OutputStream err) {
+
+
+        PrintStream o = new PrintStream(out);
+        o.println("Invoked ipconfig");
+
+        if(args.length < 3){
+            o.println("Please specify interface name and ip address");
+            return;
+        }
+        String interface_name = args[1];
+        String ipAddress = args[2];
+        try {
+            o.println("About to execute ipconfig method");
+            InetAddress address = InetAddress.getByName(ipAddress);
+            NetworkInterfaces interfaces = NetworkInterfaces.getInstance();
+
+
+            interfaces.ipconfig(interface_name,address);
+        } catch (UnknownHostException e) {
+            o.println("Please check the ip address");
+            o.println(e);
+        }
+
+        o.println("Executed ipconfig");
+    }
+
+
 }

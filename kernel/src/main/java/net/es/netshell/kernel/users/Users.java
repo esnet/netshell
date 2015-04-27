@@ -9,10 +9,7 @@
 
 package net.es.netshell.kernel.users;
 
-import net.es.netshell.api.FileUtils;
-import net.es.netshell.api.NonExistentUserException;
-import net.es.netshell.api.UserAlreadyExistException;
-import net.es.netshell.api.UserException;
+import net.es.netshell.api.*;
 import net.es.netshell.configuration.NetShellConfiguration;
 import net.es.netshell.kernel.container.Container;
 import net.es.netshell.kernel.container.ContainerACL;
@@ -20,6 +17,7 @@ import net.es.netshell.kernel.container.Containers;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.security.FileACL;
+import net.es.netshell.shell.CommandResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,7 +112,7 @@ public final class Users {
     @SysCall(
             name="do_authUser"
     )
-    public void  do_authUser (String user, String password) throws NonExistentUserException, UserException {
+    public void  do_authUser (String user, String password) throws NonExistentUserException, UserException,UserClassException {
         logger.info("do_authUser entry");
 
         // Read file.
@@ -221,7 +219,11 @@ public final class Users {
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
             return false;
-        } catch (Exception e) {
+        }catch (UserClassException e){
+            e.printStackTrace();
+            return false;
+        }
+        catch (Exception e) {
             e.printStackTrace();
             return false;
         }
@@ -254,8 +256,11 @@ public final class Users {
     }
 
 
-    public boolean createUser (UserProfile newUser) {
+    public CommandResponse createUser(UserProfile newUser) {
         Method method = null;
+        CommandResponse commandResponse;
+        String resMessage = null;
+        boolean resCode = false;
         try {
             method = KernelThread.getSysCallMethod(this.getClass(), "do_createUser");
 
@@ -265,27 +270,38 @@ public final class Users {
                         method,
                         newUser,
                         true);
+                resCode = true;
+                resMessage = "User added";
             } else {
-                return false;
+
+                resCode = false;
+                resMessage = "Operation Not Permitted";
             }
 
         } catch (UserAlreadyExistException e) {
-            return false;
+            resCode = false;
+            resMessage = "User already exists";
         } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-            return false;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            //e.printStackTrace();
+            resCode = false;
+            resMessage = "Method not implemented";
+        }catch(UserClassException e){
+            resCode = false;
+            resMessage = "User class must be root or user";
+        }catch (Exception e) {
+            resCode = false;
+            resMessage = "Error in operation";
         }
-        return true;
+
+        commandResponse = new CommandResponse(resMessage,resCode);
+        return commandResponse;
     }
 
 
     @SysCall(
             name="do_createUser"
     )
-    public void do_createUser (UserProfile newUser, boolean createContainer) throws UserAlreadyExistException, UserException, IOException {
+    public void do_createUser (UserProfile newUser, boolean createContainer) throws UserAlreadyExistException, UserException, UserClassException, IOException {
         logger.info("do_createUser entry");
 
         String username = newUser.getName();
@@ -311,7 +327,7 @@ public final class Users {
 
         // Make sure privilege value entered is valid
         if (!privArray.contains(privilege)) {
-            throw new UserException(username);
+            throw new UserClassException(privilege);
         }
 
         // Checks if the user already exists
@@ -489,19 +505,18 @@ public final class Users {
 	}
 
 
-    public boolean isPrivileged (String username) {
+    public static boolean isPrivileged (String username) {
 
-        if (this.passwords.isEmpty()  && Users.ADMIN_USERNAME.equals(username)) {
+        if (Users.getUsers().passwords.isEmpty()  && Users.ADMIN_USERNAME.equals(username)) {
             // Initial configuration. Add admin user and create configuration file.
             return true;
         }
-        UserProfile userProfile = this.passwords.get(username);
+        UserProfile userProfile = Users.getUsers().passwords.get(username);
 
         if (userProfile == null) {
             // Not a user
             return false;
         }
-        logger.debug(userProfile.getPrivilege());
 
         return Users.ROOT.equals(userProfile.getPrivilege());
 

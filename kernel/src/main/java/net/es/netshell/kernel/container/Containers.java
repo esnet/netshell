@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -140,7 +141,9 @@ public class Containers {
                                                                   "user",
                                                                   containerPath.toString(),
                                                                   "Container",
-                                                                  "none");
+
+                                                                 "none");
+
         if (createUser) {
             Users users = new Users();
             users.createUser(profile);
