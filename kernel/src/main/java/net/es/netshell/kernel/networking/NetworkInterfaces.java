@@ -28,6 +28,7 @@ public class NetworkInterfaces {
     private static NetworkInterfaces instance;
 
     private NetworkInterfaces(){
+        availableInterfaces = new HashMap<String,Boolean>();
         availableInterfaces.put("eth1.10",false);
         availableInterfaces.put("eth2.10", false);
     }

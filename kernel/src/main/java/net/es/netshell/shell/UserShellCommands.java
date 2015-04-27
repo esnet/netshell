@@ -440,9 +440,10 @@ public class UserShellCommands {
         try {
             o.println("About to execute ipconfig method");
             InetAddress address = InetAddress.getByName(ipAddress);
+            o.println("Converted ip address to InetAddress");
             NetworkInterfaces interfaces = NetworkInterfaces.getInstance();
 
-
+            o.println("Got instance of Network Interface");
             interfaces.ipconfig(interface_name,address);
         } catch (UnknownHostException e) {
             o.println("Please check the ip address");
