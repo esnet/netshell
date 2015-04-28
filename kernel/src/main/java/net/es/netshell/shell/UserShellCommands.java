@@ -419,39 +419,4 @@ public class UserShellCommands {
         o.println("Not implemented yet");
     }
 
-    @ShellCommand(name = "ipconfig",
-            shortHelp = "Configure interface",
-            longHelp = "Configure interface address \n" +
-                    "ipconfig interface-name address\n",
-            privNeeded = true)
-
-    static public void ipconfig(String[] args, InputStream in, OutputStream out, OutputStream err) {
-
-
-        PrintStream o = new PrintStream(out);
-        o.println("Invoked ipconfig");
-
-        if(args.length < 3){
-            o.println("Please specify interface name and ip address");
-            return;
-        }
-        String interface_name = args[1];
-        String ipAddress = args[2];
-        try {
-            o.println("About to execute ipconfig method");
-            InetAddress address = InetAddress.getByName(ipAddress);
-            o.println("Converted ip address to InetAddress");
-            NetworkInterfaces interfaces = NetworkInterfaces.getInstance();
-
-            o.println("Got instance of Network Interface");
-            interfaces.ipconfig(interface_name,address);
-        } catch (UnknownHostException e) {
-            o.println("Please check the ip address");
-            o.println(e);
-        }
-
-        o.println("Executed ipconfig");
-    }
-
-
 }

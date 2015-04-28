@@ -86,7 +86,6 @@ public class NetworkInterfaces {
     )
     public void do_ipconfig(String interfaceName, InetAddress address)throws IOException {
         logger.info("do_ipconfig entry");
-        System.out.println("executing do_ipconfig");
         String ipAddr = address.getHostAddress();
 
         String cmd = "/sbin/ip addr add "+ipAddr+" dev "+interfaceName;
@@ -95,7 +94,6 @@ public class NetworkInterfaces {
         System.out.println(cmd);
         Process p = null;
         try {
-            System.out.println("about to execute command");
             p = Runtime.getRuntime().exec(cmd);
         } catch (IOException e) {
             e.printStackTrace();
