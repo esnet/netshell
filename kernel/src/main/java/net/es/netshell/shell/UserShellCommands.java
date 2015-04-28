@@ -12,7 +12,6 @@ package net.es.netshell.shell;
 import jline.console.ConsoleReader;
 import net.es.netshell.api.FileUtils;
 import net.es.netshell.kernel.exec.KernelThread;
-import net.es.netshell.kernel.networking.NetworkInterfaces;
 import net.es.netshell.kernel.security.FileACL;
 import net.es.netshell.kernel.users.UserProfile;
 import net.es.netshell.kernel.users.Users;
