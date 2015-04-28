@@ -91,7 +91,6 @@ public class NetworkInterfaces {
         String cmd = "/sbin/ip addr add "+ipAddr+" dev "+interfaceName;
         logger.info(cmd);
 
-        System.out.println(cmd);
         Process p = null;
         try {
             p = Runtime.getRuntime().exec(cmd);

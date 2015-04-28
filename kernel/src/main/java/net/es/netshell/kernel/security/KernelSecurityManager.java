@@ -298,6 +298,7 @@ public class KernelSecurityManager extends SecurityManager {
     @Override
     public void checkExec(String cmd) {
         logger.debug("checkExec (String " + cmd + ") cannot execute host processes");
+        throw new ExitSecurityException("Cannot execute host processes");
 	}
 
     /**
