@@ -297,6 +297,11 @@ public class KernelSecurityManager extends SecurityManager {
 
     @Override
     public void checkExec(String cmd) {
+
+        if (this.isPrivileged()) {
+            logger.debug("checkExec(String " + cmd + ") checkExec allows because thread is privileged");
+            return;
+        }
         logger.debug("checkExec (String " + cmd + ") cannot execute host processes");
         throw new ExitSecurityException("Cannot execute host processes");
 	}

@@ -80,6 +80,37 @@ public class NetworkInterfaces {
         return true;
     }
 
+    public boolean vconfig(String interfaceName, int vid) {
+        Method method = null;
+        try {
+            method = KernelThread.getSysCallMethod(this.getClass(), "do_vconfig");
+
+            KernelThread kt = KernelThread.currentKernelThread();
+            String currentUserName = kt.getUser().getName();
+
+            String vlanInterfaceName = interfaceName+"."+vid;
+
+            logger.info("current user {}", currentUserName);
+            Users currentUsers = Users.getUsers();
+            if (currentUsers.isPrivileged(currentUserName)) {
+                logger.info("OK to change");
+
+                KernelThread.doSysCall(this,
+                        method,
+                        interfaceName, vlanInterfaceName,
+                        vid);
+            }
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+            return false;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
 
     @SysCall(
             name="do_ipconfig"
@@ -105,6 +136,32 @@ public class NetworkInterfaces {
 
 
     }
+
+
+    @SysCall(
+            name="do_vconfig"
+    )
+    public void do_vconfig(String interfaceName, String vlanInterfaceName, int vlanId)throws IOException {
+        logger.info("do_vconfig entry");
+
+        String cmd = "/sbin/ip link add link "+interfaceName+" name "+vlanInterfaceName+ " type vlan id "+vlanId;
+        logger.info(cmd);
+
+        Process p = null;
+        try {
+            p = Runtime.getRuntime().exec(cmd);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String s;
+        while ((s = br.readLine()) != null) {
+            System.out.println(s);
+        }
+
+
+    }
+
 
 
 }
