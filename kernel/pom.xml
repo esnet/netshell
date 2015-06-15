@@ -26,6 +26,10 @@
 
     <repositories>
 	<repository>
+    	    <id>Jsch</id>
+	    <url>http://jsch.sf.net/maven2/</url>
+	</repository>
+	<repository>
       	    <id>libvirt-org</id>
     	    <url>http://libvirt.org/maven2</url>
   	</repository>
@@ -63,6 +67,11 @@
 	    <version>0.5.1</version>
         </dependency>
 
+	<dependency>
+	    <groupId>com.jcraft</groupId>
+	    <artifactId>jsch</artifactId>
+	    <version>0.1.51</version>
+	</dependency>
 	<!-- Adding dependency to resolve java error  -->
 	<dependency>
 	    <groupId>net.java.dev.jna</groupId>
