@@ -66,4 +66,20 @@ public class LibvirtVirtualMachineDescriptor extends PersistentObject {
     public String getNetworkName(){
         return this.ethName;
     }
+
+    /**
+     * Function to set the IP address: useful for SSH 
+     * @param ip IP address
+     */
+    public void setIP(String ip) {
+        this.ip = ip;
+    }
+
+    /**
+     * Get the IP address
+     * @return the IP address
+     */
+    public String getIP(){
+        return this.ip;
+    }
 }
