@@ -17,7 +17,9 @@ public abstract class LibvirtManager {
   /**
    * Constructor that sets the different values from the  user input
    */
-  public void VirtualMachine(String virtualMachineFactory) {
+  public LibvirtManager() { }
+
+  public LibvirtManager(String virtualMachineFactory) {
        	this.virtualMachineFactory = virtualMachineFactory;
     }
 

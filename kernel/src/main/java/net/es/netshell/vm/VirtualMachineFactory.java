@@ -16,6 +16,8 @@ public abstract class VirtualMachineFactory extends LibvirtManager {
       */
      private static LibvirtVirtualMachine libvirtVirtualMachine;
      
+     public VirtualMachineFactory(){super();}
+
      public static LibvirtVirtualMachine getFactory(String virtualMachineFactory){
 	if (virtualMachineFactory.equals("lxc")){
 	    //return the constructor of Libvirt Virtual Machine
