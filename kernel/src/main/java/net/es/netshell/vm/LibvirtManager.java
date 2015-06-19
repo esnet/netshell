@@ -8,7 +8,8 @@ import net.es.netshell.api.PersistentObject;
 /**
  * created by amercian on 06/10/2015
  */
-public abstract class LibvirtManager { 
+//whether should be abstract
+public class LibvirtManager { 
     /**
      * Object that defines the components of Virtual Machine
      */

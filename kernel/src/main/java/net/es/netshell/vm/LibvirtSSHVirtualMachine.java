@@ -1,13 +1,16 @@
 package net.es.netshell.vm;
 
 import java.io.*;
+import java.io.File;
+import java.nio.channels.FileChannel;
+import java.lang.System;
+import java.lang.StringBuilder;
 import java.util.Properties;
 import com.jcraft.jsch.*;
-import net.es.netshell.vm.*;
-import java.lang.StringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.es.netshell.vm.*;
 import net.es.netshell.vm.LibvirtVirtualMachine;
 
 /**
@@ -109,18 +112,61 @@ public class LibvirtSSHVirtualMachine {
       * @throws FileNotFoundException
       * @throws IOException
       */
-     public Session createSessionAuth(String ip, String keyPairType, LibvirtVirtualMachine vm) throws JSchException, FileNotFoundException, IOException {
+     public void createAuth(String ip, String keyPairType, LibvirtVirtualMachine vm) throws JSchException, FileNotFoundException, IOException {
 	JSch jsch=new JSch();
 	//Need to generate this only once
-	KeyPair kpair = generateKeyPair(jsch, keyPairType, vm);
+	KeyPair kpair = generateKeyPair(jsch, keyPairType);
+	//TODO
+	//Unable to do the copying here because couldn't assume root access
+     }
+
+     /**
+      * SSH into a VM using key-gen authentication
+      * Assuming that key-gen has already been generated
+      * @param ip 
+      * @return session
+      * @throws JSchException
+      */
+     public Session createSessionAuth(String ip) throws JSchException {
+	JSch jsch = new JSch();
 	jsch.addIdentity(getPrivateKeyFileName());
-	Session session=jsch.getSession("root",ip,22);
+   	Session session=jsch.getSession("root",ip,22);
 	Properties config=new Properties();
 	config.put("StrictHostKeyChecking","no");
 	session.setConfig(config);
-	//currently disposing key pair to avoid multiple key pairs
-	kpair.dispose();
+ 	session.connect();
 	return session;
+     }
+
+     /**
+      * Function to copies files from one folder to another
+      * @param sourceFile src file
+      * @param destFile dst file
+      */
+     public static void copyFile(File sourceFile, File destFile) throws IOException {
+	if(!destFile.exists()) {
+	      destFile.createNewFile();
+	}
+
+	FileChannel source = null;
+	FileChannel destination = null;
+	try {
+	      source = new RandomAccessFile(sourceFile,"rw").getChannel();
+	      destination = new RandomAccessFile(destFile,"rw").getChannel();
+
+	      long position = 0;
+	      long count    = source.size();
+
+	      source.transferTo(position, count, destination);
+	}
+        finally {
+              if(source != null) {
+     	         source.close();
+              }
+      	      if(destination != null) {
+       	        destination.close();
+              }
+        }
      }
 
      /**
@@ -132,10 +178,10 @@ public class LibvirtSSHVirtualMachine {
       * @throws FileNotFoundException for writing key-gen file
       * @throws IOException 
       */
-     public KeyPair generateKeyPair(JSch jsch, String keyPairType, LibvirtVirtualMachine vm) throws JSchException, FileNotFoundException, IOException{
+     public KeyPair generateKeyPair(JSch jsch, String keyPairType) throws JSchException, FileNotFoundException, IOException{
 	int type = 0;
 	//Determine how to obtain these
-	String filename = generateFileName(vm.getName(), keyPairType);
+	String filename = generateFileName(keyPairType);
 	String comment = "";
 	String passphrase = "";
 	
@@ -153,9 +199,10 @@ public class LibvirtSSHVirtualMachine {
 	return kpair;
      }
 
-     private String generateFileName(String name, String keyPairType) {
+     private String generateFileName(String keyPairType) {
 	String filename;
-	filename = String.format("~/.ssh/%s/",name) + String.format("id_%s",keyPairType);
+	final String user = System.getProperty("user.home");
+	filename = String.format("%s/.ssh/",user) + String.format("id_%s",keyPairType);
 	return filename;
      }
 
