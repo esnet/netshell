@@ -36,7 +36,6 @@ public class PythonActivator implements BundleActivator{
         // props.put("foo", "bar");
         ServiceRegistration s =
                 bundleContext.registerService(PythonShellService.class.getName(), new PythonShellServiceImpl(), props);
-
         // The python shell bundle requires to load OSGi and Karaf jar files when it first execute a python
         // command or script. This can be done only by a privileged thread.
         // Therefore, the following line forces the python shell execution at initialization time which is

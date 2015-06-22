@@ -92,7 +92,6 @@ public class PythonShell {
                 org.python.core.Options.importSite = false;
                 // Sets the default search path
                 PythonInterpreter python = new PythonInterpreter(sessionLocals);
-
                 logger.debug("Created new PythonInterpreter for setting up locals and search path");
 
                 python.setIn(in);
@@ -120,7 +119,16 @@ public class PythonShell {
                         e.printStackTrace();
                     }
                 } else {
-                    python.execfile(filePath);
+                    try {
+                        python.execfile(filePath);
+                    } catch (Exception e) {
+                        try {
+                            err.write(e.getMessage().getBytes());
+                        } catch (Exception e2) {
+                            // Can't recover from it.
+                            e2.printStackTrace();
+                        }
+                    }
                 }
             }
         }
