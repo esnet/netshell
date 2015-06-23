@@ -78,6 +78,12 @@ public class PythonShell {
         PyDictionary sessionLocals;
         boolean isFirstSession = true;
         // Find or create locals
+        if (out == null) {
+            out = System.out;
+        }
+        if (err == null) {
+            err = out;
+        }
         synchronized (PythonShell.locals) {
             if (PythonShell.locals.containsKey(in)) {
                 // Already has a locals created for this session, re-use
@@ -123,7 +129,7 @@ public class PythonShell {
                         python.execfile(filePath);
                     } catch (Exception e) {
                         try {
-                            err.write(e.getMessage().getBytes());
+                            err.write(e.toString().getBytes());
                         } catch (Exception e2) {
                             // Can't recover from it.
                             e2.printStackTrace();
@@ -343,8 +349,7 @@ public class PythonShell {
      * We also have to strip out some optional OSGi attributes that are added to the name
      * of each package.
      */
-    static private void parsePackageNames(String packages, ArrayList<String> names) {
-//        System.out.println("parsePackageNames(" + packages + ")");
+    static private void parsePackageNames(String packages, ArrayList<String> names) {;
 
         // Use a couple of regex substitutions to get down to just the package names.
         // First, some of the optional attributes can be quoted, and inside the quotes
@@ -356,7 +361,6 @@ public class PythonShell {
         // Once that's done, we know that anything between a semicolon and a comma is
         // attribute and something that we can throw away.
         p = p.replaceAll(";[^,]*", "");
-//        System.out.println("p = " + p);
 
         // Now, everything that's left is really a comma-separated list of package
         // names so we can split on the commas.
