@@ -158,8 +158,8 @@ public class PythonShell {
                     logger.info("Executes file " + args[1] + " (no user defined)");
                 }
                 String filePath;
-                String argv = "import sys\nsys.argv=[";
 
+                String argv = "import sys\nsys.argv=[";
                 boolean skipFirst = true;
                 for (String a :  args) {
                     if (skipFirst) {
