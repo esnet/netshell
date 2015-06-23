@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import org.osgi.framework.Bundle;
@@ -146,7 +147,6 @@ public class PythonShell {
         try {
             if ((args != null) && (args.length > 1)) {
                 // A program is provided. Add the arguments into the python environment as command_args variable
-                sessionLocals.put("command_args", args);
                 PythonInterpreter python = new PythonInterpreter(sessionLocals);
                 python.setIn(in);
                 python.setOut(out);
@@ -154,11 +154,22 @@ public class PythonShell {
                 osgiSetup(python);
                 if (KernelThread.currentKernelThread().getUser() != null) {
                     logger.info("Executes file " + args[1] + " for user " + KernelThread.currentKernelThread().getUser().getName());
-                }
-                else {
+                } else {
                     logger.info("Executes file " + args[1] + " (no user defined)");
                 }
                 String filePath;
+                String argv = "import sys\nsys.argv=[";
+
+                boolean skipFirst = true;
+                for (String a :  args) {
+                    if (skipFirst) {
+                        skipFirst = false;
+                        continue;
+                    }
+                    argv += "'" + a + "',";
+                }
+                argv += "]";
+                python.exec(argv);
                 if (args[1].startsWith(BootStrap.rootPath.toString())) {
                     // The file path already contains the NetShell Root.
                     filePath = args[1];
