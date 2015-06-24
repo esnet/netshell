@@ -5,6 +5,7 @@ import java.util
 #
 # created by amercian on 06/15/2015
 # test Python VM SSH module
+# TODO delete this file
 
 msg = ""
 

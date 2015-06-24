@@ -1,6 +1,8 @@
 import sys, getopt
 import operator
-import subprocess
+import subprocess, shlex
+import select
+import fileinput
 from os.path import expanduser
 from net.es.netshell.vm import LibvirtVirtualMachineDescriptor
 from net.es.netshell.vm import LibvirtManager
@@ -28,15 +30,15 @@ mac = ""
 gateway = ""
 netmask = ""
 
-def lxcCreate():
-   global name
-   global os
-   subprocess.call(["sudo", "lxc-create", "-t", "{}".format(os), "-n", "{}".format(name)])
+def subprocess_cmd(command):
+    process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
+    proc_stdout = process.communicate()[0].strip()
+    print proc_stdout
 
 def main(argv):
    global name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask
    try:
-      opts, args = getopt.getopt(argv,"hn:m:c:o:s:e:i:a:g:t:",["help","name=","memory=","cpu=","container=","os=","ethName=","ip=","mac=","gateway=","netmask"])
+      #opts, args = getopt.getopt(argv,"hn:o:s:e:i:",["help","name=","container=","os=","ethName=","ip="])
    except getopt.GetoptError:
       #Not getting this error
       print 'Incorrect Input Options.'
@@ -44,14 +46,10 @@ def main(argv):
       sys.exit(2)
    for opt, arg in opts:
       if opt == '-h':
-	print 'vmManager [options]... \n options ([m] = mandatory): \n \t-h | --help \t\t\tprint this statement and exit \n \t-n | --name <VM name>\t\t[m]name of virtual machine \n \t-m | --memory <memory>\t\tassigned memory \n \t-c | --cpu <CPU nodes>\t\tnumber of cpu nodes \n \t-o | --container <container>\t[m]hypervisor type \n \t-s | --os <OS>\t\t\t[m]OS type \n \t-e | --ethName <ethernet name>\t[m]ethernet name \n \t-i | --ip <IP address>\t\tip address \n \t-a | --mac <MAC address>\tmac address \n \t-g | --gateway <Gateway>\tgateway address \n \t-t | --netmask <netmask>\tnetmask for routing '
+	print 'vmManager [options]... '
 	sys.exit()
       elif opt in ("-n", "--name"):
 	name = arg
-      elif opt in ("-m", "--memory"):
-	mem = arg
-      elif opt in ("-c", "--cpu"):
-	cpu = arg
       elif opt in ("-o", "--container"):
 	container = arg
       elif opt in ("-s", "--os"):
@@ -60,94 +58,56 @@ def main(argv):
 	ethName = arg
       elif opt in ("-i", "--ip"):
 	ip = arg
-      elif opt in ("-a", "--mac"):
-	mac = arg
-      elif opt in ("-g", "--gateway"):
-	gateway = arg
-      elif opt in ("-t", "--netmask"):
-	netmask = arg
 
-   print name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask
-
-   #Default settingss
-   if(name == "" or mem == 0 or cpu == 0 or container == "" or os == "" or ethName == "" or ip == "" or mac == "" or gateway == "" or netmask == ""):
-      defaultVM()
-
-def defaultVM():
-   global name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask
-   if(name == ""):
-      name = "vm0"
-   if(mem == 0):
-      mem = 300000
-   if(cpu == 0):
-      cpu = 1
-   if(container == ""):
-      container = "lxc"
-   if(os == ""):
-      os = "centos"
-   if(ethName == ""):
-      ethName = "default"
-   if(ip == ""):
-      ip = "192.168.121.100"
-   if(mac == ""):
-      mac = "" #Libvirt will give a default randomly generated mac address
-   if(gateway == ""):
-      gateway = "192.168.121.1" 
-   if(netmask == ""):
-      netmask = "255.255.255.0" #Class A  
-   print name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask
+   #print name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask
 
 def secureShell():
    ## SSH 
    ssh = LibvirtSSHVirtualMachine()
    #SSH with password (not recommended)
-   ssh.setPassword("MYROOTPASS")
+   ssh.setPassword("NEWROOTPW")
    ssh.commandExecute(ip, "ls -l")
    #change hostname
    newname = "test"
    ssh.commandExecute(ip, "hostname {}".format(newname))
 
-def secureShellKeyGen():
+def secureShellOpen():
+   global ip
    #SSH with key-gen pair (recommended)
    ssh = LibvirtSSHVirtualMachine()
-   ssh.createAuth(ip,"rsa",vm)
-   subprocess.call(["sudo","cp","{}/.ssh/id_rsa.pub".format(expanduser("~")),"/var/lib/lxc/{}/rootfs/root/.ssh/authorized_keys".format(name)]) 
    session = ssh.createSessionAuth(ip)
-   #Any Processes 
+   return ssh
+
+def secureShellClose(ssh):
+   #Close session 
    ssh.disconnectSession(session)
-   #To enable login to VM using CLI change permissions
-   subprocess.call(["sudo","chmod","a-rwx","{}/.ssh/id_rsa".format(expanduser("~"))])
-   subprocess.call(["sudo","chmod","u+rw","{}/.ssh/id_rsa".format(expanduser("~"))])
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+   global name, ethName, ip, container
 
-   #Creating the rootfs file system of Container
-   if container == 'lxc':
-     lxcCreate()
+   #Modidy main based on functionality input
+#   main(sys.argv[1:])
 
-   cn = LibvirtManager(container) 
-   vm = LibvirtVirtualMachine(name, mem, cpu, ethName, ip, gateway, mac, netmask)
+   cn = LibvirtManager() 
+   vm = LibvirtVirtualMachine()
 
-   cn.setVirtualMachineFactory(container)
-   vm.setName(name)
-   vm.setNetworkName(ethName)
-   vm.setIP(ip)
+   container = cn.getVirtualMachineFactory()
+   name = vm.setName(name)
+   ethName = vm.getNetworkName(ethName)
+   ip = vm.getIP(ip)
 
    conn = cn.create(container)
 
-   xml_domain = vm.xmlDomain(name, mem, cpu, cn.getVirtualMachineFactory(), vm.getNetworkName())
-
-   xml_network = vm.xmlNetwork(ethName, ip, gateway, mac, netmask)
-
-   #manually start lxc on host to be observable by lxc tools
-   net = vm.createNetwork(conn, xml_network)
-   dom = vm.create(conn, xml_domain)
-
    #TODO LookupDomainName function
 
-   #SSH Capability
-   secureShellKeyGen()
+   #SSH Login session
+   ssh = secureShellOpen()
+   
+   #Enter SSH functionality as needed
+   # ... 
+    
+   #delete ssh session
+   secureShellClose(ssh)   
 
    vm.deleteNetwork(net)
 
