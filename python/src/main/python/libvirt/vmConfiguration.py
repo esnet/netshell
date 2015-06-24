@@ -227,6 +227,10 @@ if __name__ == "__main__":
    print "Creating Domain"
    dom = vm.create(conn, xml_domain)
 
+   #Restart Network in remote host (issue after testing)
+   command = "/var/lib/libvirt/lxc/{}/".format(name)
+   subprocess.call(["chroot",command,"/bin/bash","-c","service network restart"]) 
+ 
    #SSH Capability
    print "Creating Secure Shell link"
    secureShellKeyGen(vm)
