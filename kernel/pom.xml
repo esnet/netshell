@@ -173,12 +173,6 @@
             <artifactId>joda-time</artifactId>
             <version>2.3</version>
         </dependency>
-        <!-- sLS -->
-        <dependency>
-            <groupId>net.es.lookup</groupId>
-            <artifactId>simple-lookup-service-client</artifactId>
-            <version>1.1-SNAPSHOT</version>
-        </dependency>
 
         <!-- bouncycastle.  To prevent some OSGi breakage and interactions with the Karaf modules,
         we need to make the bouncycastle packages optional package imports. -->

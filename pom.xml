@@ -13,6 +13,7 @@
     <modules>
         <module>kernel</module>
         <module>python</module>
+        <module>odl</module>
     </modules>
     <build>
         <pluginManagement>
