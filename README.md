@@ -43,17 +43,15 @@ If using a stock ODL distribution:
 1.  Download an ODL Karaf distribution from the OpenDaylight Web site.
     As of this writing the current version is Helium-SR2.  Unpack it.
 
-2.  Also download and unpack a stock version of Karaf corresponding to the ODL distribution.  As of this
-    writing, Helium-SR3 was packaged in a Karaf 3.0.1 container.
-
-3.  Copy the file ```etc/org.ops4j.pax.url.mvn.cfg``` from the stock Karaf distribution into the ODL
-    distribution.  This change restores the default search behavior for finding bundles in Maven
+2.  From the top-level directory of the ODL Karaf distribution, execute the ```fixup-karaf.sh```
+    script found in the top-level distrctory of this source tree.
+    This change restores the default search behavior for finding bundles in Maven
     repositories (in particular it's needed to read the NetShell bundles from the local Maven
     repository / cache).
 
 If using a custom-build ODL integration build:
 
-1.  Download the custom ODL build.  This build will have the stock ```etc/ops4j.pax.url.mvn.cfg``` file
+1.  Download the custom ODL build.  This build will have a fixed ```etc/ops4j.pax.url.mvn.cfg``` file
     mentioned above.  It may also have a newer Karaf and / or newer ODL components.  As of this writing,
     bmah@es.net has a pre-release build of Helium-SR3, using Karaf 3.0.2.
 
