@@ -21,7 +21,7 @@
         <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
 	    <bundle>mvn:ch.qos.logback/logback-core/1.1.2</bundle>
 	    <bundle>mvn:ch.qos.logback/logback-classic/1.1.2</bundle>
-        <bundle>mvn:com.rabbitmq/amqp-client/3.3.5</bundle>
+        <bundle>mvn:com.rabbitmq/amqp-client/3.5.3</bundle>
         <bundle>mvn:net.es/netshell-kernel/1.0-SNAPSHOT</bundle>
 	<bundle>wrap:mvn:org.libvirt/libvirt/0.5.1</bundle>
 	<bundle>mvn:net.java.dev.jna/jna/4.0.0</bundle>
