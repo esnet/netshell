@@ -29,7 +29,7 @@ public class Layer2ForwardRule extends ForwardRule {
     }
 
     @JsonIgnore
-    public byte[] toArray() {
+    public byte[] macToByteArray() {
         return Base64.decodeBase64(this.mac);
     }
 }

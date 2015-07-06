@@ -13,6 +13,9 @@ public class ForwardRule extends Rule {
 
     public ForwardRule(String name, Port inPort, Port outPort) {
         super (name);
+        if (inPort != outPort) {
+            throw new RuntimeException("Cannot create a ForwardRule if ports are on different nodes");
+        }
         this.inPort = inPort;
         this.outPort = outPort;
     }

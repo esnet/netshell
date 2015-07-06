@@ -11,13 +11,20 @@ package net.es.netshell.odl;
 import java.util.List;
 import java.util.Set;
 
+import net.es.netshell.controller.OpenFlowNode;
 import net.es.netshell.controller.layer2.Layer2Controller;
 import net.es.netshell.controller.layer2.Layer2ForwardRule;
+import net.es.netshell.controller.layer2.Layer2Port;
+import org.apache.commons.codec.binary.Base64;
+import org.opendaylight.controller.sal.action.Action;
+import org.opendaylight.controller.sal.action.Output;
 import org.opendaylight.controller.sal.core.Node;
 import org.opendaylight.controller.sal.core.NodeConnector;
 import org.opendaylight.controller.sal.flowprogrammer.Flow;
 import org.opendaylight.controller.sal.flowprogrammer.IFlowProgrammerService;
+import org.opendaylight.controller.sal.match.MatchType;
 import org.opendaylight.controller.sal.packet.*;
+import org.opendaylight.controller.sal.match.Match;
 
 import org.opendaylight.controller.sal.utils.Status;
 import org.opendaylight.controller.sal.utils.StatusCode;
@@ -161,6 +168,36 @@ public class Controller implements Layer2Controller {
             stat = flowProgrammerService.removeAllFlows(node);
         }
         return stat;
+    }
+
+    private Flow makeFlow(Layer2ForwardRule rule) {
+        Flow flow = null;
+        Match match = new Match();
+        Layer2Port inPort, outPort;
+        inPort = (Layer2Port) rule.getInPort();
+        outPort = (Layer2Port) rule.getOutPort();
+
+        match.setField(MatchType.IN_PORT, inPort.getResourceName());
+        match.setField(MatchType.DL_VLAN,new Short((short) inPort.getVlan()));
+        match.setField(MatchType.DL_DST, rule.macToByteArray());
+
+        return flow;
+    }
+
+    private Switch findODLSwitch(OpenFlowNode enosSwitch) {
+        List<Switch> switches = this.getNetworkDevices();
+        Switch sw = null;
+
+        // TODO: ODL may still use 6 bytes DPID. To verified.
+        String dpid = enosSwitch.getDpid();
+        for (Switch s : switches) {
+            if (Base64.encodeBase64String(s.getDataLayerAddress()).equals(dpid)) {
+                sw = s;
+                break;
+            }
+        }
+
+        return sw;
     }
 
     @Override
