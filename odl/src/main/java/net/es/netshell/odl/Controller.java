@@ -11,6 +11,8 @@ package net.es.netshell.odl;
 import java.util.List;
 import java.util.Set;
 
+import net.es.netshell.controller.layer2.Layer2Controller;
+import net.es.netshell.controller.layer2.Layer2ForwardRule;
 import org.opendaylight.controller.sal.core.Node;
 import org.opendaylight.controller.sal.core.NodeConnector;
 import org.opendaylight.controller.sal.flowprogrammer.Flow;
@@ -28,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * This class is an interface to the OpenFlow controller functionality in
  * OpenDaylight.
  */
-public class Controller {
+public class Controller implements Layer2Controller {
     // This is a quasi-singleton.  In theory there can be multiple of these objects
     // in a system, but in practice it seems that each one of these is associated
     // with a single instance of the OSGi bundle, which basically just means just
@@ -161,4 +163,13 @@ public class Controller {
         return stat;
     }
 
+    @Override
+    public boolean addForwardRule(Layer2ForwardRule rule) {
+        return false;
+    }
+
+    @Override
+    public boolean removeForwardRule(Layer2ForwardRule rule) {
+        return false;
+    }
 }

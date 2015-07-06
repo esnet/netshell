@@ -92,6 +92,12 @@
             <artifactId>netshell-kernel</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <!-- NetShell Cotnroller API -->
+        <dependency>
+            <groupId>net.es</groupId>
+            <artifactId>netshell-controller</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
 
     </dependencies>
 
