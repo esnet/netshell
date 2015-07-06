@@ -10,7 +10,7 @@ These steps install NetShell into a generic Karaf container.  For use with a cus
 Karaf container that is an artifact of an OpenDaylight integration build, see the "OpenDaylight
 Integration" section of this document.
 
-1.  Build and install netshell-kernel (and netshell-python if desired).
+1.  Build and install netshell-kernel (and netshell-python if desired, and netshell-odl if applicable).
     This will result in JAR artifacts being copied to the local Maven repository / cache.
     It will also result in an XML features file being copied.
 
@@ -34,50 +34,52 @@ customized Karaf container, and some of those customizations are incompatible wi
 to integration is basically to start with a ODL Karaf container and tweak it a bit so that NetShell
 can run inside it.
 
-There are two starting points.  One uses a stock ODL distribution.  The other uses a custom-built ODL
-integration build; this latter approach has the virtue of requiring less deploy-time customization (it also
-allows working with an ODL snapshot or with an updated Karaf runtime).
-
-If using a stock ODL distribution:
+In some cases, slightly different steps are needed depending on the version of OpenDaylight being
+used.  (As of this writing, some success has been had with both ODL Helium and ODL Lithium.  
+ODL Hydrogen is not supported.)  These differences will be noted where necessary.
 
 1.  Download an ODL Karaf distribution from the OpenDaylight Web site.
-    As of this writing the current version is Helium-SR2.  Unpack it.
+    As mentioned above, both ODL Helium and ODL Lithium have been tested, as of this writing.  Unpack it.
 
 2.  From the top-level directory of the ODL Karaf distribution, execute the ```fixup-karaf.sh```
-    script found in the top-level distrctory of this source tree.
+    script found in the top-level directory of this source tree.
     This change restores the default search behavior for finding bundles in Maven
     repositories (in particular it's needed to read the NetShell bundles from the local Maven
     repository / cache).
 
-If using a custom-build ODL integration build:
-
-1.  Download the custom ODL build.  This build will have a fixed ```etc/ops4j.pax.url.mvn.cfg``` file
-    mentioned above.  It may also have a newer Karaf and / or newer ODL components.  As of this writing,
-    bmah@es.net has a pre-release build of Helium-SR3, using Karaf 3.0.2.
-
-The following steps are required regardless of the version of ODL used as a starting point:
-
-1.  Edit ```etc/custom.properties``` and note the definition of ```org.osgi.framework.system.capabilities```.
-    If running with Karaf 3.0.2 or later, this definition should be commented out; it was apparently a
-    workaround for a bug in an older version of Karaf.
-
-2.  In some circumstances, ODL does not play well with the NetShell security manager (the exact conditions
+3.  In some circumstances, ODL does not play well with the NetShell security manager (the exact conditions
     are not completely known).  If this is
     believed to be a problem, the security manager can be disabled by creating a ```netshell.json```
     file 
     in the top level of the ODL Karaf installation and setting the value of the
     ```securityManagerDisabled``` parameter to 1.
 
-3.  Start up the ODL Karaf container from the top-level directory of the ODL Karaf installation with ```bin/karaf```.
+4.  Start up the ODL Karaf container from the top-level directory of the ODL Karaf installation with ```bin/karaf```.
 
-4.  Within the Karaf instance, load the ODL features of interest.  A use set of features that provides
-    OpenFlow support plus the DLUX GUI is:
+5.  Within the Karaf instance, load the ODL features of interest, such as OpenFlow support and the
+    DLUX GUI:
 
-        feature:install odl-dlux-core odl-openflowplugin-all 
+        feature:install odl-dlux-core odl-openflowplugin-all
+        
+    On ODL Lithium, it might also be necessary to load some additional DLUX modules:
+    
+        feature:install odl-dlux-all
+        
+    Note that on ODL Helium the default URL for the DLUX interface is:
+    
+        http://localhost:8181/dlux/index.html
+        
+    This URL has changed for ODL Lithium:
+    
+        http://localhost:8181/index.html
 
 5.  Features necessary for NetShell integration can be loaded as follows:
 
         feature:install odl-adsal-compatibility odl-nsf-managers
+        
+    On ODL Lithium, it is also necessary to install another module:
+    
+        feature:install odl-openflowplugin-adsal-compatibility
 
 6.  To make the embedded SSH server start up correctly, it is necessary to refresh the bindings of one
     of the bundles.
@@ -90,7 +92,7 @@ The following steps are required regardless of the version of ODL used as a star
 
 7.  Follow the instructions in "NetShell Quickstart" above to load and run the base NetShell modules.
 
-8.  To load the NetShell OpenDaylight bundle (at least until a feature is created for it):
+8.  To load the NetShell OpenDaylight bundle:
 
         bundle:install mvn:mvn:net.es/netshell-odl/1.0-SNAPSHOT
 
