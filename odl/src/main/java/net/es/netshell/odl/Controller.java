@@ -8,6 +8,7 @@
 
 package net.es.netshell.odl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -25,6 +26,9 @@ import org.opendaylight.controller.sal.flowprogrammer.IFlowProgrammerService;
 import org.opendaylight.controller.sal.match.MatchType;
 import org.opendaylight.controller.sal.packet.*;
 import org.opendaylight.controller.sal.match.Match;
+import org.opendaylight.controller.sal.action.SetDlDst;
+import org.opendaylight.controller.sal.action.SetDlSrc;
+import org.opendaylight.controller.sal.action.SetVlanId;
 
 import org.opendaylight.controller.sal.utils.Status;
 import org.opendaylight.controller.sal.utils.StatusCode;
@@ -179,7 +183,16 @@ public class Controller implements Layer2Controller {
 
         match.setField(MatchType.IN_PORT, inPort.getResourceName());
         match.setField(MatchType.DL_VLAN,new Short((short) inPort.getVlan()));
-        match.setField(MatchType.DL_DST, rule.macToByteArray());
+        match.setField(MatchType.DL_DST, rule.inMacToByteArray());
+
+        ArrayList<Action> actions = new ArrayList<Action>();
+        SetVlanId vlanAction = new SetVlanId(new Short((short) outPort.getVlan()));
+        actions.add(vlanAction);
+        SetDlDst dlDstAction = new SetDlDst(rule.outMacToByteArray());
+        actions.add(dlDstAction);
+        Node odlNode = this.findODLSwitch((OpenFlowNode) outPort.getNode()).getNode();
+        Output outputAction = new Output(this.getNodeConnector(odlNode,outPort.getResourceName()));
+        actions.add(outputAction);
 
         return flow;
     }
@@ -196,7 +209,6 @@ public class Controller implements Layer2Controller {
                 break;
             }
         }
-
         return sw;
     }
 
