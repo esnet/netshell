@@ -13,23 +13,37 @@ import java.util.List;
  */
 public class Layer2ForwardRule extends ForwardRule {
 
-    private String mac;
+    private String inMac,outMac;
 
-    public Layer2ForwardRule (String name, Layer2Port inPort, Layer2Port outPort, byte[] mac) {
+    public Layer2ForwardRule (String name, Layer2Port inPort, Layer2Port outPort, byte[] inMac, byte[] outMac) {
         super(name,inPort,outPort);
-        this.mac = Base64.encodeBase64String(mac);
+        this.inMac = Base64.encodeBase64String(inMac);
+        this.outMac = Base64.encodeBase64String(outMac);
     }
 
-    public String getMac() {
-        return mac;
+    public String getInMac() {
+        return this.inMac;
     }
 
-    public void setMac(String mac) {
-        this.mac = mac;
+    public void setInMac(String mac) {
+        this.inMac = mac;
+    }
+
+    public String getOutMac() {
+        return this.outMac;
+    }
+
+    public void setOutMac(String mac) {
+        this.outMac = mac;
     }
 
     @JsonIgnore
-    public byte[] macToByteArray() {
-        return Base64.decodeBase64(this.mac);
+    public byte[] inMacToByteArray() {
+        return Base64.decodeBase64(this.inMac);
+    }
+
+    @JsonIgnore
+    public byte[] outMacToByteArray() {
+        return Base64.decodeBase64(this.outMac);
     }
 }
