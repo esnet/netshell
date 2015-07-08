@@ -3,6 +3,7 @@ package net.es.netshell.kernel.networking;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.users.Users;
+import net.es.netshell.kernel.users.UserAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +62,9 @@ public class NetworkInterfaces {
 
             logger.info("current user {}", currentUserName);
             Users currentUsers = Users.getUsers();
-            if (currentUsers.isPrivileged(currentUserName)) {
+	    // Access per Application
+	    UserAccess currentUserAccess = UserAccess.getUsers();
+            if (currentUsers.isPrivileged(currentUserName) || currentUserAccess.isAccessPrivileged(currentUserName, "network")) {
                 logger.info("OK to change");
 
                 KernelThread.doSysCall(this,
@@ -92,7 +95,9 @@ public class NetworkInterfaces {
 
             logger.info("current user {}", currentUserName);
             Users currentUsers = Users.getUsers();
-            if (currentUsers.isPrivileged(currentUserName)) {
+	    //Privilege per application
+	    UserAccess currentUserAccess = UserAccess.getUsers();
+            if (currentUsers.isPrivileged(currentUserName) || currentUserAccess.isAccessPrivileged(currentUserName, "network")) {
                 logger.info("OK to change");
 
                 KernelThread.doSysCall(this,
