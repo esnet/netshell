@@ -1,19 +1,5 @@
 package net.es.netshell.kernel.users;
 
-import net.es.netshell.api.FileUtils;
-import net.es.netshell.kernel.security.FileACL;
-import net.es.netshell.kernel.exec.KernelThread;
-import net.es.netshell.kernel.users.UserProfile;
-import net.es.netshell.kernel.users.Users;
-import net.es.netshell.kernel.users.User;
-import net.es.netshell.shell.annotations.ShellCommand;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 /**
  * Created by amercian on 7/7/15.
  */
@@ -64,7 +50,7 @@ public class UserAccessProfile {
     }
 
     public String getAccess(){
-	return this.access;
+	return access;
     }
 
     public void setName(String username){
@@ -72,6 +58,6 @@ public class UserAccessProfile {
     }
 
     public String getName(){
-	return this.username;
+	return username;
     } 
 }

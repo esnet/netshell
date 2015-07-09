@@ -74,13 +74,9 @@ public final class UserAccess {
         try {
             method = KernelThread.getSysCallMethod(this.getClass(), "do_createAccess");
 
-            // Check if user is authorized to create users
             // Only ROOT user can perform this function
             if (KernelThread.currentKernelThread().isPrivileged()) {
-                KernelThread.doSysCall(this,
-                        method,
-                        user,
-                        true);
+                KernelThread.doSysCall(this, method, user); //removed "true"
                 resCode = true;
                 resMessage = "User access added";
             } else {
@@ -90,16 +86,19 @@ public final class UserAccess {
             }
 
         } catch (UserAlreadyExistException e) {
+	    e.printStackTrace();
             resCode = false;
             resMessage = "User access already exists";
         } catch (NoSuchMethodException e) {
-            //e.printStackTrace();
+            e.printStackTrace();
             resCode = false;
             resMessage = "Method not implemented";
         }catch(UserClassException e){
-            resCode = false;
+       	    e.printStackTrace();
+     	    resCode = false;
             resMessage = "User access must be network or user or vm";
         }catch (Exception e) {
+	    e.printStackTrace();
             resCode = false;
             resMessage = "Error in operation";
         }
