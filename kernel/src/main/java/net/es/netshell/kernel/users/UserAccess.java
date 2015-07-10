@@ -276,7 +276,7 @@ public final class UserAccess {
         for (Map.Entry p : this.userAccessList.entries() ) {
             if (p.getKey() != null) {
 		UserAccessProfile newEntry = new UserAccessProfile(p.getKey().toString(), p.getValue().toString());
-		System.out.println("Key: " + p.getKey().toString() + "\t Value: " + p.getValue().toString() + "\n");
+		//System.out.println("Key: " + p.getKey().toString() + "\t Value: " + p.getValue().toString() + "\n");
                 writer.write(newEntry.toString());
                 writer.newLine();
             }
