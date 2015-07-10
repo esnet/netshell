@@ -18,11 +18,14 @@ import java.io.*;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.io.IOException;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.SetMultimap;
 /**
  * Created by amercian on 7/1/15.
  */
@@ -30,7 +33,8 @@ import java.io.IOException;
 public final class UserAccess {
    /**
     * Extends Access Shell application
-     * Creates a folder /netshell-root/access/network/.acl/admin
+     * Creates a folder /netshell-root/access/network/.acl/username
+     * Creates the table of users and privilege profiles in /netshell-root/etc/netshell.user.access
     */
 
     private final static UserAccess users = new UserAccess();
@@ -41,8 +45,9 @@ public final class UserAccess {
 
     private Path aclFilePath; // Useful for checking if acl exists or not
     private Path NetShellRootPath;
-    // Hash Table: key = user, value = the Access Profile Object
-    private HashMap<String,UserAccessProfile> userAccessList = new HashMap<String, UserAccessProfile>();
+    // Hash Table: key = user, value = accesses
+    // To include duplicate key but no duplicate values using SetMultimap
+    private SetMultimap<String, String> userAccessList = HashMultimap.create();
     private final Logger logger = LoggerFactory.getLogger(UserAccess.class);
 
 
@@ -55,7 +60,7 @@ public final class UserAccess {
         // Read acl user file or create it if necessary
         UserAccessProfile user = new UserAccessProfile();
         try {
-            this.readUserFile(user);
+            this.readUserFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -122,22 +127,24 @@ public final class UserAccess {
 
          // Checks if the user access already exists
 	    try {
-		    this.readUserFile(newUser);
+		    this.readUserFile();
 	    } catch (IOException e) {
 		    logger.error("Cannot read access file");
 	    }
 
 	// Create hash table with list of user/access and write to /etc/netshell.user.access
-        this.userAccessList.put(username, newUser);
-	this.writeUserFile(newUser); 
+	// Including functionality to have duplicates in (hash) table
+	// user1 = network, user
+        this.userAccessList.put(username, access);
+	this.writeUserFile(); 
 
 	// Create home directory
         File homeDir = new File (Paths.get(this.getHomePath().toString(), access, username).toString());
 
-        homeDir.mkdirs();
+	/* In case directory is required */
+        //homeDir.mkdirs();
        
-        // Create access only to specific application
-        // path = netshell-root/access/network/<username>/.acl
+        // Create access only to specific application with path = netshell-root/access/network/.acl/<username>
         UserAccessACL acl = new UserAccessACL(homeDir.toPath());
         acl.allowUserRead(username);
         acl.allowUserWrite(username);
@@ -190,7 +197,7 @@ public final class UserAccess {
 
         // Make sure the user exists.
 	    try {
-		    this.readUserFile(user);
+		    this.readUserFile();
 	    } catch (IOException e) {
 		    logger.error("Cannot read access file");
 	    }
@@ -198,13 +205,15 @@ public final class UserAccess {
 	String userName = user.getName();
 	String access = user.getAccess();
 
+	// Remove entry from the multimap
+	this.userAccessList.remove(userName, access);
+
         // Delete .acl file associated with this user account
-	File aclDelete = new File (Paths.get(this.getHomePath().toString(), access, userName, ".acl", userName).toString());
+	File aclDelete = new File (Paths.get(this.getHomePath().toString(), access, ".acl", userName).toString());
 	aclDelete.delete();
 
-        // Save User File with removed user
-        user.setName("null");
-        this.writeUserFile(user);
+        // Save entry in the /etc/netshell.user.access
+        this.writeUserFile();
 
     }
 
@@ -217,16 +226,18 @@ public final class UserAccess {
      */
     public static boolean isAccessPrivileged (String username, String access) {
 
+	String accessInList;
         if (UserAccess.getUsers().userAccessList.isEmpty()  && username.equals("admin")) {
             // Initial configuration. Add admin user and create configuration file.
             return true;
         }
-        UserAccessProfile useraccess = UserAccess.getUsers().userAccessList.get(username);
+	
+        Collection<String> accesslist = UserAccess.getUsers().userAccessList.get(username);
 
-        if (useraccess.equals(null)) {
+	if (username.equals(null)) {
             // Not a user
             return false;
-        } else if (useraccess.getAccess().equals(access)) {
+        } else if (accesslist.contains(access) || Users.isPrivileged(username)) {
 	    return true;
 	} else {
 	    // Any other case
@@ -234,7 +245,7 @@ public final class UserAccess {
 	}
     }
 
-    private synchronized void readUserFile(UserAccessProfile user) throws IOException {
+    private synchronized void readUserFile() throws IOException {
         File aclFile = new File(this.aclFilePath.toString());
         aclFile.getParentFile().mkdirs();
         if (!aclFile.exists()) {
@@ -250,7 +261,7 @@ public final class UserAccess {
         while ((line = reader.readLine()) != null) {
             UserAccessProfile p = new UserAccessProfile(line);
             if (p.getName() != null) {
-                this.userAccessList.put(p.getName(), p); 
+                this.userAccessList.put(p.getName(), p.getAccess()); 
             }
             else {
                 logger.error("Malformed user entry:  {}", line);
@@ -258,12 +269,15 @@ public final class UserAccess {
         }
     }
 
-    private synchronized void writeUserFile(UserAccessProfile user) throws IOException {
+    private synchronized void writeUserFile() throws IOException {
         File aclFile = new File(this.aclFilePath.toString());
+	aclFile.delete();
         BufferedWriter writer = new BufferedWriter(new FileWriter(aclFile));
-        for (UserAccessProfile p : this.userAccessList.values() ) {
-            if (p.getName() != null) {
-                writer.write(p.toString());
+        for (Map.Entry p : this.userAccessList.entries() ) {
+            if (p.getKey() != null) {
+		UserAccessProfile newEntry = new UserAccessProfile(p.getKey().toString(), p.getValue().toString());
+		System.out.println("Key: " + p.getKey().toString() + "\t Value: " + p.getValue().toString() + "\n");
+                writer.write(newEntry.toString());
                 writer.newLine();
             }
         }
