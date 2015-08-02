@@ -16,6 +16,7 @@ import net.es.netshell.controller.OpenFlowNode;
 import net.es.netshell.controller.layer2.Layer2Controller;
 import net.es.netshell.controller.layer2.Layer2ForwardRule;
 import net.es.netshell.controller.layer2.Layer2Port;
+
 import org.apache.commons.codec.binary.Base64;
 import org.opendaylight.controller.sal.action.Action;
 import org.opendaylight.controller.sal.action.Output;
@@ -47,6 +48,8 @@ public class Controller implements Layer2Controller {
     // with a single instance of the OSGi bundle, which basically just means just
     // one per system.  So we can somewhat safely say there should be at most one
     // instance, and keep a class member variable pointing to that one instance.
+
+
     static private volatile Controller instance = null;
 
     // The constructor needs to save a pointer to this object as "the" instance.
@@ -174,6 +177,7 @@ public class Controller implements Layer2Controller {
         return stat;
     }
 
+
     private Flow makeFlow(Layer2ForwardRule rule) {
         Flow flow = null;
         Match match = new Match();
@@ -221,4 +225,5 @@ public class Controller implements Layer2Controller {
     public boolean removeForwardRule(Layer2ForwardRule rule) {
         return false;
     }
+
 }

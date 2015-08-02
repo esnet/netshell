@@ -73,7 +73,6 @@
                         <Bundle-Name>ESnet NetShell API and Generic Controller</Bundle-Name>
                         <Bundle-Version>1.0-SNAPSHOT</Bundle-Version>
                         <Bundle-Activator>net.es.netshell.controller.core.Activator</Bundle-Activator>
-                        <Export-Package>net.es.netshell.controller</Export-Package>
                         <Import-Package>*</Import-Package>
                     </instructions>
                 </configuration>

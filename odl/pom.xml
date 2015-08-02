@@ -115,8 +115,6 @@
                         <Bundle-Name>ESnet NetShell Open Daylight Integration</Bundle-Name>
                         <Bundle-Version>1.0-SNAPSHOT</Bundle-Version>
                         <Bundle-Activator>net.es.netshell.odl.Activator</Bundle-Activator>
-                        <Export-Package>net.es.netshell.odl</Export-Package>
-                        <Import-Package>*</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

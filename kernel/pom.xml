@@ -237,7 +237,7 @@
                             net.es.netshell.rabbitmq,
                             net.es.netshell.shell,
                             net.es.netshell.shell.annotations,
-			    net.es.netshell.vm,
+			                net.es.netshell.vm,
                             net.es.netshell.sshd
                         </Export-Package>
                         <Import-Package>
