@@ -4,8 +4,8 @@ import jline.console.ConsoleReader;
 import net.es.netshell.api.FileUtils;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.security.FileACL;
-import net.es.netshell.kernel.users.UserAccessProfile;
-import net.es.netshell.kernel.users.UserAccess;
+import net.es.netshell.kernel.acl.UserAccessProfile;
+import net.es.netshell.kernel.acl.UserAccess;
 import net.es.netshell.shell.annotations.ShellCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +23,10 @@ import java.nio.file.Paths;
 public class AccessShellCommands {
     @ShellCommand(name = "addaccess",
     shortHelp = "Add access to a particular user",
-    longHelp = "Required arguments are a username, and access type.\n" +
-            "The access class should be either \"network\" or \"user\" or \"vm\".",
+    longHelp = "Required arguments are a username, map.\n" +
+	    "addaccess user network:ipconfig:interface:eth0:vlan:10,11 " +
+            "The access class should start with either \"network\" or \"user\" or \"vm\"." +
+	    "map includes the second layer granuality of access control" ,
     privNeeded = true)
     public static void addAccess(String[] args, InputStream in, OutputStream out, OutputStream err) {
         Logger logger = LoggerFactory.getLogger(AccessShellCommands.class);
@@ -35,7 +37,16 @@ public class AccessShellCommands {
 
         // Argument checking
         if (args.length != 3) {
-            o.println("Usage:  addaccess <username> <type>");
+            o.println("Usage:  addaccess <username> <map>");
+	    /**
+             * addaccess user1 network:ipconfig:interface:eth0:vlan:1,2,3
+             * addaccess user1 network:vconfig:vlan:10,11,12
+             * addaccess user1 user:root  //user can add users with root access
+             * addaccess user1 vm:10  //user can add upto 10vms
+             * addaccess user1 network:all
+             * if map is all, then all types of network functions can be done
+             */
+	    // the map can be modified for granuality
             return;
         }
 
@@ -56,7 +67,7 @@ public class AccessShellCommands {
 
     @ShellCommand(name = "removeaccess",
             shortHelp = "Remove access from a user",
-            longHelp = "No arguments are required. \n")
+            longHelp = "Arguments include username, type, map/all. \n")
     public static void removeAccess(String[] args, InputStream in, OutputStream out, OutputStream err) {
         Logger logger = LoggerFactory.getLogger(AccessShellCommands.class);
         logger.info("removeaccess with {} arguments", args.length);
@@ -64,8 +75,11 @@ public class AccessShellCommands {
         PrintStream o = new PrintStream(out);
 
         if (args.length != 3) {
-            o.print("Usage: removeaccess <username> <type>");
-	        return;
+            o.print("Usage: removeaccess <username> <map>");
+	    /*
+             * <map> can be all to remove all access
+             */
+	    return;
         }
 
 	UserAccessProfile userProfile = new UserAccessProfile(args[1], args[2]);

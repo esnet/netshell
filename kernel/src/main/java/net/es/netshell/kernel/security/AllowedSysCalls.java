@@ -29,7 +29,7 @@ public final class AllowedSysCalls {
         allowedSysCallClasses.add(net.es.netshell.kernel.exec.KernelThread.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.security.FileACL.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.users.Users.class);
-        allowedSysCallClasses.add(net.es.netshell.kernel.users.UserAccess.class);
+        allowedSysCallClasses.add(net.es.netshell.kernel.acl.UserAccess.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.container.Container.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.container.Containers.class);
         allowedSysCallClasses.add(net.es.netshell.boot.BootStrap.class);

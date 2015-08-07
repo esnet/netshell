@@ -234,6 +234,7 @@
                             net.es.netshell.boot,
                             net.es.netshell.classloader,
                             net.es.netshell.configuration,
+                            net.es.netshell.kernel.acl,
                             net.es.netshell.kernel.container,
                             net.es.netshell.kernel.exec,
                             net.es.netshell.kernel.exec.annotations,

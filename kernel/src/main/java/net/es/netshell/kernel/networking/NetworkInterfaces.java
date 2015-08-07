@@ -3,7 +3,7 @@ package net.es.netshell.kernel.networking;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.users.Users;
-import net.es.netshell.kernel.users.UserAccess;
+import net.es.netshell.kernel.acl.UserAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -17,8 +17,7 @@ import net.es.netshell.kernel.container.Containers;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.security.FileACL;
-import net.es.netshell.kernel.users.UserAccessProfile;
-import net.es.netshell.kernel.users.UserAccess;
+import net.es.netshell.kernel.acl.UserAccess;
 import net.es.netshell.shell.CommandResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +45,7 @@ public final class Users {
 
     private final static Users users = new Users();
 
-    /* Users directory */
+    /* uSERS directory */
     public final static String USERS_DIR="users";
 
     private final static String ADMIN_USERNAME = "admin";
