@@ -45,21 +45,21 @@ public class NetworkManageProfile extends UserAccessProfile {
 
 	//this constructor is used only if maplist[0]="network"
 	//dont need to check it again
-	for(int i = 1; i<= maplist.length; i++){
+	for(int i = 0; i<maplist.length; i++){
 	    if(maplist[i].equals("ipconfig")){
 		this.type = IPCONFIG;
 	    }
-	    else if(maplist[i].equals("vconfig")){
+	    if(maplist[i].equals("vconfig")){
 		this.type = VCONFIG;
 	    }
-	    else if(maplist[i].equals("interface")){
+	    if(maplist[i].equals("interface")){
 		this.ethInterface = maplist[i+1];
 	    }
-	    else if(maplist[i].equals("vlanInterface")){
+	    if(maplist[i].equals("vlanInterface")){
 		this.vlanInterface = maplist[i+1];
 	    }
 	    /* Assuming that there could be multiple VLAN ids */
-	    else if(maplist[i].equals("vlanId")){
+	    if(maplist[i].equals("vlanId")){
 		vlan_list = maplist[i+1].split(",");
 		this.vlan = new ArrayList<Integer>(vlan_list.length);
 		for (int j=0; j<vlan_list.length; j++){

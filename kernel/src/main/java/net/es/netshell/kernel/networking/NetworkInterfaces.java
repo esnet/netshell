@@ -64,7 +64,7 @@ public class NetworkInterfaces {
             Users currentUsers = Users.getUsers();
 	    // Access per Application
 	    UserAccess currentUserAccess = UserAccess.getUsers();
-            if (currentUsers.isPrivileged(currentUserName) || currentUserAccess.isAccessPrivileged(currentUserName, "network")) {
+            if (currentUsers.isPrivileged(currentUserName) || currentUserAccess.isAccessPrivileged(currentUserName, String.format("network:ipconfig:interface:%s",interfaceName))) {
                 logger.info("OK to change");
 
                 KernelThread.doSysCall(this,
@@ -97,7 +97,7 @@ public class NetworkInterfaces {
             Users currentUsers = Users.getUsers();
 	    //Privilege per application
 	    UserAccess currentUserAccess = UserAccess.getUsers();
-            if (currentUsers.isPrivileged(currentUserName) || currentUserAccess.isAccessPrivileged(currentUserName, "network")) {
+            if (currentUsers.isPrivileged(currentUserName) || currentUserAccess.isAccessPrivileged(currentUserName, String.format("network:vconfig:interface:%s:vlanId:%s",interfaceName,Integer.toString(vid)))) {
                 logger.info("OK to change");
 
                 KernelThread.doSysCall(this,

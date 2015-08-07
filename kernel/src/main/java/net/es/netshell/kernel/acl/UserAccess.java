@@ -62,14 +62,14 @@ public final class UserAccess {
 
         // Read acl user file or create it if necessary
         UserAccessProfile user = new UserAccessProfile();
-        String username = user.getName();
+        /*String username = user.getName();
 	String map = user.getMap();
 	String[] access = map.split(":");
         try {
             this.readUserFile(username, access[0]);
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
 
     }
 
@@ -189,6 +189,7 @@ public final class UserAccess {
                         user);
             }
         } catch (NonExistentUserException e) {
+            e.printStackTrace();
             return false;
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
@@ -246,9 +247,14 @@ public final class UserAccess {
 	// Access will depend on application
 	// map should be decoded for each application
 	String access;
-	String[] accessInList = map.split(":");
-	access = accessInList[0];
-
+	String[] accessInList;
+	if(map.contains(":")){
+	   accessInList = map.split(":");
+	   access = accessInList[0];
+	} else {
+	   access = map;
+	}
+	
         if (UserAccess.getUsers().userAccessList.isEmpty()  && username.equals("admin")) {
             // Initial configuration. Add admin user and create configuration file.
             return true;

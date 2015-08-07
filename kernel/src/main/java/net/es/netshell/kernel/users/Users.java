@@ -271,7 +271,7 @@ public final class Users {
             String currentUserName = kt.getUser().getName();
 
             // Check if user is authorized to create users
-            if (KernelThread.currentKernelThread().isPrivileged() || currentUserAccess.isAccessPrivileged(currentUserName, "user")) {
+            if (KernelThread.currentKernelThread().isPrivileged() || currentUserAccess.isAccessPrivileged(currentUserName, "user:create")) {
                 KernelThread.doSysCall(this,
                         method,
                         newUser,
@@ -285,16 +285,19 @@ public final class Users {
             }
 
         } catch (UserAlreadyExistException e) {
-            resCode = false;
+            e.printStackTrace();
+	    resCode = false;
             resMessage = "User already exists";
         } catch (NoSuchMethodException e) {
-            //e.printStackTrace();
+            e.printStackTrace();
             resCode = false;
             resMessage = "Method not implemented";
         }catch(UserClassException e){
+            e.printStackTrace();
             resCode = false;
             resMessage = "User class must be root or user";
         }catch (Exception e) {
+            e.printStackTrace();
             resCode = false;
             resMessage = "Error in operation";
         }
@@ -411,7 +414,7 @@ public final class Users {
 
             if ((currentUserName.equals(userName))  ||
                     (isPrivileged(currentUserName)) || 
-		    (currentUserAccess.isAccessPrivileged(currentUserName, "user"))) {
+		    (currentUserAccess.isAccessPrivileged(currentUserName, "user:delete"))) {
                 logger.info("OK to remove");
                 KernelThread.doSysCall(this,
                         method,

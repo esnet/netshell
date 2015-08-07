@@ -13,7 +13,6 @@ public class UserManageProfile extends UserAccessProfile {
     public static final String DELETE = "delete";
 
     private String type;
-    private int number;
 
     /**
      * Constructor types
@@ -22,11 +21,11 @@ public class UserManageProfile extends UserAccessProfile {
 	this.username = username;
 	this.map = map;
 	this.maplist = map.split(":");
-	for(int i = 1; i<= maplist.length; i++){
+	for(int i = 0; i< maplist.length; i++){
 	    if(maplist[i].equals("create")){
 		this.type = CREATE;
 	    }
-	    else if(maplist[i].equals("delete")){
+	    if(maplist[i].equals("delete")){
 		this.type = DELETE;
 	    }
 	}
@@ -37,7 +36,7 @@ public class UserManageProfile extends UserAccessProfile {
     }
 
     public String getType(){
-	return type;
+	return this.type;
     }
 
     public static boolean isPrivileged(String username, String map){

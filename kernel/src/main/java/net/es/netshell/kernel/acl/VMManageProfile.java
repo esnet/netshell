@@ -31,10 +31,10 @@ public class VMManageProfile extends UserAccessProfile{
 	    if(maplist[i].equals("root")){
 		this.type = ROOT;
 	    }
-	    else if(maplist[i].equals("user")){
+	    if(maplist[i].equals("user")){
 		this.type = USER;
 	    }
-	    else if(maplist[i].equals("number")){
+	    if(maplist[i].equals("number")){
 		this.number = Integer.parseInt(maplist[i+1]);
 	    }
 	}
