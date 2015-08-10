@@ -13,11 +13,12 @@ import net.es.netshell.vm.LibvirtSSHVirtualMachine;
 public class LibvirtVirtualMachine extends LibvirtVirtualMachineDescriptor {
 
     /**
+     * VirtualMachine descriptor for Libvirt specifically, creates XMLs for libvirt modules,
      * Functionality of LibvirtVirtual Machine is similar to Domain functionality
      * in Libvirt JAVA API (Create, define, destroy and execute commands in domains)
      */
-    //private String virtualMachineFactory; 
     public static String libvirtVirtualMachine;
+
     //Create function calls to perform SSH via domain instance
     public LibvirtSSHVirtualMachine vmSSH = new LibvirtSSHVirtualMachine();
 
@@ -28,8 +29,8 @@ public class LibvirtVirtualMachine extends LibvirtVirtualMachineDescriptor {
     /**
      * Constructor that calls the LibvirtVirtualMachineDescriptor
      */
-    public LibvirtVirtualMachine(String name, int memory, int cpu, String ethName, String ip, String gateway, String mac, String netmask) {
-	super(name, memory, cpu, ethName, ip, gateway, mac, netmask);
+    public LibvirtVirtualMachine(String name, int memory, int cpu, String ethName, String ip, String gateway, String mac, String netmask, String bridgeName, String bridgeIP) {
+	super(name, memory, cpu, ethName, ip, gateway, mac, netmask, bridgeName, bridgeIP);
     }	
     /**
      * Generate an XML string to create a domain based on user input.
@@ -54,8 +55,8 @@ public class LibvirtVirtualMachine extends LibvirtVirtualMachineDescriptor {
      * @param netmask
      * @return xml string for Network
      */
-    public String xmlNetwork(String ethName, String ip, String gateway, String mac, String netmask) {
-	String xml_network = String.format("<network><name>%s</name><bridge name='virbr1'/><forward mode='nat'/><ip address='192.168.121.10' netmask='%s'><dhcp><range start='%s' end='%s'/></dhcp></ip></network>",ethName,netmask,ip,ip);
+    public String xmlNetwork(String ethName, String ip, String gateway, String mac, String netmask, String bridgeName, String bridgeIP) {
+	String xml_network = String.format("<network><name>%s</name><bridge name='%s'/><forward mode='nat'/><ip address='%s' netmask='%s'><dhcp><range start='%s' end='%s'/></dhcp></ip></network>",ethName,bridgeName,bridgeIP,netmask,ip,ip);
 	return xml_network;
     }
 

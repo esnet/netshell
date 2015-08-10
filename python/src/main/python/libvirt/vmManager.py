@@ -89,6 +89,10 @@ if __name__ == "__main__":
 
    conn = cn.create(container)
 
+   #Restart Network in remote host (issue after testing)
+   command = "/var/lib/libvirt/lxc/{}/".format(name)
+   subprocess.call(["chroot",command,"/bin/bash","-c","service network restart"]) 
+
    #SSH Login session
    ssh = secureShellOpen()
    

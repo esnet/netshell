@@ -29,6 +29,8 @@ ip = ""
 mac = ""
 gateway = ""
 netmask = ""
+bridgeName = ""
+bridgeIP = ""
 
 def subprocess_cmd(command):
    process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
@@ -101,9 +103,9 @@ def lxcCentosConfig():
 
 
 def main(argv):
-   global name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask
+   global name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask, bridgeName, bridgeIP
    try:
-      opts, args = getopt.getopt(argv,"hn:m:c:o:s:e:i:a:g:t:",["help","name=","memory=","cpu=","container=","os=","ethName=","ip=","mac=","gateway=","netmask"])
+      opts, args = getopt.getopt(argv,"hn:m:c:o:s:e:i:a:g:t:b:p:",["help","name=","memory=","cpu=","container=","os=","ethName=","ip=","mac=","gateway=","netmask=","bridgeName=","bridgeIP="])
    except getopt.GetoptError:
       #error if none of the options match
       print 'Incorrect Input Options.'
@@ -111,7 +113,7 @@ def main(argv):
       sys.exit(2)
    for opt, arg in opts:
       if opt in ("-h", "--help") :
-	print 'vmConfiguration.py [options]... \n options ([m] = mandatory): \n \t-h | --help \t\t\tprint this statement and exit \n \t-n | --name <VM name>\t\t[m]name of virtual machine \n \t-m | --memory <memory>\t\tassigned memory \n \t-c | --cpu <CPU nodes>\t\tnumber of cpu nodes \n \t-o | --container <container>\t[m]hypervisor type \n \t-s | --os <OS>\t\t\t[m]OS type \n \t-e | --ethName <ethernet name>\t[m]ethernet name \n \t-i | --ip <IP address>\t\tip address \n \t-a | --mac <MAC address>\tmac address \n \t-g | --gateway <Gateway>\tgateway address \n \t-t | --netmask <netmask>\tnetmask for routing '
+	print 'vmConfiguration.py [options]... \n options ([m] = mandatory): \n \t-h | --help \t\t\tprint this statement and exit \n \t-n | --name <VM name>\t\t[m]name of virtual machine \n \t-m | --memory <memory>\t\tassigned memory \n \t-c | --cpu <CPU nodes>\t\tnumber of cpu nodes \n \t-o | --container <container>\t[m]hypervisor type \n \t-s | --os <OS>\t\t\t[m]OS type \n \t-e | --ethName <ethernet name>\t[m]ethernet name \n \t-i | --ip <IP address>\t\tip address \n \t-a | --mac <MAC address>\tmac address \n \t-g | --gateway <Gateway>\tgateway address \n \t-t | --netmask <netmask>\tnetmask for routing \n \t-b | --bridge <bridge name>\tVM bridge name \n \t-p | --bridgeIP <bridge IP>\tbridge IP address on host'
 	sys.exit()
       elif opt in ("-n", "--name"):
 	name = arg
@@ -133,15 +135,19 @@ def main(argv):
 	gateway = arg
       elif opt in ("-t", "--netmask"):
 	netmask = arg
+      elif opt in ("-b", "--bridge"):
+	bridgeName = arg
+      elif opt in ("-p", "--bridgeIP"):
+	bridgeIP = arg
 
-   print name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask
+   print name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask, bridgeName, bridgeIP
 
    #Default settingss
-   if(name == "" or mem == 0 or cpu == 0 or container == "" or os == "" or ethName == "" or ip == "" or mac == "" or gateway == "" or netmask == ""):
+   if(name == "" or mem == 0 or cpu == 0 or container == "" or os == "" or ethName == "" or ip == "" or mac == "" or gateway == "" or netmask == "" or bridgeName == "" or bridgeIP == ""):
       defaultVM()
 
 def defaultVM():
-   global name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask
+   global name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask, bridgeName, bridgeIP
    if(name == ""):
       name = "centos-7"
    if(mem == 0):
@@ -162,7 +168,11 @@ def defaultVM():
       gateway = "192.168.121.1" 
    if(netmask == ""):
       netmask = "255.255.255.0" #Class A  
-   print name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask
+   if(bridgeName == ""):
+      bridgeName = "virbr1"
+   if(bridgeIP == ""):
+      bridgeIP == "192.168.121.10"
+   print name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask, bridgeName, bridgeIP
 
 def secureShell():
    global ip
@@ -195,7 +205,7 @@ def secureShellKeyGen(vm):
    print "Added to connected hosts"
 
 if __name__ == "__main__":
-   global name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask   
+   global name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask, bridgeName, bridgeIP
    main(sys.argv[1:])
 
    #Creating the rootfs file system of Container
@@ -206,7 +216,7 @@ if __name__ == "__main__":
 
    print "Entering Libvirt Manager..."
    cn = LibvirtManager(container) 
-   vm = LibvirtVirtualMachine(name, mem, cpu, ethName, ip, gateway, mac, netmask)
+   vm = LibvirtVirtualMachine(name, mem, cpu, ethName, ip, gateway, mac, netmask, bridgeName, bridgeIP)
 
    print "Setting VM parameters..."
    cn.setVirtualMachineFactory(container)
@@ -219,7 +229,7 @@ if __name__ == "__main__":
 
    xml_domain = vm.xmlDomain(name, mem, cpu, cn.getVirtualMachineFactory(), vm.getNetworkName())
 
-   xml_network = vm.xmlNetwork(ethName, ip, gateway, mac, netmask)
+   xml_network = vm.xmlNetwork(ethName, ip, gateway, mac, netmask, bridgeName, bridgeIP)
 
    #manually start lxc on host to be observable by lxc tools
    print "Creating Network"

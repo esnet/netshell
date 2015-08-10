@@ -8,7 +8,7 @@ import net.es.netshell.api.PersistentObject;
 
 public class LibvirtVirtualMachineDescriptor extends PersistentObject {
     private int memory, cpu;
-    private String name, ethName, ip, gateway, mac, netmask;
+    private String name, ethName, ip, gateway, mac, netmask, bridgeName, bridgeIP;
 
     public LibvirtVirtualMachineDescriptor() {
 
@@ -23,8 +23,10 @@ public class LibvirtVirtualMachineDescriptor extends PersistentObject {
      * @param gateway
      * @param mac
 `````* @param netmask
+     * @param bridgeName
+     * @param bridgeIP
      */ 
-    public LibvirtVirtualMachineDescriptor (String name, int memory, int cpu, String ethName, String ip, String gateway, String mac, String netmask) {
+    public LibvirtVirtualMachineDescriptor (String name, int memory, int cpu, String ethName, String ip, String gateway, String mac, String netmask, String bridgeName, String bridgeIP) {
         this.name = name;
         this.memory = memory;
         this.cpu = cpu;
@@ -33,6 +35,8 @@ public class LibvirtVirtualMachineDescriptor extends PersistentObject {
         this.gateway = gateway;
         this.mac = mac;
 	this.netmask = netmask;
+	this.bridgeName = bridgeName;
+	this.bridgeIP = bridgeIP;
     }
 
     /**

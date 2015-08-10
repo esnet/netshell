@@ -25,7 +25,8 @@ public abstract class VirtualMachineFactory extends LibvirtManager {
  	        return new LibvirtVirtualMachine();
 	    }
 	}
-	//scaling for future	
+	// TODO if needed to be extended
+	
 	/*if (virtualMachineFactory.equals("qemu"))
 	    return new QemuVirtualMachine(); */
 	return null;
