@@ -148,4 +148,4 @@ if __name__ == "__main__":
 	  	  \t sys.path.append('/root/jython/Lib/site-packages/') \n \
 	  	  \t sys.path.append (pwd().toString()) """)
 
-#feature install bundles in karaf - How?
+# TODO feature install bundles in karaf - How?

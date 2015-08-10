@@ -14,7 +14,7 @@ from net.es.netshell.vm import LibvirtSSHVirtualMachine
 # on 06/20/2015
 
 #################################################################
-# VM Configuration: Used to create/config VM, config SSH
+# VM Configuration: Used to create/config VM, config SSH	#
 #################################################################
 
 #Global variable
@@ -105,7 +105,7 @@ def main(argv):
    try:
       opts, args = getopt.getopt(argv,"hn:m:c:o:s:e:i:a:g:t:",["help","name=","memory=","cpu=","container=","os=","ethName=","ip=","mac=","gateway=","netmask"])
    except getopt.GetoptError:
-      #Not getting this error
+      #error if none of the options match
       print 'Incorrect Input Options.'
       print 'use for details: vmManager.py -h'
       sys.exit(2)

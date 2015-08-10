@@ -14,21 +14,15 @@ from net.es.netshell.vm import LibvirtSSHVirtualMachine
 # on 06/08/2015
 
 #################################################################
-# VM Manager: Modify as per requirements
+# VM Manager: Modify as per requirements and new Applications ###
+# TODO Used ONLY after vmConfiguration.py
 #################################################################
 
 #Global variable
-vmName = "" 
 name = ""
-mem = 0
-cpu = 0
 container = ""
-os = ""
 ethName = ""
 ip = ""
-mac = ""
-gateway = ""
-netmask = ""
 
 def subprocess_cmd(command):
     process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
@@ -36,24 +30,22 @@ def subprocess_cmd(command):
     print proc_stdout
 
 def main(argv):
-   global name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask
+   global name, container, ethName, ip
    try:
-      #opts, args = getopt.getopt(argv,"hn:o:s:e:i:",["help","name=","container=","os=","ethName=","ip="])
+      opts, args = getopt.getopt(argv,"hn:o:e:i:",["help","name=","container=","ethName=","ip="])
    except getopt.GetoptError:
-      #Not getting this error
+      #error if none of options match
       print 'Incorrect Input Options.'
       print 'use for details: vmManager.py -h'
       sys.exit(2)
    for opt, arg in opts:
       if opt == '-h':
-	print 'vmManager [options]... '
+	print 'vmManager [options]... \n options: \n \t-h | --help \t\t\tprint this statement and exit \n \t-n | --name <VM name>\t\tname of  virtual machine \n \t-o | --container <container>\thypervisor type \n \t-e | --ethName <ethernet name>\tethernet name of VM \n \t-i | --ip <IP address>\t\tip address of VM'
 	sys.exit()
       elif opt in ("-n", "--name"):
 	name = arg
       elif opt in ("-o", "--container"):
 	container = arg
-      elif opt in ("-s", "--os"):
-	os = arg
       elif opt in ("-e", "--ethname"):
 	ethName = arg
       elif opt in ("-i", "--ip"):
@@ -85,8 +77,7 @@ def secureShellClose(ssh):
 if __name__ == "__main__":
    global name, ethName, ip, container
 
-   #Modidy main based on functionality input
-#   main(sys.argv[1:])
+   main(sys.argv[1:])
 
    cn = LibvirtManager() 
    vm = LibvirtVirtualMachine()
@@ -98,19 +89,18 @@ if __name__ == "__main__":
 
    conn = cn.create(container)
 
-   #TODO LookupDomainName function
-
    #SSH Login session
    ssh = secureShellOpen()
    
    #Enter SSH functionality as needed
-   # ... 
+   # TODO  
     
    #delete ssh session
    secureShellClose(ssh)   
 
-   vm.deleteNetwork(net)
+### Delete only if necessary
+#   vm.deleteNetwork(net)
 
-   vm.delete(dom)
+#   vm.delete(dom)
 
    cn.delete(conn)
