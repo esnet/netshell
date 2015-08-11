@@ -17,6 +17,7 @@ import net.es.netshell.kernel.container.Containers;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.security.FileACL;
+import net.es.netshell.kernel.acl.UserAccess;
 import net.es.netshell.shell.CommandResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ public final class Users {
 
     private final static Users users = new Users();
 
-    /* Users directory */
+    /* uSERS directory */
     public final static String USERS_DIR="users";
 
     private final static String ADMIN_USERNAME = "admin";
@@ -264,8 +265,13 @@ public final class Users {
         try {
             method = KernelThread.getSysCallMethod(this.getClass(), "do_createUser");
 
+	    // Access per Application
+	    UserAccess currentUserAccess = UserAccess.getUsers();
+	    KernelThread kt = KernelThread.currentKernelThread();
+            String currentUserName = kt.getUser().getName();
+
             // Check if user is authorized to create users
-            if (KernelThread.currentKernelThread().isPrivileged()) {
+            if (KernelThread.currentKernelThread().isPrivileged() || currentUserAccess.isAccessPrivileged(currentUserName, "user:create")) {
                 KernelThread.doSysCall(this,
                         method,
                         newUser,
@@ -279,16 +285,19 @@ public final class Users {
             }
 
         } catch (UserAlreadyExistException e) {
-            resCode = false;
+            e.printStackTrace();
+	    resCode = false;
             resMessage = "User already exists";
         } catch (NoSuchMethodException e) {
-            //e.printStackTrace();
+            e.printStackTrace();
             resCode = false;
             resMessage = "Method not implemented";
         }catch(UserClassException e){
+            e.printStackTrace();
             resCode = false;
             resMessage = "User class must be root or user";
         }catch (Exception e) {
+            e.printStackTrace();
             resCode = false;
             resMessage = "Error in operation";
         }
@@ -400,8 +409,12 @@ public final class Users {
         try {
             method = KernelThread.getSysCallMethod(this.getClass(), "do_removeUser");
 
-            if ((currentUserName.equals(userName)) ||
-                    isPrivileged(currentUserName)) {
+	    // Access per Application
+	    UserAccess currentUserAccess = UserAccess.getUsers();
+
+            if ((currentUserName.equals(userName))  ||
+                    (isPrivileged(currentUserName)) || 
+		    (currentUserAccess.isAccessPrivileged(currentUserName, "user:delete"))) {
                 logger.info("OK to remove");
                 KernelThread.doSysCall(this,
                         method,
