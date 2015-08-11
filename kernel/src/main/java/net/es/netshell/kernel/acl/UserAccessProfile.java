@@ -3,6 +3,13 @@ package net.es.netshell.kernel.acl;
 /**
  * Created by amercian on 7/7/15.
  */
+import net.es.netshell.api.*;
+import net.es.netshell.configuration.NetShellConfiguration;
+import net.es.netshell.kernel.security.FileACL;
+import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 /**
  * Class to identify the different User Access Profiles based on Netshell Application Management
@@ -53,7 +60,7 @@ public class UserAccessProfile {
     }
 
     public String getMap(){
-	return map;
+	return this.map;
     }
 
     public void setName(String username){
@@ -61,6 +68,32 @@ public class UserAccessProfile {
     }
 
     public String getName(){
-	return username;
+	return this.username;
+    }
+
+    public static String readUserFile(String username, String access) throws IOException {
+       	Path aclFilePath = FileUtils.toRealPath(String.format("/etc/acl/%s",access));
+        File aclFile = new File(aclFilePath.toString());
+        aclFile.getParentFile().mkdirs();
+        if (!aclFile.exists()) {
+            // File does not exist yet, create it.
+            if (!aclFile.createNewFile()) {
+                // File could not be created, return a RuntimeError
+                throw new RuntimeException("Cannot create " + aclFilePath.toString());
+            }
+        }
+        BufferedReader reader = new BufferedReader(new FileReader(aclFile));
+        String line = null;
+
+        while ((line = reader.readLine()) != null) {
+            UserAccessProfile p = new UserAccessProfile(line);
+            if (p.getName().equals(username)) {
+                return p.getMap(); 
+            }
+            else {
+		return null;
+            }
+        }
+	return null;
     }
 }

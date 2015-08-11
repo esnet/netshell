@@ -36,7 +36,7 @@ import com.google.common.collect.SetMultimap;
 public final class UserAccess {
    /**
     * Extends Access Shell application
-     * Creates a folder /netshell-root/etc/acl/network/vconfig/.acl/username
+     * Creates a folder /netshell-root/etc/acl/network/vconfig/acl/username
      * Creates the table of users and privilege profiles in /netshell-root/etc/netshell.user.access
     */
 
@@ -50,7 +50,9 @@ public final class UserAccess {
     private Path NetShellRootPath;
     // Hash Table: key = user, value = accesses
     // To include duplicate key but no duplicate values using SetMultimap
-    private SetMultimap<String, String> userAccessList = HashMultimap.create();
+    private SetMultimap<String, String> NetworkAccessList = HashMultimap.create();
+    private SetMultimap<String, String> UserAccessList = HashMultimap.create();
+    private SetMultimap<String, String> VMAccessList = HashMultimap.create();
     private final Logger logger = LoggerFactory.getLogger(UserAccess.class);
 
 
@@ -141,19 +143,21 @@ public final class UserAccess {
 
 	// check which access profile should be performed and lists are created
 	if(access[0].equals("network")){
+            this.NetworkAccessList.put(username, map);
 	    NetworkManageProfile user = new NetworkManageProfile(username, map);
 	}
 	else if(access[0].equals("user")){
+            this.UserAccessList.put(username, map);
 	    UserManageProfile user = new UserManageProfile(username, map);
 	}
 	else if(access[0].equals("vm")){
+            this.VMAccessList.put(username, map);
 	    VMManageProfile user = new VMManageProfile(username, map);
 	}
 	
 	// Create hash table with list of user/access and write to /etc/netshell.user.access
 	// Including functionality to have duplicates in (hash) table
 	// Remove dependency on map TODO
-        this.userAccessList.put(username, map);
 	this.writeUserFile(username, access[0]); 
 
 	// Create home directory
@@ -168,7 +172,7 @@ public final class UserAccess {
         acl.allowUserWrite(username);
 	acl.allowUserExecute(username);
         // Commit ACL's
-        acl.store();
+        //acl.store();
     }
 
     public boolean removeaccess (UserAccessProfile user) {
@@ -224,11 +228,17 @@ public final class UserAccess {
 	    }
 
 	// Remove entry from the multimap
-	this.userAccessList.remove(username, map);
+	if(access[0].equals("network")){
+	    this.NetworkAccessList.remove(username, map);
+	} else if(access[0].equals("user")){
+	    this.UserAccessList.remove(username, map);
+	} else if(access[0].equals("vm")){
+	    this.VMAccessList.remove(username, map);
+	}   
 
         // Delete .acl file associated with this user account
-	File aclDelete = new File (Paths.get(this.getHomePath().toString(), access[0], ".acl", username).toString());
-	aclDelete.delete();
+	//File aclDelete = new File (Paths.get(this.getHomePath().toString(), access[0], ".acl", username).toString());
+	//aclDelete.delete();
 
         // Save entry in the /etc/netshell.user.access
         this.writeUserFile(username, access[0]);
@@ -242,7 +252,7 @@ public final class UserAccess {
      * @param map accessing application
      * @return TRUE or FALSE
      */
-    public static boolean isAccessPrivileged (String username, String map) {
+    public static boolean isAccessPrivileged (String username, String map) throws IOException{
 
 	// Access will depend on application
 	// map should be decoded for each application
@@ -255,23 +265,25 @@ public final class UserAccess {
 	   access = map;
 	}
 	
-        if (UserAccess.getUsers().userAccessList.isEmpty()  && username.equals("admin")) {
+        if ( access.equals("network") && UserAccess.getUsers().NetworkAccessList.isEmpty() && username.equals("admin")) {
             // Initial configuration. Add admin user and create configuration file.
             return true;
-        }
-	
-        // Collection<String> accesslist = UserAccess.getUsers().userAccessList.get(username);
+        } else if (access.equals("user") && UserAccess.getUsers().UserAccessList.isEmpty() && username.equals("admin")) {
+	    return true;
+	} else if (access.equals("vm") && UserAccess.getUsers().VMAccessList.isEmpty() && username.equals("admin")) {
+	    return true;
+	}
 	
 	if (username.equals(null)) {
             // Not a user
             return false;
         } else if (/*accesslist.contains(access) ||*/ Users.isPrivileged(username)) {
 	    return true;
-	} else if (UserAccess.getUsers().userAccessList.containsKey(username) && access.equals("network") && NetworkManageProfile.isPrivileged(username, map)) {
+	} else if (UserAccess.getUsers().NetworkAccessList.containsKey(username) && access.equals("network") && NetworkManageProfile.isPrivileged(username, map)) {
 	    return true;
-	} else if (access.equals("user") && UserManageProfile.isPrivileged(username, map)) {
+	} else if (UserAccess.getUsers().UserAccessList.containsKey(username) && access.equals("user") && UserManageProfile.isPrivileged(username, map)) {
 	    return true;
-	} else if (access.equals("vm") && VMManageProfile.isPrivileged(username, map)) {
+	} else if (UserAccess.getUsers().VMAccessList.containsKey(username) && access.equals("vm") && VMManageProfile.isPrivileged(username, map)) {
 	    return true;
 	} else {
 	    // Any other case
@@ -280,7 +292,7 @@ public final class UserAccess {
     }
 
     private synchronized void readUserFile(String username, String access) throws IOException {
-       	this.aclFilePath = FileUtils.toRealPath(String.format("/etc/acl/%s/%s",access,username));
+       	this.aclFilePath = FileUtils.toRealPath(String.format("/etc/acl/%s",access));
         File aclFile = new File(this.aclFilePath.toString());
         aclFile.getParentFile().mkdirs();
         if (!aclFile.exists()) {
@@ -295,30 +307,58 @@ public final class UserAccess {
 
         while ((line = reader.readLine()) != null) {
             UserAccessProfile p = new UserAccessProfile(line);
-            if (p.getName() != null) {
-                this.userAccessList.put(p.getName(), p.getMap()); 
+            if (p.getName() != null && access.equals("network")) {
+                this.NetworkAccessList.put(p.getName(), p.getMap()); 
             }
-            else {
+            else if (p.getName() != null && access.equals("user")) {
+                this.UserAccessList.put(p.getName(), p.getMap()); 
+            }
+	    if (p.getName() != null && access.equals("vm")) {
+                this.VMAccessList.put(p.getName(), p.getMap()); 
+            }
+	    else {
                 logger.error("Malformed user entry:  {}", line);
             }
         }
     }
 
     private synchronized void writeUserFile(String username, String access) throws IOException {
-	this.aclFilePath = FileUtils.toRealPath(String.format("/etc/acl/%s/%s",access,username));
+	this.aclFilePath = FileUtils.toRealPath(String.format("/etc/acl/%s",access));
         File aclFile = new File(this.aclFilePath.toString());
 	aclFile.delete();
         BufferedWriter writer = new BufferedWriter(new FileWriter(aclFile));
-        for (Map.Entry p : this.userAccessList.entries() ) {
-            if (p.getKey() != null) {
-		UserAccessProfile newEntry = new UserAccessProfile(p.getKey().toString(), p.getValue().toString());
-		//System.out.println("Key: " + p.getKey().toString() + "\t Value: " + p.getValue().toString() + "\n");
-                writer.write(newEntry.toString());
-                writer.newLine();
+	if(access.equals("network")){
+            for (Map.Entry p : this.NetworkAccessList.entries() ) {
+                if (p.getKey() != null) {
+	  	    UserAccessProfile newEntry = new UserAccessProfile(p.getKey().toString(), p.getValue().toString());
+		    //System.out.println("Key: " + p.getKey().toString() + "\t Value: " + p.getValue().toString() + "\n");
+                    writer.write(newEntry.toString());
+                    writer.newLine();
+                }
             }
-        }
-        writer.flush();
-        writer.close();
+            writer.flush();
+            writer.close();
+	} else	if(access.equals("user")){
+            for (Map.Entry p : this.UserAccessList.entries() ) {
+                if (p.getKey() != null) {
+	  	    UserAccessProfile newEntry = new UserAccessProfile(p.getKey().toString(), p.getValue().toString());
+                    writer.write(newEntry.toString());
+                    writer.newLine();
+                }
+            }
+            writer.flush();
+            writer.close();
+	} else if(access.equals("vm")){
+            for (Map.Entry p : this.VMAccessList.entries() ) {
+                if (p.getKey() != null) {
+	  	    UserAccessProfile newEntry = new UserAccessProfile(p.getKey().toString(), p.getValue().toString());
+                    writer.write(newEntry.toString());
+                    writer.newLine();
+                }
+            }
+            writer.flush();
+            writer.close();
+	}
     }
 
     public Path getNetShellRootPath() { return NetShellRootPath; }

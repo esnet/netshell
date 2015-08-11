@@ -1,5 +1,6 @@
 package net.es.netshell.kernel.acl;
 
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 /**
@@ -49,7 +50,7 @@ public class VMManageProfile extends UserAccessProfile{
 	return type;
     }
 
-    public static boolean isPrivileged(String username, String map){
+    public static boolean isPrivileged(String username, String map) throws IOException{
 	
 	VMManageProfile new_user = new VMManageProfile(username, map);
 	String[] maplist = map.split(":");
@@ -59,10 +60,14 @@ public class VMManageProfile extends UserAccessProfile{
 		number = Integer.parseInt(maplist[i+1]);
 	    }
 	}
-    	if (username.equals(null)) {
+
+	String existingUserMap = readUserFile(username, "vm");
+	VMManageProfile existingMap = new VMManageProfile(username, existingUserMap);
+
+    	if (username.equals(null) || existingMap.getMap().equals(null)) {
             // Not a user
             return false;
-	} else if (new_user.getType().equals("user") || new_user.getType().equals("root") && number < (Integer)vm_number.get(username)) {
+	} else if (new_user.getType().equals("user") || new_user.getType().equals("root") && number < (Integer)existingMap.vm_number.get(username)) {
 	    return true;
 	} else {
 	    // Any other case

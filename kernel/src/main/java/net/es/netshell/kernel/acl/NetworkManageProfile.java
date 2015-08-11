@@ -2,6 +2,8 @@ package net.es.netshell.kernel.acl;
 
 import net.es.netshell.kernel.acl.UserAccessProfile;
 
+import java.io.*;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +46,6 @@ public class NetworkManageProfile extends UserAccessProfile {
 	String[] vlan_list;
 
 	//this constructor is used only if maplist[0]="network"
-	//dont need to check it again
 	for(int i = 0; i<maplist.length; i++){
 	    if(maplist[i].equals("ipconfig")){
 		this.type = IPCONFIG;
@@ -60,15 +61,19 @@ public class NetworkManageProfile extends UserAccessProfile {
 	    }
 	    /* Assuming that there could be multiple VLAN ids */
 	    if(maplist[i].equals("vlanId")){
-		vlan_list = maplist[i+1].split(",");
-		this.vlan = new ArrayList<Integer>(vlan_list.length);
-		for (int j=0; j<vlan_list.length; j++){
-		    this.vlan.add(j,Integer.parseInt(vlan_list[j]));
+		if(maplist[i+1].contains(",")){
+		    vlan_list = maplist[i+1].split(",");
+		    this.vlan = new ArrayList<Integer>(vlan_list.length);
+		    for (int j=0; j<vlan_list.length; j++){
+		        this.vlan.add(j,Integer.parseInt(vlan_list[j]));
+	       	    }
+		} else {
+		    this.vlan.add(Integer.parseInt(maplist[i+1]));
 		}
 	    }
 	}
 	this.ethlist.put(username,this.ethInterface);
-	this.vlanlist.put(username, this.vlan);
+        this.vlanlist.put(username, this.vlan);
     }
 
     public String getType(){
@@ -83,18 +88,32 @@ public class NetworkManageProfile extends UserAccessProfile {
 	return this.ethInterface;
     }
 
-    public static boolean isPrivileged(String username, String map){	
+    public static boolean isPrivileged(String username, String map) throws IOException {	
 
-	NetworkManageProfile new_user = new NetworkManageProfile(username, map);
-	ArrayList<Integer> new_vlan = new_user.getVlan();
-	String new_eth = new_user.getEth();
+	String[] maplist = map.split(":");
+	String newEth="", newvlanInterface="";
+	Integer vid=0;
 
-    	if (username.equals(null)) {
+	for(int i = 0; i<maplist.length; i++){
+	    if(maplist[i].equals("interface")){
+		newEth = maplist[i+1];
+	    }
+	    if(maplist[i].equals("vlanInterface")){
+		newvlanInterface = maplist[i+1];
+	    }
+	    if(maplist[i].equals("vlanId")){
+		vid = Integer.parseInt(maplist[i+1]);
+            }
+	}
+	
+	String existingUserMap = readUserFile(username, "network");
+	NetworkManageProfile existingMap = new NetworkManageProfile(username, existingUserMap);
+		
+    	if (username.equals(null) || existingMap.getMap().equals(null)) {
             // Not a user
             return false;
 	// check for valid user, vlan list and eth list
-	// TODO the new vlan could be a list, so compare lists
-	} else if (/*vlan_flag ||*/ ethlist.containsValue(new_eth)) {
+	} else if (existingMap.ethlist.containsValue(newEth) && existingMap.vlanlist.containsValue(vid)) {
 	    return true;
 	} else {
 	    // Any other case
