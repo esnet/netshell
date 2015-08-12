@@ -37,7 +37,7 @@ public class AccessShellCommands {
 
         // Argument checking
         if (args.length != 3) {
-            o.println("Usage:  addaccess <username> <map> \n addaccess <username> <network:ipconfig:interface:<eth0>:vlanId:<10>> \n addaccess <username> <user:create> \n addaccess <username> <vm:root:10>");
+            o.println("Usage:  addaccess <username> <map> \n addaccess <username> <network:ipconfig:interface:<eth0>:vlan:<10>> \n addaccess <username> <user:create> \n addaccess <username> <vm:root:10>");
 	    /**
              * addaccess user1 network:ipconfig:interface:eth0:vlan:1,2,3
              * addaccess user1 network:vconfig:vlan:10,11,12
