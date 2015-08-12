@@ -37,13 +37,16 @@ public class NetworkingShellCommands {
             InetAddress address = InetAddress.getByName(ipAddress);
             NetworkInterfaces interfaces = NetworkInterfaces.getInstance();
 
-            interfaces.ipconfig(interfaceName,address);
+            if (interfaces.ipconfig(interfaceName,address)){
+        	o.println("Executed ipconfig");
+	    } else {
+		o.println("No permission to execute");
+	    }
         } catch (UnknownHostException e) {
             o.println("Please check the ip address");
             o.println(e);
         }
 
-        o.println("Executed ipconfig");
     }
 
     @ShellCommand(name = "vconfig",
@@ -67,10 +70,10 @@ public class NetworkingShellCommands {
         int vid = Integer.parseInt(vlanId);
         NetworkInterfaces interfaces = NetworkInterfaces.getInstance();
 
-        interfaces.vconfig(interface_name,vid);
-
-
-        o.println("Executed vconfig");
-    }
-
+	if(interfaces.vconfig(interface_name,vid)) {
+	     o.println("Executed vconfig");
+	} else {
+	     o.println("No permission to execute");
+	}
+   }
 }

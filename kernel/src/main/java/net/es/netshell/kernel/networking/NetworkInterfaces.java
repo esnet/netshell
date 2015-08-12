@@ -66,12 +66,16 @@ public class NetworkInterfaces {
 	    UserAccess currentUserAccess = UserAccess.getUsers();
             if (currentUsers.isPrivileged(currentUserName) || currentUserAccess.isAccessPrivileged(currentUserName, String.format("network:ipconfig:interface:%s",interfaceName))) {
                 logger.info("OK to change");
+		System.out.println("OK to change \n");
 
                 KernelThread.doSysCall(this,
                         method,
                         interfaceName,
                         address);
-            }
+		return true;
+            } else {
+		return false;
+	    }
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
             return false;
@@ -80,7 +84,7 @@ public class NetworkInterfaces {
             e.printStackTrace();
             return false;
         }
-        return true;
+        //return false;
     }
 
     public boolean vconfig(String interfaceName, int vid) {
@@ -97,14 +101,18 @@ public class NetworkInterfaces {
             Users currentUsers = Users.getUsers();
 	    //Privilege per application
 	    UserAccess currentUserAccess = UserAccess.getUsers();
-            if (currentUsers.isPrivileged(currentUserName) || currentUserAccess.isAccessPrivileged(currentUserName, String.format("network:vconfig:interface:%s:vlanId:%s",interfaceName,Integer.toString(vid)))) {
+            if (currentUsers.isPrivileged(currentUserName) || currentUserAccess.isAccessPrivileged(currentUserName, String.format("network:vconfig:interface:%s:vlan:%s",interfaceName,Integer.toString(vid)))) {
                 logger.info("OK to change");
 
+		System.out.println("OK to change \n");
                 KernelThread.doSysCall(this,
                         method,
                         interfaceName, vlanInterfaceName,
                         vid);
-            }
+		return true;
+            } else {
+		return false;
+	    }
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
             return false;
@@ -113,7 +121,7 @@ public class NetworkInterfaces {
             e.printStackTrace();
             return false;
         }
-        return true;
+        //return false;
     }
 
 
