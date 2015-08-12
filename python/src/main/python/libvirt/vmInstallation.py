@@ -24,14 +24,14 @@ def main(argv):
     global name
 
     try:
-	opts,, args = getopt.getopt(argv,"hn:",["help", "name="])
+	opts, args = getopt.getopt(argv,"hn:",["help", "name="])
     except getopt.GetoptError:
-	print "Incorrect input options. Use hostConfig.py -h"
+	print "Incorrect input options. Use vmInstallation -h"
 	sys.exit(2)
 
     for opt, arg in opts:
 	if opt in ("-h", "--help"):
-	    print 'hostConfig -n <username>'
+	    print 'vmInstallation -n <username>'
 	    sys.exit()
 	elif opt in ("-n", "--name"):
 	    name = arg
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 		 export JAVA_HOME=/root/jdk1.7.0_79")
 
     #restart bash
-    subprocess.call(["chroot", command, "/bin/bash", "-c", "source {}/.bash_profile".format(expanduser("~")])
+    subprocess.call(["chroot", command, "/bin/bash", "-c", "source {}/.bash_profile".format(expanduser("~"))])
 
     #install dependencies
     subprocess.call(["chroot", command, "/bin/bash", "-c", "yum install -y wget git maven"])

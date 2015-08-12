@@ -1,5 +1,6 @@
 import subprocess
-
+import sys, getopt
+import operator
 
 # Authored by amercian
 # dated 07/08/2015
@@ -16,7 +17,7 @@ def main(argv):
     global hostName
 
     try:
-	opts,, args = getopt.getopt(argv,"hn:",["help", "name="])
+	opts, args = getopt.getopt(argv,"hn:",["help", "name="])
     except getopt.GetoptError:
 	print "Incorrect input options. Use hostConfig.py -h"
 	sys.exit(2)

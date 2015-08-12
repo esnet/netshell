@@ -159,7 +159,7 @@ def defaultVM():
    if(os == ""):
       os = "centos"
    if(ethName == ""):
-      ethName = "default1"
+      ethName = "default"
    if(ip == ""):
       ip = "192.168.121.100"
    if(mac == ""):
@@ -216,7 +216,7 @@ if __name__ == "__main__":
 
    print "Entering Libvirt Manager..."
    cn = LibvirtManager(container) 
-   vm = LibvirtVirtualMachine(name, mem, cpu, ethName, ip, gateway, mac, netmask, bridgeName, bridgeIP)
+   vm = LibvirtVirtualMachine(name, long(mem), int(cpu), ethName, ip, gateway, mac, netmask, bridgeName, bridgeIP)
 
    print "Setting VM parameters..."
    cn.setVirtualMachineFactory(container)
@@ -227,13 +227,14 @@ if __name__ == "__main__":
    print "Creating VM connection..."
    conn = cn.create(container)
 
-   xml_domain = vm.xmlDomain(name, mem, cpu, cn.getVirtualMachineFactory(), vm.getNetworkName())
+   xml_domain = vm.xmlDomain(name, long(mem), int(cpu), cn.getVirtualMachineFactory(), vm.getNetworkName())
 
    xml_network = vm.xmlNetwork(ethName, ip, gateway, mac, netmask, bridgeName, bridgeIP)
 
    #manually start lxc on host to be observable by lxc tools
    print "Creating Network"
    net = vm.createNetwork(conn, xml_network)
+   
    print "Creating Domain"
    dom = vm.create(conn, xml_domain)
 
