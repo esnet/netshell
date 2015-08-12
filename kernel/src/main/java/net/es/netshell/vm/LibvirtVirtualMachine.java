@@ -74,11 +74,19 @@ public class LibvirtVirtualMachine extends LibvirtVirtualMachineDescriptor {
             System.out.println("exception caught:"+e);
             System.out.println(e.getError());
         }
+	return dom;
+    }
+
+    public Domain start(Domain dom) throws LibvirtException {
 	int domain_connect = dom.create();
 	if(domain_connect == 0){
 	    System.out.println("Domain creation failed!");
 	}
 	return dom;
+    }
+
+    public void stop(Domain dom) throws LibvirtException {
+	dom.shutdown();
     }
 
     public void delete(Domain dom) throws LibvirtException {
@@ -89,6 +97,17 @@ public class LibvirtVirtualMachine extends LibvirtVirtualMachineDescriptor {
             System.out.println(e.getError());
         }
 
+    }
+
+    public Domain domainLookUp(Connect conn, String name) throws LibvirtException{
+	Domain dom = null;
+	try {
+	    dom = conn.domainLookupByName(name);
+	} catch (LibvirtException e) {
+	    System.out.println("exception caught:"+e);
+	    System.out.println(e.getError());
+	}
+	return dom;
     }
 
     /**

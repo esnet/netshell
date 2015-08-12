@@ -109,7 +109,7 @@ def main(argv):
    except getopt.GetoptError:
       #error if none of the options match
       print 'Incorrect Input Options.'
-      print 'use for details: vmManager.py -h'
+      print 'use for details: vmConfiguration.py -h'
       sys.exit(2)
    for opt, arg in opts:
       if opt in ("-h", "--help") :
@@ -187,23 +187,6 @@ def secureShell():
    ssh.disconnectSession(session)
    print "Changed host name of VM ", name
 
-def secureShellKeyGen(vm):
-   global name, ip
-   #SSH with key-gen pair (recommended)
-   ssh = LibvirtSSHVirtualMachine()
-   ssh.createAuth(ip,"rsa",vm)
-   #This line changes if ubuntu
-   subprocess_cmd("mkdir /var/lib/libvirt/lxc/{}/root/.ssh".format(name))
-   subprocess.call(["sudo","cp","{}/.ssh/id_rsa.pub".format(expanduser("~")),"/var/lib/libvirt/lxc/{}/root/.ssh/authorized_keys".format(name)]) 
-   session = ssh.createSessionAuth(ip)
-   #Any Processes 
-   ssh.disconnectSession(session)
-   print "Created Key-Gen Authentication"
-   #To enable login to VM using CLI change permissions
-   subprocess.call(["sudo","chmod","a-rwx","{}/.ssh/id_rsa".format(expanduser("~"))])
-   subprocess.call(["sudo","chmod","u+rw","{}/.ssh/id_rsa".format(expanduser("~"))])
-   print "Added to connected hosts"
-
 if __name__ == "__main__":
    global name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask, bridgeName, bridgeIP
    main(sys.argv[1:])
@@ -237,14 +220,6 @@ if __name__ == "__main__":
    
    print "Creating Domain"
    dom = vm.create(conn, xml_domain)
-
-   #Restart Network in remote host (issue after testing)
-   command = "/var/lib/libvirt/lxc/{}/".format(name)
-   subprocess.call(["chroot",command,"/bin/bash","-c","service network restart"]) 
- 
-   #SSH Capability
-   print "Creating Secure Shell link"
-   secureShellKeyGen(vm)
 
     ### Delete only if necessary
 #   vm.deleteNetwork(net)
