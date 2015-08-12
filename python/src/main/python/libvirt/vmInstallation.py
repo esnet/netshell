@@ -48,7 +48,7 @@ if __name__ == "__main__":
     main(sys.argv[1:])
 
     command = "/var/lib/libvirt/lxc/{}/".format(name)
-    root = command + "root/"
+    root = command + "root"
 
     #scp java jdk to lxc root home
     subprocess.call(["sudo","cp","{}/jdk-7u79-linux-x64.gz".format(expanduser("~")),"{}".format(root)])
@@ -122,8 +122,10 @@ if __name__ == "__main__":
 
     subprocess.call(["chroot", command, "/bin/bash", "-c", "source .bash_profile"])
 
-    subprocess.call(["chroot", command, "/bin/bash", "-c", "mkdir netshell-root/etc"])
-    subprocess.call(["chroot", command, "/bin/bash", "-c", "touch netshell-root/etc/init.py"])
+    subprocess.call(["chroot", command, "/bin/bash", "-c", "mkdir root/netshell-root"])
+    subprocess.call(["chroot", command, "/bin/bash", "-c", "mkdir root/netshell-root/etc"])
+    subprocess.call(["chroot", command, "/bin/bash", "-c", "touch root/netshell-root/etc/init.py"])
+    subprocess.call(["chroot", command, "/bin/bash", "-c", "touch root/netshell-root/etc/profile.py"])
 
     with open("{}/netshell-root/etc/profile.py".format(root), "w") as myfile:
 	myfile.write(""" import sys \n \

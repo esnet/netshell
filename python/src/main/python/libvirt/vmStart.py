@@ -47,7 +47,7 @@ if __name__ == "__main__":
    dom = conn.domainLookupByName(name)
 
    flag = dom.create()
-   if(flag == 0)
-	print "Domain creation failed!"
-   else
-	print "Domain started"
+   if(flag == 0):
+	print "Domain started!"
+   else:
+	print "Domain failed!"
