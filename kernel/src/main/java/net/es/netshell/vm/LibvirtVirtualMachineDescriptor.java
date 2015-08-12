@@ -7,7 +7,8 @@ package net.es.netshell.vm;
 import net.es.netshell.api.PersistentObject;
 
 public class LibvirtVirtualMachineDescriptor extends PersistentObject {
-    private int memory, cpu;
+    private int cpu;
+    private long memory;
     private String name, ethName, ip, gateway, mac, netmask, bridgeName, bridgeIP;
 
     public LibvirtVirtualMachineDescriptor() {
@@ -26,7 +27,7 @@ public class LibvirtVirtualMachineDescriptor extends PersistentObject {
      * @param bridgeName
      * @param bridgeIP
      */ 
-    public LibvirtVirtualMachineDescriptor (String name, int memory, int cpu, String ethName, String ip, String gateway, String mac, String netmask, String bridgeName, String bridgeIP) {
+    public LibvirtVirtualMachineDescriptor (String name, long memory, int cpu, String ethName, String ip, String gateway, String mac, String netmask, String bridgeName, String bridgeIP) {
         this.name = name;
         this.memory = memory;
         this.cpu = cpu;

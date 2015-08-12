@@ -29,7 +29,7 @@ public class LibvirtVirtualMachine extends LibvirtVirtualMachineDescriptor {
     /**
      * Constructor that calls the LibvirtVirtualMachineDescriptor
      */
-    public LibvirtVirtualMachine(String name, int memory, int cpu, String ethName, String ip, String gateway, String mac, String netmask, String bridgeName, String bridgeIP) {
+    public LibvirtVirtualMachine(String name, long memory, int cpu, String ethName, String ip, String gateway, String mac, String netmask, String bridgeName, String bridgeIP) {
 	super(name, memory, cpu, ethName, ip, gateway, mac, netmask, bridgeName, bridgeIP);
     }	
     /**
@@ -40,7 +40,7 @@ public class LibvirtVirtualMachine extends LibvirtVirtualMachineDescriptor {
      * @param virtualMachineFactory 
      * @return xml string for Domain
      */
-    public String xmlDomain(String name, int memory, int cpu, String virtualMachineFactory, String ethName){
+    public String xmlDomain(String name, long memory, int cpu, String virtualMachineFactory, String ethName){
 	String xml_domain = String.format("<domain type='%s'><name>%s</name><memory>%d</memory><os><type>exe</type><init>/sbin/init</init></os><vcpu>%d</vcpu><clock offset='utc'/><on_poweroff>destroy</on_poweroff><on_reboot>restart</on_reboot><on_crash>destroy</on_crash><devices><emulator>/usr/libexec/libvirt_lxc</emulator><filesystem type='mount'><source dir='/var/lib/libvirt/lxc/%s/'/><target dir='/'/></filesystem><interface type='network'><source network='%s'/></interface><console type='pty' /></devices></domain>",virtualMachineFactory, name, memory, cpu, name, ethName);
 
 	return xml_domain;
