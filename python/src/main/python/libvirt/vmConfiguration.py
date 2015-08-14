@@ -147,6 +147,7 @@ def main(argv):
       defaultVM()
 
 def defaultVM():
+   # TODO make the default VM dynamically adopted and not static
    global name, mem, cpu, container, os, ethName, ip, mac, gateway, netmask, bridgeName, bridgeIP
    if(name == ""):
       name = "centos-7"

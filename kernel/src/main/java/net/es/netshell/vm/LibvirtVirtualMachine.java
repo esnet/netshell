@@ -138,4 +138,16 @@ public class LibvirtVirtualMachine extends LibvirtVirtualMachineDescriptor {
         }
 
     }
+
+    public Network networkLookUp(Connect conn, String ethName) throws LibvirtException{
+	Network net = null;
+	try {
+	    net = conn.networkLookupByName(ethName);
+	} catch (LibvirtException e) {
+	    System.out.println("exception caught:"+e);
+	    System.out.println(e.getError());
+	}
+	return net;
+    }
+
 } 

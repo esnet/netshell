@@ -24,6 +24,7 @@ def main(argv):
    global name
    try:
       opts, args = getopt.getopt(argv,"hn:",["help","name="])
+      #TODO enter the eth address and start that as well
    except getopt.GetoptError:
       #error if none of the options match
       print 'Incorrect Input Options.'
@@ -45,8 +46,10 @@ if __name__ == "__main__":
    conn = cn.create("lxc")
 
    dom = conn.domainLookupByName(name)
+   net = conn.networkLookupByName(ethName)
 
    flag = dom.create()
+   #net.create()
    if(flag == 0):
 	print "Domain started!"
    else:

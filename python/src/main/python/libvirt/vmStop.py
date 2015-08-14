@@ -24,6 +24,7 @@ def main(argv):
    global name
    try:
       opts, args = getopt.getopt(argv,"hn:",["help","name="])
+      #TODO enter the eth address and start
    except getopt.GetoptError:
       #error if none of the options match
       print 'Incorrect Input Options.'
