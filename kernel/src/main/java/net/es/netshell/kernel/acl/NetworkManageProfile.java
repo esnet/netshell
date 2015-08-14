@@ -26,14 +26,14 @@ public class NetworkManageProfile extends UserAccessProfile {
     private static SetMultimap<String,String> ethlist = HashMultimap.create();
     // List of vlan ids
     //private static Map<String,ArrayList<Integer>> vlanlist = new HashMap<String, ArrayList<Integer>>();
-    private static SetMultimap<String,Integer> vlanlist = HashMultimap.create();
+    private static SetMultimap<String,List<Integer>> vlanlist = HashMultimap.create();
 
     private String type;
     private String ethInterface;
     private String vlanInterface;
     // list of vlan   
-    //private ArrayList<Integer> vlan;
-    private Integer vlan;
+    private List<Integer> vlan = new ArrayList<Integer>();
+    //private Integer vlan;
   
      /**
      * Constructor types
@@ -63,16 +63,17 @@ public class NetworkManageProfile extends UserAccessProfile {
 	    }
 	    /* Assuming that there could be multiple VLAN ids */
 	    if(maplist[i].equals("vlan")){
-		/*if(maplist[i+1].contains(",")){
+		if(maplist[i+1].contains(",")){
 		    vlan_list = maplist[i+1].split(",");
-		    this.vlan = new ArrayList<Integer>(vlan_list.length);
+		    //this.vlan = new ArrayList<Integer>(vlan_list.length);
 		    for (int j=0; j<vlan_list.length; j++){
-		        this.vlan.add(j,Integer.parseInt(vlan_list[j]));
+		        this.vlan.add(Integer.parseInt(vlan_list[j]));
 	       	    }
 		} else {
-		    this.vlan.add(0,Integer.parseInt(maplist[i+1]));
-		}*/
-		this.vlan = Integer.parseInt(maplist[i+1]);
+		    this.vlan.add(Integer.parseInt(maplist[i+1]));
+		}
+		/* Assuming vlan is only one value */
+		//this.vlan = Integer.parseInt(maplist[i+1]);
 	    }
 	}
 	this.ethlist.put(username,this.ethInterface);
@@ -83,7 +84,7 @@ public class NetworkManageProfile extends UserAccessProfile {
 	return this.type;
     }
 
-    public Integer getVlan(){
+    public List<Integer> getVlan(){
 	return this.vlan;
     }
 
@@ -121,7 +122,7 @@ public class NetworkManageProfile extends UserAccessProfile {
 	} else if (existingMap.getType().equals("ipconfig") && existingMap.ethlist.containsValue(newEth)) {
 	    System.out.print("True ipconfig case \n");
 	    return true;
-	} else if (existingMap.getType().equals("vconfig") && existingMap.ethlist.containsValue(newEth) && existingMap.vlanlist.containsValue(vid)) {
+	} else if (existingMap.getType().equals("vconfig") && existingMap.ethlist.containsValue(newEth) /*&& existingMap.vlanlist.containsValue(vid)*/ && existingMap.getVlan().contains(vid)) {
 	    System.out.print("True vconfig case \n");
 	    return true;
 	}  else {
