@@ -1,0 +1,60 @@
+module netshell-odlmdsal-impl {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:netshell-odlmdsal:impl";
+    prefix "netshell-odlmdsal-impl";
+
+    import config { prefix config; revision-date 2013-04-05; }
+    import opendaylight-md-sal-binding { prefix mdsal; revision-date 2013-10-28; }
+    import netshell-odlmdsal { prefix netshell-odlmdsal; revision-date 2015-08-07; }
+
+    description
+        "This module contains the base YANG definitions for the odl-mdsal
+        implementation";
+
+    revision "2015-08-07" {
+        description
+                "Initial revision";
+    }
+
+    // This is the definition of the service implementation as a module identity.
+    identity netshell-odlmdsal-impl {
+        description "NetShell ODL MD-SAL integration";
+        base "config:module-type";
+        config:java-name-prefix OdlMdsal;
+    }
+
+    // Augments the 'configuration' choice node under modules/module.
+    // We consume the three main services, RPCs, Notifications & data broker
+    augment "/config:modules/config:module/config:configuration" {
+        case netshell-odlmdsal-impl {
+            when "/config:modules/config:module/config:type = 'netshell-odlmdsal-impl'";
+
+            container rpc-registry {
+                uses config:service-ref {
+                    refine type {
+                        mandatory true;
+                        config:required-identity mdsal:binding-rpc-registry;
+                    }
+                }
+            }
+
+            container notification-service {
+                uses config:service-ref {
+                    refine type {
+                        mandatory true;
+                        config:required-identity mdsal:binding-notification-service;
+                    }
+                }
+            }
+
+            container data-broker {
+                uses config:service-ref {
+                    refine type {
+                        mandatory false;
+                        config:required-identity mdsal:binding-async-data-broker;
+                    }
+                }
+            }
+        }
+    }
+}

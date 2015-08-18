@@ -1,0 +1,16 @@
+module netshell-odlmdsal {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:netshell-odlmdsal";
+    prefix "netshell-odlmdsal";
+
+    import config { prefix config; revision-date 2013-04-05; }
+
+    description
+        "Service definition for netshell-odmdsal";
+
+    revision "2015-08-07" {
+        description
+            "Initial revision";
+    }
+
+}

@@ -14,6 +14,7 @@
         <module>kernel</module>
         <module>python</module>
         <module>odl</module>
+        <module>odl-mdsal</module>
         <module>controller</module>
     </modules>
     <build>
