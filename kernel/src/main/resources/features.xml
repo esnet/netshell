@@ -40,5 +40,7 @@
     </feature>
     <feature name="netshell-odl-mdsal" version="1.0.0-SNAPSHOT" description="ESnet Netshell OpenDaylight (MD-SAL) Integration Bundle">
         <bundle>mvn:net.es/netshell-odl-mdsal/1.0-SNAPSHOT</bundle>
+        <!-- Should really put etc/opendaylight/karaf into a definition of some sort -->
+        <configfile finalname="etc/opendaylight/karaf/04-netshell-mdsal.xml">mvn:net.es/netshell-odl-mdsal/${project.version}/xml/config</configfile>
     </feature>
 </features>

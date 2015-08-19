@@ -25,10 +25,10 @@
         <data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
             <modules xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
                 <module>
-                    <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:config:netshell-odlmdsal:impl">
+                    <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:netshell-odlmdsal:impl">
                         prefix:netshell-odlmdsal-impl
                     </type>
-                    <name>shape-provider-impl</name>
+                    <name>netshell-odlmdsal-impl</name>
                     <rpc-registry>
                         <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-rpc-registry</type>
                         <name>binding-rpc-broker</name>
@@ -43,12 +43,16 @@
                         </type>
                         <name>binding-notification-broker</name>
                     </notification-service>
-                    <thread-pool-size>5</thread-pool-size>
+                    <!--           Exemplary thread model configuration. Uncomment <threads> tag below to adjust default thread model -->
+                    <!-- <threads>
+                        <boss-threads>2</boss-threads>
+                        <worker-threads>8</worker-threads>
+                    </threads> -->
                 </module>
             </modules>
         </data>
     </configuration>
     <required-capabilities>
-        <capability>urn:opendaylight:params:xml:ns:yang:controller:config:shape-provider:impl?module=shape-provider-impl&amp;revision=2014-12-03</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:netshell-odlmdsal:impl?module=netshell-odlmdsal-impl&amp;revision=2015-08-07</capability>
     </required-capabilities>
 </snapshot>
