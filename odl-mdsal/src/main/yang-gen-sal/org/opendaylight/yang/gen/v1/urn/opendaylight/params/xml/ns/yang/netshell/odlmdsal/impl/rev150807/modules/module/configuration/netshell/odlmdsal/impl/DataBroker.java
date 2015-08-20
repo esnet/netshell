@@ -1,0 +1,47 @@
+package org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.netshell.odlmdsal.impl.rev150807.modules.module.configuration.netshell.odlmdsal.impl;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.rev130405.ServiceRef;
+import org.opendaylight.yangtools.yang.common.QName;
+import org.opendaylight.yangtools.yang.binding.ChildOf;
+import org.opendaylight.yangtools.yang.binding.Augmentable;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.rev130405.modules.Module;
+
+
+/**
+ * <p>This class represents the following YANG schema fragment defined in module <b>netshell-odlmdsal-impl</b>
+ * <br />(Source path: <i>META-INF/yang/netshell-odlmdsal-impl.yang</i>):
+ * <pre>
+ * container data-broker {
+ *     leaf type {
+ *         type service-type-ref;
+ *     }
+ *     leaf name {
+ *         type leafref;
+ *     }
+ *     uses service-ref {
+ *         refine (urn:opendaylight:params:xml:ns:yang:netshell-odlmdsal:impl?revision=2015-08-07)type {
+ *             leaf type {
+ *                 type service-type-ref;
+ *             }
+ *         }
+ *     }
+ * }
+ * </pre>
+ * The schema path to identify an instance is
+ * <i>netshell-odlmdsal-impl/modules/module/configuration/(urn:opendaylight:params:xml:ns:yang:netshell-odlmdsal:impl?revision=2015-08-07)netshell-odlmdsal-impl/data-broker</i>
+ * <p>To create instances of this class use {@link org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.netshell.odlmdsal.impl.rev150807.modules.module.configuration.netshell.odlmdsal.impl.DataBrokerBuilder}.
+ * @see org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.netshell.odlmdsal.impl.rev150807.modules.module.configuration.netshell.odlmdsal.impl.DataBrokerBuilder
+ */
+public interface DataBroker
+    extends
+    ChildOf<Module>,
+    Augmentable<org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.netshell.odlmdsal.impl.rev150807.modules.module.configuration.netshell.odlmdsal.impl.DataBroker>,
+    ServiceRef
+{
+
+
+
+    public static final QName QNAME = org.opendaylight.yangtools.yang.common.QName.create("urn:opendaylight:params:xml:ns:yang:netshell-odlmdsal:impl","2015-08-07","data-broker");;
+
+
+}
+
