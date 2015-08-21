@@ -236,7 +236,11 @@
                         </goals>
                         <configuration>
                             <sources>
+                                <!-- XXX Need to reconcile these three -->
+                                <!-- Perhaps generatedConfigPath shoudl be ${project.build.directory}/generated-sources/config -->
                                 <source>${project.build.directory}/generated-sources/config</source>;
+                                <source>${generatedConfigPath}</source>
+                                <source>${generatedSalPath}</source>
                             </sources>
                         </configuration>
                     </execution>

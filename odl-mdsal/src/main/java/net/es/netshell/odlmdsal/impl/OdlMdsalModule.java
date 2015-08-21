@@ -1,4 +1,9 @@
 package net.es.netshell.odlmdsal.impl;
+
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
+import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+
 /**
 * NetShell ODL MD-SAL integration
 */
@@ -21,8 +26,18 @@ public class OdlMdsalModule extends net.es.netshell.odlmdsal.impl.AbstractOdlMds
 
         System.out.println("Hello ODL MD-SAL");
 
-        // TODO:implement
-        throw new java.lang.UnsupportedOperationException();
+        // Data broker service to interact with datastore
+        DataBroker dataBrokerService = getDataBrokerDependency();
+
+        // RPC Registry service to register RPCs
+        RpcProviderRegistry rpcRegistryDependency = getRpcRegistryDependency();
+
+        //retrieves the notification service for publishing notifications
+        NotificationProviderService notificationService = getNotificationServiceDependency();
+
+         OdlMdsalImpl odlMdsalImpl = new OdlMdsalImpl(dataBrokerService, notificationService, rpcRegistryDependency);
+        return odlMdsalImpl;
+
     }
 
 }
