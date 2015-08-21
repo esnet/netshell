@@ -44,8 +44,8 @@
         <config.version>0.2.8-Helium-SR3</config.version>
         <guava.version>14.0.1</guava.version>
 
-        <generatedConfigPath>src/main/yang-gen-config</generatedConfigPath>
-        <generatedSalPath>src/main/yang-gen-sal</generatedSalPath>
+        <generatedConfigPath>${project.build.directory}/generated-sources/config</generatedConfigPath>
+        <generatedSalPath>${project.build.directory}/generated-sources/sal</generatedSalPath>
 
     </properties>
 
@@ -236,9 +236,6 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <!-- XXX Need to reconcile these three -->
-                                <!-- Perhaps generatedConfigPath shoudl be ${project.build.directory}/generated-sources/config -->
-                                <source>${project.build.directory}/generated-sources/config</source>;
                                 <source>${generatedConfigPath}</source>
                                 <source>${generatedSalPath}</source>
                             </sources>
