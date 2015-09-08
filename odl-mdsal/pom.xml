@@ -273,7 +273,7 @@
                         <Bundle-Name>ESnet NetShell Open Daylight (MD-SAL) Integration</Bundle-Name>
                         <Bundle-Version>1.0-SNAPSHOT</Bundle-Version>
                         <Export-Package>net.es.netshell.odlmdsal.impl</Export-Package>
-                        <Import-Package>*</Import-Package>
+                        <Import-Package>com.google.common.base;version="[18.0,19)",com.google.common.collect;version="[18.0,19)",com.google.common.util.concurrent;version="[18.0,19)",*</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
