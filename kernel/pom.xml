@@ -22,6 +22,8 @@
         <kernel.version>0.0.1-SNAPSHOT</kernel.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <guava.version>18.0</guava.version>
     </properties>
 
     <repositories>
@@ -72,9 +74,9 @@
         </dependency>
 
         <dependency>
-	    <groupId>com.google.collections</groupId>
-	    <artifactId>google-collections</artifactId>
-	    <version>1.0-rc2</version>
+	    <groupId>com.google.guava</groupId>
+	    <artifactId>guava</artifactId>
+	    <version>${guava.version}</version>
         </dependency>
 
 	<dependency>

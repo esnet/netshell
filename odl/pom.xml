@@ -19,6 +19,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <controller.sal.version>0.9.1-Lithium-SR1</controller.sal.version>
+        <controller.switchmanager.version>0.8.1-Lithium-SR1</controller.switchmanager.version>
     </properties>
 
     <repositories>
@@ -78,12 +81,12 @@
         <dependency>
             <groupId>org.opendaylight.controller</groupId>
             <artifactId>sal</artifactId>
-            <version>0.8.1-Helium</version>
+            <version>${controller.sal.version}</version>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.controller</groupId>
             <artifactId>switchmanager</artifactId>
-            <version>0.7.1-Helium</version>
+            <version>${controller.switchmanager.version}</version>
         </dependency>
 
         <!-- NetShell -->
@@ -112,7 +115,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Name>ESnet NetShell Open Daylight Integration</Bundle-Name>
+                        <Bundle-Name>ESnet NetShell Open Daylight (AD-SAL) Integration</Bundle-Name>
                         <Bundle-Version>1.0-SNAPSHOT</Bundle-Version>
                         <Bundle-Activator>net.es.netshell.odl.Activator</Bundle-Activator>
                     </instructions>
