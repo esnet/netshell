@@ -22,6 +22,7 @@
 package net.es.netshell.odlmdsal.impl;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -33,23 +34,50 @@ import org.opendaylight.controller.sal.binding.api.NotificationService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketReceived;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class is an interface to the OpenFlow controller (and related) functionality
  * in OpenDaylight, using the MD-SAL abstraction layer.
  */
-// XXX implements PacketProcessingListener
-public class OdlMdsalImpl implements AutoCloseable {
+public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
+
+    /**
+     * Callback function to pass a RawPacket to some of our code.  It's designed
+     * to get a thread of control back into Python...the idea is to define and
+     * instantiate an instance of a Python class that implements this interface.
+     *
+     * There needs to be some authorization around the getter and setter here.
+     */
+    public interface Callback {
+        public void callback(PacketReceived notification);
+    }
+    private Callback packetInCallback;
+
+    public Callback getPacketInCallback() {
+        return packetInCallback;
+    }
+
+    public void setPacketInCallback(Callback packetInCallback) {
+        this.packetInCallback = packetInCallback;
+    }
 
     // ODL objects
     DataBroker dataBroker;
     NotificationProviderService notificationProviderService;
     RpcProviderRegistry rpcProviderRegistry;
+    List<Registration> registrations;
 
     SalFlowService salFlowService;
     NotificationService notificationService;
@@ -77,6 +105,9 @@ public class OdlMdsalImpl implements AutoCloseable {
     public NotificationService getNotificationService() {
         return notificationService;
     }
+
+    // Logging
+    static final private Logger logger = LoggerFactory.getLogger(OdlMdsalImpl.class);
 
     // This is a quasi-singleton.  In theory there can be multiple of these objects
     // in a system, but in practice it seems that each one of these is associated
@@ -116,6 +147,11 @@ public class OdlMdsalImpl implements AutoCloseable {
                 throw new RuntimeException("this.packetProcessingService null");
             }
 
+            // Register for notifications
+/*            this.registrations = Lists.newArrayList();
+            Registration reg = notificationService.registerNotificationListener(this);
+            this.registrations.add(reg);
+*/
         }
         else {
             throw new RuntimeException("Attempt to create multiple " + OdlMdsalImpl.class.getName());
@@ -127,8 +163,27 @@ public class OdlMdsalImpl implements AutoCloseable {
      * Override the close() abstract method from java.lang.AutoCloseable.
      */
     @Override
-    public void close() {
+    public void close() throws Exception {
+
+        // Deregister notifications
+        for (Registration r : registrations) {
+            r.close();
+        }
+        registrations.clear();
+
         return;
+    }
+
+    /**
+     * Override onPacketReceived() abstract method from PacketProcessingListener.
+     */
+    @Override
+    public void onPacketReceived(PacketReceived notification) {
+        logger.info("Received packet notification {}", notification.getMatch());
+
+        if (packetInCallback != null) {
+            packetInCallback.callback(notification);
+        }
     }
 
     /**
