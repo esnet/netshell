@@ -73,13 +73,13 @@ ODL Hydrogen is not supported.)  These differences will be noted where necessary
     
         http://localhost:8181/index.html
 
-5.  Features necessary for NetShell integration can be loaded as follows:
+5.  Features necessary for NetShell integration can be loaded as follows on ODL Helium:
 
         feature:install odl-adsal-compatibility odl-nsf-managers
         
-    On ODL Lithium, it is also necessary to install another module:
+    On ODL Lithium, it is necessary to do this instead:
     
-        feature:install odl-openflowplugin-adsal-compatibility
+        feature:install odl-openflowplugin-adsal-compatibility odl-nsf-managers
 
 6.  To make the embedded SSH server start up correctly, it is necessary to refresh the bindings of one
     of the bundles.
@@ -92,13 +92,9 @@ ODL Hydrogen is not supported.)  These differences will be noted where necessary
 
 7.  Follow the instructions in "NetShell Quickstart" above to load and run the base NetShell modules.
 
-8.  To load the NetShell OpenDaylight bundle:
+8.  To load the NetShell OpenDaylight AD-SAL bundle:
 
-        bundle:install mvn:mvn:net.es/netshell-odl/1.0-SNAPSHOT
-
-    There is a lightly-tested feature for this bundle (if we want to express dependencies,
-    it would install those as well, but there aren't any listed yet):
-    
+        feature:install netshell-controller
         feature:install netshell-odl
         
 
