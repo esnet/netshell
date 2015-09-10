@@ -24,8 +24,6 @@ public class OdlMdsalModule extends net.es.netshell.odlmdsal.impl.AbstractOdlMds
     @Override
     public java.lang.AutoCloseable createInstance() {
 
-        System.out.println("Hello ODL MD-SAL");
-
         // Data broker service to interact with datastore
         DataBroker dataBrokerService = getDataBrokerDependency();
 

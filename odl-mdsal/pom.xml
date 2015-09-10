@@ -253,7 +253,7 @@
                         <configuration>
                             <artifacts>
                                 <artifact>
-                                    <file>${project.build.directory}/classes/initial/04-netshell-mdsal.xml</file>
+                                    <file>${project.build.directory}/classes/initial/84-netshell-mdsal.xml</file>
                                     <type>xml</type>
                                     <classifier>config</classifier>
                                 </artifact>

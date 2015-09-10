@@ -119,6 +119,9 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
     // The constructor needs to save a pointer to this object as "the" instance.
     // If there is more than one object construction attempted, that's bad.
     public OdlMdsalImpl(DataBroker d, NotificationProviderService n, RpcProviderRegistry r) {
+
+        System.out.println("Hello ODL MD-SAL");
+
         if (instance == null) {
             instance = this;
 
@@ -148,8 +151,8 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
             }
 
             // Register for notifications
-/*            this.registrations = Lists.newArrayList();
-            Registration reg = notificationService.registerNotificationListener(this);
+            this.registrations = Lists.newArrayList();
+/*            Registration reg = notificationService.registerNotificationListener(this);
             this.registrations.add(reg);
 */
         }
@@ -166,10 +169,15 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
     public void close() throws Exception {
 
         // Deregister notifications
-        for (Registration r : registrations) {
-            r.close();
+        if (registrations != null) {
+            for (Registration r : registrations) {
+                r.close();
+            }
         }
         registrations.clear();
+
+        System.out.println("Goodbye ODL MD-SAL");
+        instance = null;
 
         return;
     }

@@ -28,7 +28,7 @@
                     <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:netshell-odlmdsal:impl">
                         prefix:netshell-odlmdsal-impl
                     </type>
-                    <name>netshell-odlmdsal-impl</name>
+                    <name>netshell-odlmdsal-impl</name>3
                     <rpc-registry>
                         <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-rpc-registry</type>
                         <name>binding-rpc-broker</name>
