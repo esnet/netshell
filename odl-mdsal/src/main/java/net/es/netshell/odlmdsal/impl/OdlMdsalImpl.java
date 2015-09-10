@@ -43,8 +43,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * This class is an interface to the OpenFlow controller (and related) functionality
@@ -181,10 +179,24 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
      */
     @Override
     public void onPacketReceived(PacketReceived notification) {
-        logger.info("Received packet notification {}", notification);
+        logger.info("Received data packet " + notification.toString());
 
-        if (packetInCallback != null) {
-            packetInCallback.callback(notification);
+        EthernetFrame frame = EthernetFrame.packetToFrame(notification.getPayload());
+
+        if (frame != null) {
+
+            logger.info(" Dst " + EthernetFrame.byteString(frame.getDstMac()) +
+                    " Src " + EthernetFrame.byteString(frame.getSrcMac()) +
+                    " EtherType " + String.format("%04x", frame.getEtherType()) +
+                    " VID " + String.format("%d", frame.getVid()) +
+                    " payload " + frame.getPayload().length);
+
+            if (packetInCallback != null) {
+                packetInCallback.callback(notification);
+            }
+        }
+        else {
+            logger.info("Unable to parse inbound packet");
         }
     }
 
