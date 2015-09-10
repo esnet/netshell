@@ -29,7 +29,6 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.SalFlowService;
-import org.opendaylight.controller.sal.binding.api.NotificationService;
 
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
@@ -80,7 +79,6 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
     List<Registration> registrations;
 
     SalFlowService salFlowService;
-    NotificationService notificationService;
     PacketProcessingService packetProcessingService;
 
     // XXX These getters are mostly here for debugging from the interactive
@@ -100,10 +98,6 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
 
     public SalFlowService getSalFlowService() {
         return salFlowService;
-    }
-
-    public NotificationService getNotificationService() {
-        return notificationService;
     }
 
     // Logging
@@ -152,9 +146,9 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
 
             // Register for notifications
             this.registrations = Lists.newArrayList();
-/*            Registration reg = notificationService.registerNotificationListener(this);
+            Registration reg = notificationProviderService.registerNotificationListener(this);
             this.registrations.add(reg);
-*/
+
         }
         else {
             throw new RuntimeException("Attempt to create multiple " + OdlMdsalImpl.class.getName());
@@ -187,7 +181,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
      */
     @Override
     public void onPacketReceived(PacketReceived notification) {
-        logger.info("Received packet notification {}", notification.getMatch());
+        logger.info("Received packet notification {}", notification);
 
         if (packetInCallback != null) {
             packetInCallback.callback(notification);
