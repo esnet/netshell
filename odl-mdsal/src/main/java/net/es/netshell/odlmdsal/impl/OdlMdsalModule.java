@@ -33,7 +33,7 @@ public class OdlMdsalModule extends net.es.netshell.odlmdsal.impl.AbstractOdlMds
         //retrieves the notification service for publishing notifications
         NotificationProviderService notificationService = getNotificationServiceDependency();
 
-         OdlMdsalImpl odlMdsalImpl = new OdlMdsalImpl(dataBrokerService, notificationService, rpcRegistryDependency);
+        OdlMdsalImpl odlMdsalImpl = new OdlMdsalImpl(dataBrokerService, notificationService, rpcRegistryDependency);
         return odlMdsalImpl;
 
     }
