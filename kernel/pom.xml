@@ -27,14 +27,14 @@
     </properties>
 
     <repositories>
-	<repository>
-    	    <id>Jsch</id>
-	    <url>http://jsch.sf.net/maven2/</url>
-	</repository>
-	<repository>
+	    <repository>
+        	    <id>Jsch</id>
+    	    <url>http://jsch.sf.net/maven2/</url>
+    	</repository>
+    	<repository>
       	    <id>libvirt-org</id>
-    	    <url>http://libvirt.org/maven2</url>
-  	</repository>
+       	    <url>http://libvirt.org/maven2</url>
+      	</repository>
         <repository>
             <snapshots>
                 <enabled>false</enabled>
@@ -79,25 +79,25 @@
 	    <version>${guava.version}</version>
         </dependency>
 
-	<dependency>
-	    <groupId>com.jcraft</groupId>
-	    <artifactId>jsch</artifactId>
-	    <version>0.1.51</version>
-	</dependency>
-	<!-- Adding dependency to resolve java error  -->
-	<dependency>
-	    <groupId>net.java.dev.jna</groupId>
-	    <artifactId>jna</artifactId>
-	    <version>4.0.0</version>
-	</dependency>
-	<dependency>
-	    <groupId>net.java.dev.jna</groupId>
-	    <artifactId>jna-platform</artifactId>
-	    <version>4.0.0</version>
-<!--	    <classifier>platform</classifier>-->
-	</dependency>
+    	<dependency>
+	        <groupId>com.jcraft</groupId>
+	        <artifactId>jsch</artifactId>
+    	    <version>0.1.51</version>
+	    </dependency>
+    	<!-- Adding dependency to resolve java error  -->
+	    <dependency>
+	        <groupId>net.java.dev.jna</groupId>
+    	    <artifactId>jna</artifactId>
+	        <version>4.0.0</version>
+    	</dependency>
+	    <dependency>
+	        <groupId>net.java.dev.jna</groupId>
+	        <artifactId>jna-platform</artifactId>
+	        <version>4.0.0</version>
+            <!-- <classifier>platform</classifier>-->
+	    </dependency>
  
-	 <dependency>
+	    <dependency>
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
             <version>2.11</version>
@@ -199,19 +199,6 @@
             <artifactId>org.osgi.core</artifactId>
             <version>4.3.1</version>
         </dependency>
-
-        <!--        <dependency>
-                    <groupId>org.apache.felix</groupId>
-                    <artifactId>org.apache.felix.main</artifactId>
-                    <version>4.4.1</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.felix</groupId>
-                    <artifactId>org.apache.felix.gogo.runtime</artifactId>
-                    <version>0.12.1</version>
-                </dependency>
-                -->
-
     </dependencies>
 
 
@@ -248,7 +235,6 @@
                         </Export-Package>
                         <Import-Package>
                             org.bouncycastle.openssl;version="[1.50,2)";resolution:=optional,
-<!--                            org.apache.felix.service.command;version="[0.10.0,1.0.0)", -->
                             *
                         </Import-Package>
                     </instructions>
