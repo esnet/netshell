@@ -1,0 +1,58 @@
+module netshell-odlcorsa-impl {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:netshell-odlcorsa:impl";
+    prefix "netshell-odlcorsa-impl";
+
+    import config { prefix config; revision-date 2013-04-05; }
+    import opendaylight-md-sal-binding { prefix mdsal; revision-date 2013-10-28; }
+
+    description
+        "This module contains adapters for the Corsa ODL SDX3 driver";
+
+    revision "2015-09-11" {
+        description
+                "Initial revision";
+    }
+
+    // This is the definition of the service implementation as a module identity.
+    identity netshell-odlcorsa-impl {
+        description "NetShell ODL Corsa/SDX3 Integration";
+        base "config:module-type";
+        config:java-name-prefix OdlCorsa;
+    }
+
+    // Augments the 'configuration' choice node under modules/module.
+    // We consume the three main services, RPCs, Notifications & data broker
+    augment "/config:modules/config:module/config:configuration" {
+        case netshell-odlcorsa-impl {
+            when "/config:modules/config:module/config:type = 'netshell-odlcorsa-impl'";
+
+            container rpc-registry {
+                uses config:service-ref {
+                    refine type {
+                        mandatory true;
+                        config:required-identity mdsal:binding-rpc-registry;
+                    }
+                }
+            }
+
+            container notification-service {
+                uses config:service-ref {
+                    refine type {
+                        mandatory true;
+                        config:required-identity mdsal:binding-notification-service;
+                    }
+                }
+            }
+
+            container data-broker {
+                uses config:service-ref {
+                    refine type {
+                        mandatory false;
+                        config:required-identity mdsal:binding-async-data-broker;
+                    }
+                }
+            }
+        }
+    }
+}
