@@ -36,17 +36,18 @@
         <bundle>mvn:net.es/netshell-controller/1.0-SNAPSHOT</bundle>
     </feature>
     <feature name="netshell-odl" version="1.0.0-SNAPSHOT" description="ESnet NetShell OpenDaylight (AD-SAL) Integration Bundle">
-        <feature>netshell-controller</feature>
+        <feature version="1.0.0-SNAPSHOT">netshell-controller</feature>
         <bundle>mvn:net.es/netshell-odl/1.0-SNAPSHOT</bundle>
     </feature>
     <feature name="netshell-odl-mdsal" version="1.0.0-SNAPSHOT" description="ESnet Netshell OpenDaylight (MD-SAL) Integration Bundle">
-        <feature>netshell-controller</feature>
+        <feature version="1.0.0-SNAPSHOT">netshell-controller</feature>
         <bundle>mvn:net.es/netshell-odl-mdsal/1.0-SNAPSHOT</bundle>
         <!-- Should really put etc/opendaylight/karaf into a definition of some sort -->
         <configfile finalname="etc/opendaylight/karaf/84-netshell-mdsal.xml">mvn:net.es/netshell-odl-mdsal/${project.version}/xml/config</configfile>
     </feature>
     <feature name="netshell-odl-corsa" version="1.0.0-SNAPSHOT" description="ESnet Netshell OpenDaylight (Corsa) Integration Bundle">
-        <feature>netshell-controller</feature>
+        <feature version="1.0.0-SNAPSHOT">netshell-controller</feature>
+        <feature version="0.1.1">corsa-sdx3-api</feature>
         <bundle>mvn:net.es/netshell-odl-corsa/1.0-SNAPSHOT</bundle>
         <!-- Should really put etc/opendaylight/karaf into a definition of some sort -->
         <configfile finalname="etc/opendaylight/karaf/85-netshell-corsa.xml">mvn:net.es/netshell-odl-corsa/${project.version}/xml/config</configfile>
