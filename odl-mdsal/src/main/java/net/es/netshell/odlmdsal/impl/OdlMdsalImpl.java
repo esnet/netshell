@@ -28,10 +28,11 @@ import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.SalFlowService;
 
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingService;
@@ -223,6 +224,37 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
         }
 
         return switches;
+    }
+
+    /**
+     * Get the set of node connectors for a switch
+     */
+    public List<NodeConnector> getNodeConnectors(Node node) {
+        // The NodeConnector in getNodeConnector() below is a list of NodeCodeConnector type objects.
+        return node.getNodeConnector();
+    }
+
+    /**
+     * Get a specific port (a.k.a. NodeConnector) on a switch given its name
+     * The node name is, at least in mininet-land, of the form "s1-eth1".
+     * This depends on the FlowCapableNodeConnector augmentation, so it only
+     * works with OpenFlow switches (and not surprisingly with the OpenFlow
+     * plugin enabled).
+     */
+    public NodeConnector getNodeConnector(Node node, String nodeConnectorName) {
+        List<NodeConnector> l = node.getNodeConnector();
+        for (NodeConnector nc : l) {
+
+            // We need to access an augmentation of the NodeConnector to get
+            // its name (in mininet-land).
+            FlowCapableNodeConnector fcnc = nc.getAugmentation(FlowCapableNodeConnector.class);
+            if (fcnc != null) {
+                if (fcnc.getName().equals(nodeConnectorName)) {
+                    return nc;
+                }
+            }
+        }
+        return null;
     }
 
 }
