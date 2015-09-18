@@ -147,7 +147,7 @@ public class OdlCorsaImpl implements AutoCloseable {
                                                MacAddress m2, short p2, int vlan2, short vp2, short q2, long mt2)
         throws InterruptedException, ExecutionException {
 
-        // Create the vlan-mac-transit-match fields first
+        // Create the create-transit-vlan-mac-circuit match fields first
         PortId portId1 = new PortId(p1);
         VlanId vlanId1 = new VlanId(vlan1);
 
@@ -155,7 +155,7 @@ public class OdlCorsaImpl implements AutoCloseable {
             new org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.create.transit.vlan.mac.circuit.input.MatchBuilder().
                 setEthernetDestination(m1).setInPort(portId1).setVlanId(vlanId1).build();
 
-        // Create the vlan-mac-transit-circuit-action fields
+        // Create the create-transit-vlan-mac-circuit action fields
         PortId portId2 = new PortId(p2);
         VlanId vlanId2 = new VlanId(vlan2);
         VlanPcp vlanPcp2 = new VlanPcp(vp2);
