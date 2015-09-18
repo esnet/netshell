@@ -23,33 +23,76 @@ package net.es.netshell.odlmdsal.impl;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import net.es.netshell.controller.OpenFlowNode;
+import net.es.netshell.controller.layer2.Layer2Controller;
+import net.es.netshell.controller.layer2.Layer2ForwardRule;
+import net.es.netshell.controller.layer2.Layer2Port;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
+import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Uri;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.OutputActionCaseBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.output.action._case.OutputActionBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.Action;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNodeConnector;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.SalFlowService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowId;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.TableKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.FlowBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.FlowKey;
 
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowCookie;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowModFlags;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.Instructions;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.InstructionsBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.Match;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.MatchBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.instruction.ApplyActionsCaseBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.instruction.apply.actions._case.ApplyActionsBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.list.Instruction;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.list.InstructionBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.list.InstructionKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetDestination;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetSource;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.EthernetMatch;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketReceived;
 import org.opendaylight.yangtools.concepts.Registration;
+import org.opendaylight.yangtools.yang.binding.Augmentation;
+import org.opendaylight.yangtools.yang.binding.DataContainer;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.common.RpcResult;
+import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This class is an interface to the OpenFlow controller (and related) functionality
  * in OpenDaylight, using the MD-SAL abstraction layer.
  */
-public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
+public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, Layer2Controller {
 
     /**
      * Callback function to pass a RawPacket to some of our code.  It's designed
@@ -62,11 +105,9 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
         public void callback(PacketReceived notification);
     }
     private Callback packetInCallback;
-
     public Callback getPacketInCallback() {
         return packetInCallback;
     }
-
     public void setPacketInCallback(Callback packetInCallback) {
         this.packetInCallback = packetInCallback;
     }
@@ -79,6 +120,9 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
 
     SalFlowService salFlowService;
     PacketProcessingService packetProcessingService;
+
+    private AtomicLong flowIdInc = new AtomicLong();
+    private AtomicLong flowCookieInc = new AtomicLong(0x8800000000000000L);
 
     // XXX These getters are mostly here for debugging from the interactive
     // Python shell.  In theory there isn't any reason to expose these
@@ -255,6 +299,181 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
             }
         }
         return null;
+    }
+
+
+    private InstanceIdentifier<Table> getTableInstanceId(InstanceIdentifier<Node> nodeId, short flowTableId) {
+        // get flow table key
+        TableKey flowTableKey = new TableKey(flowTableId);
+        return nodeId.builder()
+                .augmentation(FlowCapableNode.class)
+                .child(Table.class, flowTableKey)
+                .build();
+    }
+
+    /**
+     * Push a flow
+     * This basically just writes the flow (which already needs to have been
+     * constructed) to the datastore.  The FlowProgrammer module will pick this
+     * up and actually push the flow to the switch.
+     */
+    public static AddFlowInputBuilder lastBuilder;
+    public boolean addFlow(Node node, Flow flow) throws ExecutionException, InterruptedException {
+        /*
+        InstanceIdentifier<Flow> flowInstanceIdentifier =
+                InstanceIdentifier.builder(Nodes.class).
+                        child(Node.class, node.getKey()).
+                        augmentation(FlowCapableNode.class).
+                        child(Table.class, new TableKey(flow.getTableId())).
+                        child(Flow.class, flow.getKey()).
+                        build();
+        WriteTransaction wtx = dataBroker.newWriteOnlyTransaction();
+        // Is merge() or put() more appropriate here?
+        wtx.merge(LogicalDatastoreType.OPERATIONAL, flowInstanceIdentifier, flow, true);
+        */
+        AddFlowInputBuilder builder = new AddFlowInputBuilder(flow);
+        //XXX need setNode, maybe setFlowRef, setFlowTable, setTransactionURI
+        InstanceIdentifier<Node> nodeInstanceIdentifier = InstanceIdentifier.builder(Nodes.class).child(Node.class, node.getKey()).build();
+        builder.setNode(new NodeRef(nodeInstanceIdentifier));
+
+        InstanceIdentifier<Flow> flowInstanceIdentifier =
+                InstanceIdentifier.builder(Nodes.class).
+                        child(Node.class, node.getKey()).
+                        augmentation(FlowCapableNode.class).
+                        child(Table.class, new TableKey(flow.getTableId())).
+                        child(Flow.class, flow.getKey()).
+                        build();
+        builder.setFlowRef(new FlowRef(flowInstanceIdentifier));
+
+        builder.setFlowTable(new FlowTableRef(getTableInstanceId(nodeInstanceIdentifier, flow.getTableId())));
+
+        builder.setTransactionUri(new Uri(flow.getId().getValue()));
+
+        lastBuilder = builder;
+        System.out.println(builder.toString());
+
+        Future<RpcResult<AddFlowOutput>> resultFuture =
+                salFlowService.addFlow(builder.build());
+        RpcResult<AddFlowOutput> result = resultFuture.get();
+        if (result.isSuccessful() == true) {
+            return true;
+        }
+        else {
+            logger.error(result.getErrors().toString());
+            return false;
+        }
+    }
+
+    /**
+     * Create a L2 flow
+     */
+//    public Flow makeFlow(Layer2ForwardRule rule) {
+    public Flow makeFlow(Node odlNode, String inPortName, String outPortName) {
+
+
+//        Layer2Port inPort, outPort;
+//        inPort = (Layer2Port) rule.getInPort();
+//        outPort = (Layer2Port) rule.getOutPort();
+
+        // Figure out the node
+//        Node odlNode = this.findODLSwitch((OpenFlowNode) inPort.getNode());
+
+        // Create a match object to match on the input port
+        MatchBuilder matchBuilder = new MatchBuilder();
+//         NodeConnector ncIn = this.getNodeConnector(odlNode, inPort.getResourceName());
+        NodeConnector ncIn = this.getNodeConnector(odlNode, inPortName);
+        matchBuilder.setInPort(ncIn.getId());
+
+        // Create an output action to forward to the output port
+        OutputActionBuilder output = new OutputActionBuilder();
+//          NodeConnector ncOut = this.getNodeConnector(odlNode, outPort.getResourceName());
+        NodeConnector ncOut = this.getNodeConnector(odlNode, outPortName);
+        output.setOutputNodeConnector(ncOut.getId());
+
+        // Put that in an action
+        ActionBuilder ab = new ActionBuilder();
+        ab.setAction(new OutputActionCaseBuilder().setOutputAction(output.build()).build());
+        ab.setOrder(0);
+        ab.setKey(new ActionKey(0));
+
+        // Make an action list to hold the action
+        List<Action> actionList = Lists.newArrayList();
+        actionList.add(ab.build());
+
+        // Create apply actions instruction
+        ApplyActionsBuilder aab = new ApplyActionsBuilder();
+        aab.setAction(actionList);
+
+        // Now create an instruction to include the instruction
+        InstructionBuilder ib = new InstructionBuilder();
+        ib.setInstruction(new ApplyActionsCaseBuilder().setApplyActions(aab.build()).build());
+        ib.setOrder(0);
+        ib.setKey(new InstructionKey(0));
+
+        // List of instructions that stores individual instructions
+        List<Instruction> instructions = Lists.newArrayList();
+        instructions.add(ib.build());
+
+        // Now we need an instruction set builder
+        InstructionsBuilder isb = new InstructionsBuilder();
+        isb.setInstruction(instructions);
+
+        // Finally get to make the flow itself
+        FlowBuilder flowBuilder = new FlowBuilder();
+
+//         String flowId = "L2_Rule_" + inPort.getResourceName();
+        FlowId flowId = new FlowId("L2_Rule_" + inPortName);
+        flowBuilder.setId(flowId);
+        flowBuilder.setKey(new FlowKey(flowId));
+        flowBuilder.setBarrier(true);
+        flowBuilder.setTableId((short) 0);
+        flowBuilder.setPriority(32768);
+        flowBuilder.setFlowName(flowId.getValue());
+        flowBuilder.setHardTimeout(0);
+        flowBuilder.setIdleTimeout(0);
+        flowBuilder.setBufferId(0L);
+        flowBuilder.setFlags(new FlowModFlags(false, false, false, false, false));
+
+        flowBuilder.setMatch(matchBuilder.build());
+        flowBuilder.setInstructions(isb.build());
+
+        return flowBuilder.build();
+
+    }
+
+    private Node findODLSwitch(OpenFlowNode enosSwitch) {
+        List<Node> switches = this.getNetworkDevices();
+        Node sw = null;
+
+        // Construct the Node ID we're looking for, it'll be "openflow:xxx" where
+        // xxx is the decimal representation of the DPID
+        byte[] dpid = enosSwitch.dpidToByteArray();
+        long dpidLong = 0;
+        for (int i = 0; i < dpid.length; i++) {
+            dpidLong <<= 8;
+            dpidLong |= dpid[i];
+        }
+        String targetId = "openflow:" + String.format("%ld", dpidLong);
+
+        // Look for a switch in inventory that has that ID.
+        for (Node s : switches) {
+            if (s.getId().getValue().equals(targetId)) {
+                sw = s;
+                break;
+            }
+        }
+        return sw;
+    }
+
+
+    @Override
+    public boolean addForwardRule(Layer2ForwardRule rule) {
+        return false;
+    }
+
+    @Override
+    public boolean removeForwardRule(Layer2ForwardRule rule) {
+        return false;
     }
 
 }
