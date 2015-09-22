@@ -24,10 +24,16 @@ package net.es.netshell.odlcorsa.impl;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.openflowplugin.api.openflow.md.util.OpenflowVersion;
+import org.opendaylight.openflowplugin.openflow.md.util.InventoryDataServiceUtil;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNodeConnector;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNodeConnectorUpdateFieldsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowCookie;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeId;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.l2.types.rev130827.VlanId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.l2.types.rev130827.VlanPcp;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId;
@@ -132,7 +138,7 @@ public class OdlCorsaImpl implements AutoCloseable {
     /**
      * delete-flow
      */
-    public void DeleteFlow(FlowRef flowRef) throws InterruptedException, ExecutionException {
+    public void deleteFlow(FlowRef flowRef) throws InterruptedException, ExecutionException {
         DeleteFlowInput deleteFlowInput = new DeleteFlowInputBuilder().setFlowRef(flowRef).build();
         Future<RpcResult<Void>> future = sdx3Service.deleteFlow(deleteFlowInput);
         RpcResult<Void> result = future.get();
@@ -143,12 +149,15 @@ public class OdlCorsaImpl implements AutoCloseable {
      * create-transit-vlan-mac-circuit
      */
     public FlowRef CreateTransitVlanMacCircuit(NodeId nid, int priority, BigInteger c,
-                                               MacAddress m1, short p1, int vlan1,
-                                               MacAddress m2, short p2, int vlan2, short vp2, short q2, long mt2)
+                                               MacAddress m1, NodeConnectorId ncid1, int vlan1,
+                                               MacAddress m2, NodeConnectorId ncid2, int vlan2,
+                                               short vp2, short q2, long mt2)
         throws InterruptedException, ExecutionException {
 
         // Create the create-transit-vlan-mac-circuit match fields first
-        PortId portId1 = new PortId(p1);
+        // XXX it is not clear to me if we should be mucking around with methods from
+        // openflowplugin directly, even though they're public and static.
+        PortId portId1 = new PortId(InventoryDataServiceUtil.portNumberfromNodeConnectorId(OpenflowVersion.OF13, ncid1.getValue()).shortValue());
         VlanId vlanId1 = new VlanId(vlan1);
 
         org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.create.transit.vlan.mac.circuit.input.Match match =
@@ -156,7 +165,7 @@ public class OdlCorsaImpl implements AutoCloseable {
                 setEthernetDestination(m1).setInPort(portId1).setVlanId(vlanId1).build();
 
         // Create the create-transit-vlan-mac-circuit action fields
-        PortId portId2 = new PortId(p2);
+        PortId portId2 = new PortId(InventoryDataServiceUtil.portNumberfromNodeConnectorId(OpenflowVersion.OF13, ncid2.getValue()).shortValue());
         VlanId vlanId2 = new VlanId(vlan2);
         VlanPcp vlanPcp2 = new VlanPcp(vp2);
         QueueId queue2 = new QueueId(q2);

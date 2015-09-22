@@ -34,8 +34,15 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Uri;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.OutputActionCaseBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.SetDlDstActionCaseBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.SetVlanIdActionCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.output.action._case.OutputActionBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.dl.dst.action._case.SetDlDstActionBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.field._case.SetFieldBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.vlan.id.action._case.SetVlanIdAction;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.vlan.id.action._case.SetVlanIdActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.Action;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionKey;
@@ -62,14 +69,22 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instru
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.list.InstructionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.list.InstructionKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.l2.types.rev130827.VlanId;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.MacAddressFilter;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetDestination;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetDestinationBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetSource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.EthernetMatch;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.EthernetMatchBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.VlanMatch;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.VlanMatchBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketReceived;
@@ -280,7 +295,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
 
     /**
      * Get a specific port (a.k.a. NodeConnector) on a switch given its name
-     * The node name is, at least in mininet-land, of the form "s1-eth1".
+     * The port name is, at least in mininet-land, of the form "s1-eth1".
      * This depends on the FlowCapableNodeConnector augmentation, so it only
      * works with OpenFlow switches (and not surprisingly with the OpenFlow
      * plugin enabled).
@@ -317,55 +332,44 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      * constructed) to the datastore.  The FlowProgrammer module will pick this
      * up and actually push the flow to the switch.
      */
-    public static AddFlowInputBuilder lastBuilder;
-    public boolean addFlow(Node node, Flow flow) throws ExecutionException, InterruptedException {
-        /*
-        InstanceIdentifier<Flow> flowInstanceIdentifier =
-                InstanceIdentifier.builder(Nodes.class).
-                        child(Node.class, node.getKey()).
-                        augmentation(FlowCapableNode.class).
-                        child(Table.class, new TableKey(flow.getTableId())).
-                        child(Flow.class, flow.getKey()).
-                        build();
-        WriteTransaction wtx = dataBroker.newWriteOnlyTransaction();
-        // Is merge() or put() more appropriate here?
-        wtx.merge(LogicalDatastoreType.OPERATIONAL, flowInstanceIdentifier, flow, true);
-        */
+    public boolean addFlow(NodeId nodeId, Flow flow) throws ExecutionException, InterruptedException {
+
         AddFlowInputBuilder builder = new AddFlowInputBuilder(flow);
+        NodeKey nodeKey = new NodeKey(nodeId);
         //XXX need setNode, maybe setFlowRef, setFlowTable, setTransactionURI
-        InstanceIdentifier<Node> nodeInstanceIdentifier = InstanceIdentifier.builder(Nodes.class).child(Node.class, node.getKey()).build();
+
+        InstanceIdentifier<Node> nodeInstanceIdentifier = InstanceIdentifier.builder(Nodes.class).child(Node.class, nodeKey).build();
         builder.setNode(new NodeRef(nodeInstanceIdentifier));
 
         InstanceIdentifier<Flow> flowInstanceIdentifier =
                 InstanceIdentifier.builder(Nodes.class).
-                        child(Node.class, node.getKey()).
+                        child(Node.class, nodeKey).
                         augmentation(FlowCapableNode.class).
                         child(Table.class, new TableKey(flow.getTableId())).
                         child(Flow.class, flow.getKey()).
                         build();
         builder.setFlowRef(new FlowRef(flowInstanceIdentifier));
-
+        // XXX note to self:  save the FlowRef?
         builder.setFlowTable(new FlowTableRef(getTableInstanceId(nodeInstanceIdentifier, flow.getTableId())));
 
         builder.setTransactionUri(new Uri(flow.getId().getValue()));
 
-        lastBuilder = builder;
-        System.out.println(builder.toString());
-
         Future<RpcResult<AddFlowOutput>> resultFuture =
                 salFlowService.addFlow(builder.build());
-        RpcResult<AddFlowOutput> result = resultFuture.get();
-        if (result.isSuccessful() == true) {
+        RpcResult<AddFlowOutput> rpcResult = resultFuture.get();
+        if (rpcResult.isSuccessful() == true) {
+            AddFlowOutput result = rpcResult.getResult();
             return true;
         }
         else {
-            logger.error(result.getErrors().toString());
+            logger.error(rpcResult.getErrors().toString());
             return false;
         }
     }
 
     /**
-     * Create a L2 flow
+     * Create a forwarding flow between two switch ports
+     * This function is mostly for testing.
      */
 //    public Flow makeFlow(Layer2ForwardRule rule) {
     public Flow makeFlow(Node odlNode, String inPortName, String outPortName) {
@@ -438,6 +442,131 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         flowBuilder.setInstructions(isb.build());
 
         return flowBuilder.build();
+
+    }
+
+
+    /**
+     * Push a Layer 2 VLAN and MAC translation flow entry
+     * @param nid
+     * @param priority
+     * @param c
+     * @param m1
+     * @param ncid1
+     * @param vlan1
+     * @param m2
+     * @param ncid2
+     * @param vlan2
+     * @param vp2
+     * @param q2
+     * @param mt2
+     * @return
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
+    public Object createTransitVlanMacCircuit(NodeId nid, int priority, BigInteger c,
+                                               MacAddress m1, NodeConnectorId ncid1, int vlan1,
+                                               MacAddress m2, NodeConnectorId ncid2, int vlan2,
+                                               short vp2, short q2, long mt2)
+        throws ExecutionException, InterruptedException {
+
+        // Create the new match object first.  We do exact matches on the port, VLAN,
+        // and MAC address.
+        MatchBuilder matchBuilder = new MatchBuilder();
+        matchBuilder.setInPort(ncid1);
+
+        org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.vlan.match.fields.VlanIdBuilder
+          vlanIdBuilder = new org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.vlan.match.fields.VlanIdBuilder();
+        vlanIdBuilder.setVlanId(new VlanId(vlan1));
+        vlanIdBuilder.setVlanIdPresent(true);
+        VlanMatchBuilder vlanMatchBuilder = new VlanMatchBuilder();
+        vlanMatchBuilder.setVlanId(vlanIdBuilder.build());
+        matchBuilder.setVlanMatch(vlanMatchBuilder.build());
+
+        EthernetDestinationBuilder ethernetDestinationBuilder = new EthernetDestinationBuilder();
+        ethernetDestinationBuilder.setAddress(new MacAddress(m1));
+        EthernetMatchBuilder ethernetMatchBuilder = new EthernetMatchBuilder();
+        ethernetMatchBuilder.setEthernetDestination(ethernetDestinationBuilder.build());
+        matchBuilder.setEthernetMatch(ethernetMatchBuilder.build());
+
+        // Create set and output actions
+        SetVlanIdActionBuilder setVlanIdActionBuilder = new SetVlanIdActionBuilder();
+        setVlanIdActionBuilder.setVlanId(new VlanId(vlan2));
+
+        SetDlDstActionBuilder setDlDstActionBuilder = new SetDlDstActionBuilder();
+        setDlDstActionBuilder.setAddress(m2);
+
+        OutputActionBuilder outputActionBuilder = new OutputActionBuilder();
+        outputActionBuilder.setOutputNodeConnector(ncid2);
+
+        ActionBuilder ab1 = new ActionBuilder();
+        ab1.setAction(new SetVlanIdActionCaseBuilder().setSetVlanIdAction(setVlanIdActionBuilder.build()).build());
+        ab1.setOrder(0);
+        ab1.setKey(new ActionKey(0));
+
+        ActionBuilder ab2 = new ActionBuilder();
+        ab2.setAction(new SetDlDstActionCaseBuilder().setSetDlDstAction(setDlDstActionBuilder.build()).build());
+        ab2.setOrder(0);
+        ab2.setKey(new ActionKey(0));
+
+        ActionBuilder ab3 = new ActionBuilder();
+        ab3.setAction(new OutputActionCaseBuilder().setOutputAction(outputActionBuilder.build()).build());
+        ab3.setOrder(0);
+        ab3.setKey(new ActionKey(0));
+
+        // Make an action list to hold the actions
+        List<Action> actionList = Lists.newArrayList();
+        actionList.add(ab1.build());
+        actionList.add(ab2.build());
+        actionList.add(ab3.build());
+
+        // Create APPLY ACTIONS instruction
+        ApplyActionsBuilder applyActionsBuilder = new ApplyActionsBuilder();
+        applyActionsBuilder.setAction(actionList);
+
+        // Create an instruction to include the APPLY ACTION instruction
+        InstructionBuilder instructionBuilder = new InstructionBuilder();
+        instructionBuilder.setInstruction(new ApplyActionsCaseBuilder().setApplyActions(applyActionsBuilder.build()).build());
+        instructionBuilder.setOrder(0);
+        instructionBuilder.setKey(new InstructionKey(0));
+
+        // Now need a one-element list to hold this instruction
+        List<Instruction> instructionList = Lists.newArrayList();
+        instructionList.add(instructionBuilder.build());
+
+        // Set the instructions
+        InstructionsBuilder instructionsBuilder = new InstructionsBuilder();
+        instructionsBuilder.setInstruction(instructionList);
+
+        // Make the flow
+        FlowBuilder flowBuilder = new FlowBuilder();
+        FlowId flowId = new FlowId("L2_Rule_" + ncid1.getValue());
+        flowBuilder.setId(flowId);
+        flowBuilder.setKey(new FlowKey(flowId));
+        flowBuilder.setBarrier(true);
+        flowBuilder.setTableId((short) 0);
+        flowBuilder.setPriority(32768);
+        flowBuilder.setFlowName(flowId.getValue());
+        flowBuilder.setHardTimeout(0);
+        flowBuilder.setIdleTimeout(0);
+        flowBuilder.setBufferId(0L);
+        flowBuilder.setFlags(new FlowModFlags(false, false, false, false, false));
+
+        flowBuilder.setMatch(matchBuilder.build());
+        flowBuilder.setInstructions(instructionsBuilder.build());
+
+        // Push the flow.  We should be getting something back that gives us a handle to the flow
+        // if we need to get back to it.
+        boolean rc = addFlow(nid, flowBuilder.build());
+        return rc;
+    }
+
+    /**
+     *
+     * @param flowRef
+     */
+    public void deleteFlow(FlowRef flowRef) throws InterruptedException, ExecutionException {
+        RemoveFlowInputBuilder removeFlowInputBuilder = new RemoveFlowInputBuilder();
 
     }
 
