@@ -285,6 +285,22 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         return switches;
     }
 
+    public Node getNetworkDeviceByDpid(long dpid) {
+        List<Node> switches = this.getNetworkDevices();
+        Node sw = null;
+
+        String targetId = "openflow:" + String.format("%ld", dpid);
+
+        // Look for a switch in inventory that has that ID.
+        for (Node s : switches) {
+            if (s.getId().getValue().equals(targetId)) {
+                sw = s;
+                break;
+            }
+        }
+        return sw;
+    }
+
     /**
      * Get the set of node connectors for a switch
      */
@@ -609,6 +625,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
             dpidLong <<= 8;
             dpidLong |= dpid[i];
         }
+        // XXX return this.getNetworkDeviceByDpid(long dpidLong);
         String targetId = "openflow:" + String.format("%ld", dpidLong);
 
         // Look for a switch in inventory that has that ID.

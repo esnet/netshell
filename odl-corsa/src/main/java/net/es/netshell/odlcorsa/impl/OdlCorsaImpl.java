@@ -38,6 +38,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeRef
 import org.opendaylight.yang.gen.v1.urn.opendaylight.l2.types.rev130827.VlanId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.l2.types.rev130827.VlanPcp;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterRef;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketReceived;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.*;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
@@ -192,4 +194,36 @@ public class OdlCorsaImpl implements AutoCloseable {
             return null;
         }
     }
+
+    public MeterRef CreateGreenMeter(NodeId nid, long meter) throws InterruptedException, ExecutionException {
+        org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId meterId =
+                new org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId(meter);
+        org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateGreenMeterInput input =
+                new org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateGreenMeterInputBuilder().setNodeId(nid).setMeterId(meterId).build();
+
+        Future<RpcResult<CreateGreenMeterOutput>> future = sdx3Service.createGreenMeter(input);
+        RpcResult<CreateGreenMeterOutput> rpcResult = future.get();
+        if (rpcResult.isSuccessful()) {
+            CreateGreenMeterOutput result = rpcResult.getResult();
+            return result.getMeterRef();
+        }
+        else {
+            return null;
+        }
+
+    }
+
+    public boolean DeleteMeter(MeterRef meterRef) throws InterruptedException, ExecutionException {
+        org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.DeleteMeterInput input =
+                new org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.DeleteMeterInputBuilder().setMeterRef(meterRef).build();
+        Future<RpcResult<Void>> future = sdx3Service.deleteMeter(input);
+        RpcResult<Void> rpcResult = future.get();
+        if (rpcResult.isSuccessful()) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
 }
