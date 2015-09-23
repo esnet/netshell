@@ -29,6 +29,7 @@ import org.opendaylight.openflowplugin.openflow.md.util.InventoryDataServiceUtil
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNodeConnectorUpdateFieldsBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.Flow;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowCookie;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
@@ -138,7 +139,7 @@ public class OdlCorsaImpl implements AutoCloseable {
     /**
      * delete-flow
      */
-    public void deleteFlow(FlowRef flowRef) throws InterruptedException, ExecutionException {
+    public void deleteFlow(FlowRef flowRef, Flow flow) throws InterruptedException, ExecutionException {
         DeleteFlowInput deleteFlowInput = new DeleteFlowInputBuilder().setFlowRef(flowRef).build();
         Future<RpcResult<Void>> future = sdx3Service.deleteFlow(deleteFlowInput);
         RpcResult<Void> result = future.get();

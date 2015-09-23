@@ -332,7 +332,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      * constructed) to the datastore.  The FlowProgrammer module will pick this
      * up and actually push the flow to the switch.
      */
-    public boolean addFlow(NodeId nodeId, Flow flow) throws ExecutionException, InterruptedException {
+    public FlowRef addFlow(NodeId nodeId, Flow flow) throws ExecutionException, InterruptedException {
 
         AddFlowInputBuilder builder = new AddFlowInputBuilder(flow);
         NodeKey nodeKey = new NodeKey(nodeId);
@@ -357,13 +357,13 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         Future<RpcResult<AddFlowOutput>> resultFuture =
                 salFlowService.addFlow(builder.build());
         RpcResult<AddFlowOutput> rpcResult = resultFuture.get();
-        if (rpcResult.isSuccessful() == true) {
+        if (rpcResult.isSuccessful()) {
             AddFlowOutput result = rpcResult.getResult();
-            return true;
+            return new FlowRef(flowInstanceIdentifier);
         }
         else {
             logger.error(rpcResult.getErrors().toString());
-            return false;
+            return null;
         }
     }
 
@@ -447,7 +447,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
 
 
     /**
-     * Push a Layer 2 VLAN and MAC translation flow entry
+     * Create a Layer 2 VLAN and MAC translation flow entry
      * @param nid
      * @param priority
      * @param c
@@ -464,11 +464,10 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      * @throws ExecutionException
      * @throws InterruptedException
      */
-    public Object createTransitVlanMacCircuit(NodeId nid, int priority, BigInteger c,
-                                               MacAddress m1, NodeConnectorId ncid1, int vlan1,
-                                               MacAddress m2, NodeConnectorId ncid2, int vlan2,
-                                               short vp2, short q2, long mt2)
-        throws ExecutionException, InterruptedException {
+    public Flow createTransitVlanMacCircuitFlow(NodeId nid, int priority, BigInteger c,
+                                                MacAddress m1, NodeConnectorId ncid1, int vlan1,
+                                                MacAddress m2, NodeConnectorId ncid2, int vlan2,
+                                                short vp2, short q2, long mt2) {
 
         // Create the new match object first.  We do exact matches on the port, VLAN,
         // and MAC address.
@@ -506,13 +505,13 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
 
         ActionBuilder ab2 = new ActionBuilder();
         ab2.setAction(new SetDlDstActionCaseBuilder().setSetDlDstAction(setDlDstActionBuilder.build()).build());
-        ab2.setOrder(0);
-        ab2.setKey(new ActionKey(0));
+        ab2.setOrder(1);
+        ab2.setKey(new ActionKey(1));
 
         ActionBuilder ab3 = new ActionBuilder();
         ab3.setAction(new OutputActionCaseBuilder().setOutputAction(outputActionBuilder.build()).build());
-        ab3.setOrder(0);
-        ab3.setKey(new ActionKey(0));
+        ab3.setOrder(2);
+        ab3.setKey(new ActionKey(2));
 
         // Make an action list to hold the actions
         List<Action> actionList = Lists.newArrayList();
@@ -540,13 +539,9 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
 
         // Make the flow
         FlowBuilder flowBuilder = new FlowBuilder();
-        FlowId flowId = new FlowId("L2_Rule_" + ncid1.getValue());
-        flowBuilder.setId(flowId);
-        flowBuilder.setKey(new FlowKey(flowId));
         flowBuilder.setBarrier(true);
         flowBuilder.setTableId((short) 0);
         flowBuilder.setPriority(32768);
-        flowBuilder.setFlowName(flowId.getValue());
         flowBuilder.setHardTimeout(0);
         flowBuilder.setIdleTimeout(0);
         flowBuilder.setBufferId(0L);
@@ -555,18 +550,50 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         flowBuilder.setMatch(matchBuilder.build());
         flowBuilder.setInstructions(instructionsBuilder.build());
 
+        // Do these last
+        FlowId flowId = new FlowId("TransitVlanMacCircuit_" + Long.toString(flowBuilder.hashCode()));
+        flowBuilder.setId(flowId);
+        flowBuilder.setKey(new FlowKey(flowId));
+        flowBuilder.setFlowName(flowId.getValue());
+
+        return flowBuilder.build();
+
+        /*
         // Push the flow.  We should be getting something back that gives us a handle to the flow
         // if we need to get back to it.
-        boolean rc = addFlow(nid, flowBuilder.build());
-        return rc;
+        return addFlow(nid, flowBuilder.build());
+        */
     }
 
     /**
      *
      * @param flowRef
      */
-    public void deleteFlow(FlowRef flowRef) throws InterruptedException, ExecutionException {
-        RemoveFlowInputBuilder removeFlowInputBuilder = new RemoveFlowInputBuilder();
+    public boolean deleteFlow(FlowRef flowRef, Flow flow) throws InterruptedException, ExecutionException {
+
+        // Make a parameter block for doing removeFlow().  This seems to really really want
+        // the actual flow being removed, although in theory it should be possible to
+        // remove the flow just given a FlowRef object (because the FlowRef has the path
+        // to the flow object in the datastore.
+        RemoveFlowInputBuilder removeFlowInputBuilder = new RemoveFlowInputBuilder(flow);
+        removeFlowInputBuilder.setBarrier(true);
+        removeFlowInputBuilder.setFlowRef(flowRef);
+        removeFlowInputBuilder.setNode(new NodeRef(flowRef.getValue().firstIdentifierOf(Node.class)));
+        removeFlowInputBuilder.setFlowTable(new FlowTableRef(flowRef.getValue().firstIdentifierOf(Table.class)));
+        salFlowService.removeFlow(removeFlowInputBuilder.build());
+
+        Future<RpcResult<RemoveFlowOutput>> resultFuture =
+                salFlowService.removeFlow(removeFlowInputBuilder.build());
+        RpcResult<RemoveFlowOutput> rpcResult = resultFuture.get();
+        if (rpcResult.isSuccessful() == true) {
+            RemoveFlowOutput result = rpcResult.getResult();
+            return true;
+        }
+        else {
+            logger.error(rpcResult.getErrors().toString());
+            return false;
+        }
+
 
     }
 
