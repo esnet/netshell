@@ -151,7 +151,7 @@ public class OdlCorsaImpl implements AutoCloseable {
     /**
      * create-transit-vlan-mac-circuit
      */
-    public FlowRef CreateTransitVlanMacCircuit(NodeId nid, int priority, BigInteger c,
+    public FlowRef createTransitVlanMacCircuit(NodeId nid, int priority, BigInteger c,
                                                MacAddress m1, NodeConnectorId ncid1, int vlan1,
                                                MacAddress m2, NodeConnectorId ncid2, int vlan2,
                                                short vp2, short q2, long mt2)
@@ -195,7 +195,17 @@ public class OdlCorsaImpl implements AutoCloseable {
         }
     }
 
-    public MeterRef CreateGreenMeter(NodeId nid, long meter) throws InterruptedException, ExecutionException {
+    /**
+     * Create a green-only meter.
+     * Note that creating a meter with the same ID as an existing meter causes a silent failure.
+     *
+     * @param nid
+     * @param meter
+     * @return Meter reference, for use in deleting the meter
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public MeterRef createGreenMeter(NodeId nid, long meter) throws InterruptedException, ExecutionException {
         org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId meterId =
                 new org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId(meter);
         org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateGreenMeterInput input =
@@ -213,7 +223,15 @@ public class OdlCorsaImpl implements AutoCloseable {
 
     }
 
-    public boolean DeleteMeter(MeterRef meterRef) throws InterruptedException, ExecutionException {
+    /**
+     * Delete a previously-configured meter.
+     *
+     * @param meterRef
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public boolean deleteMeter(MeterRef meterRef) throws InterruptedException, ExecutionException {
         org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.DeleteMeterInput input =
                 new org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.DeleteMeterInputBuilder().setMeterRef(meterRef).build();
         Future<RpcResult<Void>> future = sdx3Service.deleteMeter(input);
