@@ -289,7 +289,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         List<Node> switches = this.getNetworkDevices();
         Node sw = null;
 
-        String targetId = "openflow:" + String.format("%ld", dpid);
+        String targetId = "openflow:" + String.format("%d", dpid);
 
         // Look for a switch in inventory that has that ID.
         for (Node s : switches) {
