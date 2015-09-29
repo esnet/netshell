@@ -33,6 +33,7 @@ import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.openflowplugin.api.OFConstants;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Uri;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.OutputActionCaseBuilder;
@@ -560,7 +561,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         flowBuilder.setPriority(32768);
         flowBuilder.setHardTimeout(0);
         flowBuilder.setIdleTimeout(0);
-        flowBuilder.setBufferId(0L);
+        flowBuilder.setBufferId(OFConstants.OFP_NO_BUFFER);
         flowBuilder.setFlags(new FlowModFlags(false, false, false, false, false));
 
         flowBuilder.setMatch(matchBuilder.build());
@@ -626,7 +627,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
             dpidLong |= dpid[i];
         }
         // XXX return this.getNetworkDeviceByDpid(long dpidLong);
-        String targetId = "openflow:" + String.format("%ld", dpidLong);
+        String targetId = OFConstants.OF_URI_PREFIX + String.format("%ld", dpidLong);
 
         // Look for a switch in inventory that has that ID.
         for (Node s : switches) {
