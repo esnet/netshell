@@ -32,6 +32,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.Fl
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.Flow;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowCookie;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Node;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeRef;
@@ -151,7 +152,7 @@ public class OdlCorsaImpl implements AutoCloseable {
     /**
      * create-transit-vlan-mac-circuit
      */
-    public FlowRef createTransitVlanMacCircuit(NodeId nid, int priority, BigInteger c,
+    public FlowRef createTransitVlanMacCircuit(Node odlNode, int priority, BigInteger c,
                                                MacAddress m1, NodeConnectorId ncid1, int vlan1,
                                                MacAddress m2, NodeConnectorId ncid2, int vlan2,
                                                short vp2, short q2, long mt2)
@@ -181,7 +182,7 @@ public class OdlCorsaImpl implements AutoCloseable {
         FlowCookie cookie = new FlowCookie(c);
         org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateTransitVlanMacCircuitInput input =
             new org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateTransitVlanMacCircuitInputBuilder().
-                setNodeId(nid).setPriority(priority).setCookie(cookie).setMatch(match).setAction(action).build();
+                setNodeId(odlNode.getId()).setPriority(priority).setCookie(cookie).setMatch(match).setAction(action).build();
 
         Future<RpcResult<CreateTransitVlanMacCircuitOutput>> future =
                 sdx3Service.createTransitVlanMacCircuit(input);
@@ -199,17 +200,18 @@ public class OdlCorsaImpl implements AutoCloseable {
      * Create a green-only meter.
      * Note that creating a meter with the same ID as an existing meter causes a silent failure.
      *
-     * @param nid
+     * @param odlNode
      * @param meter
      * @return Meter reference, for use in deleting the meter
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    public MeterRef createGreenMeter(NodeId nid, long meter) throws InterruptedException, ExecutionException {
+    public MeterRef createGreenMeter(Node odlNode, long meter) throws InterruptedException, ExecutionException {
         org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId meterId =
                 new org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId(meter);
         org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateGreenMeterInput input =
-                new org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateGreenMeterInputBuilder().setNodeId(nid).setMeterId(meterId).build();
+                new org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateGreenMeterInputBuilder()
+                        .setNodeId(odlNode.getId()).setMeterId(meterId).build();
 
         Future<RpcResult<CreateGreenMeterOutput>> future = sdx3Service.createGreenMeter(input);
         RpcResult<CreateGreenMeterOutput> rpcResult = future.get();

@@ -38,6 +38,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.OutputActionCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.SetDlDstActionCaseBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.SetFieldCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.SetVlanIdActionCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.output.action._case.OutputActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.dl.dst.action._case.SetDlDstActionBuilder;
@@ -290,7 +291,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         List<Node> switches = this.getNetworkDevices();
         Node sw = null;
 
-        String targetId = "openflow:" + String.format("%d", dpid);
+        String targetId = OFConstants.OF_URI_PREFIX + String.format("%d", dpid);
 
         // Look for a switch in inventory that has that ID.
         for (Node s : switches) {
@@ -333,7 +334,26 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         return null;
     }
 
-
+    /**
+     * Get the NodeConnector for the local port on a switch.
+     * @param node
+     * @return
+     */
+    public NodeConnector getLocalNodeConnector(Node node) {
+        List<NodeConnector> l = node.getNodeConnector();
+        for (NodeConnector nc : l) {
+            // Get the augmentation of the NodeConnector so we can get to
+            // its port number, see if that matches the reserved local port number
+            FlowCapableNodeConnector fcnc = nc.getAugmentation(FlowCapableNodeConnector.class);
+            if (fcnc != null) {
+                String fcncPort = fcnc.getPortNumber().getString();
+                if (fcncPort != null && fcncPort.equals("LOCAL")) {
+                    return nc;
+                }
+            }
+        }
+        return null;
+    }
     private InstanceIdentifier<Table> getTableInstanceId(InstanceIdentifier<Node> nodeId, short flowTableId) {
         // get flow table key
         TableKey flowTableKey = new TableKey(flowTableId);
@@ -349,10 +369,10 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      * constructed) to the datastore.  The FlowProgrammer module will pick this
      * up and actually push the flow to the switch.
      */
-    public FlowRef addFlow(NodeId nodeId, Flow flow) throws ExecutionException, InterruptedException {
+    public FlowRef addFlow(Node odlNode, Flow flow) throws ExecutionException, InterruptedException {
 
         AddFlowInputBuilder builder = new AddFlowInputBuilder(flow);
-        NodeKey nodeKey = new NodeKey(nodeId);
+        NodeKey nodeKey = new NodeKey(odlNode.getId());
         //XXX need setNode, maybe setFlowRef, setFlowTable, setTransactionURI
 
         InstanceIdentifier<Node> nodeInstanceIdentifier = InstanceIdentifier.builder(Nodes.class).child(Node.class, nodeKey).build();
@@ -448,11 +468,11 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         flowBuilder.setKey(new FlowKey(flowId));
         flowBuilder.setBarrier(true);
         flowBuilder.setTableId((short) 0);
-        flowBuilder.setPriority(32768);
+        flowBuilder.setPriority(OFConstants.DEFAULT_FLOW_PRIORITY);
         flowBuilder.setFlowName(flowId.getValue());
         flowBuilder.setHardTimeout(0);
         flowBuilder.setIdleTimeout(0);
-        flowBuilder.setBufferId(0L);
+        flowBuilder.setBufferId(OFConstants.OFP_NO_BUFFER);
         flowBuilder.setFlags(new FlowModFlags(false, false, false, false, false));
 
         flowBuilder.setMatch(matchBuilder.build());
@@ -465,7 +485,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
 
     /**
      * Create a Layer 2 VLAN and MAC translation flow entry
-     * @param nid
+     * @param odlNode
      * @param priority
      * @param c
      * @param m1
@@ -481,7 +501,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      * @throws ExecutionException
      * @throws InterruptedException
      */
-    public Flow createTransitVlanMacCircuitFlow(NodeId nid, int priority, BigInteger c,
+    public Flow createTransitVlanMacCircuitFlow(Node odlNode, int priority, BigInteger c,
                                                 MacAddress m1, NodeConnectorId ncid1, int vlan1,
                                                 MacAddress m2, NodeConnectorId ncid2, int vlan2,
                                                 short vp2, short q2, long mt2) {
@@ -512,6 +532,21 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         SetDlDstActionBuilder setDlDstActionBuilder = new SetDlDstActionBuilder();
         setDlDstActionBuilder.setAddress(m2);
 
+        // Open vSwitch (and possibly other switches too?) has a restriction that
+        // a packet cannot be output to the same port from which it entered the
+        // switch.  In the SDN testbed we may very well have reasons for doing
+        // things like this.  If we're asked to set up a flow like this, use an
+        // instruction to overwrite the in_port metadata with something that can't
+        // possibly be the output port.  This allows us to set the output port to
+        // the original input port.  Only do this hack if necessary, both for
+        // runtime performance and to avoid unnecessarily obfuscating the flow
+        // entry.
+        SetFieldBuilder setFieldBuilder = null;
+        if (ncid1.getValue().equals(ncid2.getValue())) {
+            setFieldBuilder = new SetFieldBuilder();
+            setFieldBuilder.setInPort(this.getLocalNodeConnector(odlNode).getId());
+        }
+
         OutputActionBuilder outputActionBuilder = new OutputActionBuilder();
         outputActionBuilder.setOutputNodeConnector(ncid2);
 
@@ -525,6 +560,14 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         ab2.setOrder(1);
         ab2.setKey(new ActionKey(1));
 
+        ActionBuilder ab2a = null;
+        if (setFieldBuilder != null) {
+            ab2a = new ActionBuilder();
+            ab2a.setAction(new SetFieldCaseBuilder().setSetField(setFieldBuilder.build()).build());
+            ab2a.setOrder(2);
+            ab2a.setKey(new ActionKey(0));
+        }
+
         ActionBuilder ab3 = new ActionBuilder();
         ab3.setAction(new OutputActionCaseBuilder().setOutputAction(outputActionBuilder.build()).build());
         ab3.setOrder(2);
@@ -534,6 +577,9 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         List<Action> actionList = Lists.newArrayList();
         actionList.add(ab1.build());
         actionList.add(ab2.build());
+        if (ab2a != null) {
+            actionList.add(ab2a.build());
+        }
         actionList.add(ab3.build());
 
         // Create APPLY ACTIONS instruction
@@ -558,7 +604,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         FlowBuilder flowBuilder = new FlowBuilder();
         flowBuilder.setBarrier(true);
         flowBuilder.setTableId((short) 0);
-        flowBuilder.setPriority(32768);
+        flowBuilder.setPriority(OFConstants.DEFAULT_FLOW_PRIORITY);
         flowBuilder.setHardTimeout(0);
         flowBuilder.setIdleTimeout(0);
         flowBuilder.setBufferId(OFConstants.OFP_NO_BUFFER);
