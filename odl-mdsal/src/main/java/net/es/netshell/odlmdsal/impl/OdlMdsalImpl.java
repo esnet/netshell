@@ -70,11 +70,9 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instru
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.list.Instruction;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.list.InstructionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.list.InstructionKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeId;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeRef;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnectorKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.l2.types.rev130827.VlanId;
@@ -87,9 +85,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.EthernetMatchBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.VlanMatch;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.VlanMatchBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingListener;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingService;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketReceived;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.*;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.Augmentation;
 import org.opendaylight.yangtools.yang.binding.DataContainer;
@@ -354,6 +350,21 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         }
         return null;
     }
+
+    private InstanceIdentifier<Node> getNodeInstanceId(Node node) {
+        NodeKey nodeKey = new NodeKey(node.getId());
+        return InstanceIdentifier.builder(Nodes.class).child(Node.class, nodeKey).build();
+    }
+
+    private InstanceIdentifier<NodeConnector> getNodeConnectorInstanceId(Node node, NodeConnector nc) {
+        NodeKey nodeKey = new NodeKey(node.getId());
+        NodeConnectorKey nckey = new NodeConnectorKey(nc.getId());
+        return InstanceIdentifier.builder(Nodes.class)
+                .child(Node.class, nodeKey)
+                .child(NodeConnector.class, nckey)
+                .build();
+    }
+
     private InstanceIdentifier<Table> getTableInstanceId(InstanceIdentifier<Node> nodeId, short flowTableId) {
         // get flow table key
         TableKey flowTableKey = new TableKey(flowTableId);
@@ -375,7 +386,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         NodeKey nodeKey = new NodeKey(odlNode.getId());
         //XXX need setNode, maybe setFlowRef, setFlowTable, setTransactionURI
 
-        InstanceIdentifier<Node> nodeInstanceIdentifier = InstanceIdentifier.builder(Nodes.class).child(Node.class, nodeKey).build();
+        InstanceIdentifier<Node> nodeInstanceIdentifier = getNodeInstanceId(odlNode);
         builder.setNode(new NodeRef(nodeInstanceIdentifier));
 
         InstanceIdentifier<Flow> flowInstanceIdentifier =
@@ -685,6 +696,14 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         return sw;
     }
 
+    public void transmitDataPacket(Node odlNode, NodeConnector ncid, byte [] payload) {
+        TransmitPacketInput input =
+                new TransmitPacketInputBuilder().setPayload(payload)
+                        .setNode(new NodeRef(this.getNodeInstanceId(odlNode)))
+                        .setEgress(new NodeConnectorRef(this.getNodeConnectorInstanceId(odlNode, ncid)))
+                        .build();
+        packetProcessingService.transmitPacket(input);
+    }
 
     @Override
     public boolean addForwardRule(Layer2ForwardRule rule) {
