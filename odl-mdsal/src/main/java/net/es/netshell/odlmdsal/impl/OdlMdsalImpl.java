@@ -134,6 +134,10 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
     SalFlowService salFlowService;
     PacketProcessingService packetProcessingService;
 
+    // We have to have something to set up the initial flows in the switches,
+    // this is it.
+    InitialFlowWriter initialFlowWriter;
+
     private AtomicLong flowIdInc = new AtomicLong();
     private AtomicLong flowCookieInc = new AtomicLong(0x8800000000000000L);
 
@@ -200,10 +204,15 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
                 throw new RuntimeException("this.packetProcessingService null");
             }
 
-            // Register for notifications
+            // Register us for notifications
             this.registrations = Lists.newArrayList();
             Registration reg = notificationProviderService.registerNotificationListener(this);
             this.registrations.add(reg);
+
+            // Create an InitialFlowWriter and register it for notifications
+            this.initialFlowWriter = new InitialFlowWriter(this.salFlowService);
+            Registration reg2 = notificationProviderService.registerNotificationListener(this.initialFlowWriter);
+            this.registrations.add(reg2);
 
         }
         else {
