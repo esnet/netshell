@@ -160,6 +160,8 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         return salFlowService;
     }
 
+    public InitialFlowWriter getInitialFlowWriter() { return initialFlowWriter; }
+
     // Logging
     static final private Logger logger = LoggerFactory.getLogger(OdlMdsalImpl.class);
 

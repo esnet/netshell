@@ -75,7 +75,7 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
     private int flowHardTimeout;
 
     // Logging
-    static final private Logger logger = LoggerFactory.getLogger(OdlMdsalImpl.class);
+    static final private Logger logger = LoggerFactory.getLogger(InitialFlowWriter.class);
 
     public InitialFlowWriter(SalFlowService s) {
         this.salFlowService = s;
@@ -142,7 +142,7 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
         initialFlowExecutor.submit(new InitialFlowWriterProcessor(n));
     }
 
-    private class InitialFlowWriterProcessor implements Runnable {
+    public class InitialFlowWriterProcessor implements Runnable {
 
         private NodeUpdated nodeUpdated;
         public InitialFlowWriterProcessor(NodeUpdated n) {
@@ -158,7 +158,7 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
         }
 
         public void addInitialFlows(InstanceIdentifier<Node> nodeId) throws ExecutionException, InterruptedException {
-            logger.debug("Add flows for {}", nodeId);
+            logger.info("Add flows for {}", nodeId);
 
             // Build flow
             Flow f = makeControllerFlow();
@@ -167,8 +167,7 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
         }
 
         /**
-         * Create a forwarding flow between two switch ports
-         * This function is mostly for testing.
+         * Create a forwarding flow that sends everything to the controller.
          */
         public Flow makeControllerFlow() {
 
