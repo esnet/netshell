@@ -212,7 +212,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
             this.registrations.add(reg);
 
             // Create an InitialFlowWriter and register it for notifications
-            this.initialFlowWriter = new InitialFlowWriter(this.salFlowService);
+            this.initialFlowWriter = new InitialFlowWriter(this, this.salFlowService);
             Registration reg2 = notificationProviderService.registerNotificationListener(this.initialFlowWriter);
             this.registrations.add(reg2);
 
@@ -310,6 +310,26 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         return sw;
     }
 
+    public Node getNetworkDeviceByInstanceId(InstanceIdentifier<Node> nodeId) {
+        List<Node> switches = this.getNetworkDevices();
+
+        Node sw = null;
+
+        // Look for a switch in inventory whose InstanceIdentifier is the same as what was passed.
+        for (Node s : switches) {
+
+            InstanceIdentifier<Node> sid = getNodeInstanceId(s);
+            logger.info("Switch has IID {}", sid);
+
+            if (sid.equals(nodeId)) {
+                sw = s;
+                break;
+            }
+        }
+        return sw;
+
+    }
+
     /**
      * Get the set of node connectors for a switch
      */
@@ -362,12 +382,12 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         return null;
     }
 
-    private InstanceIdentifier<Node> getNodeInstanceId(Node node) {
+    static public InstanceIdentifier<Node> getNodeInstanceId(Node node) {
         NodeKey nodeKey = new NodeKey(node.getId());
         return InstanceIdentifier.builder(Nodes.class).child(Node.class, nodeKey).build();
     }
 
-    private InstanceIdentifier<NodeConnector> getNodeConnectorInstanceId(Node node, NodeConnector nc) {
+    static public InstanceIdentifier<NodeConnector> getNodeConnectorInstanceId(Node node, NodeConnector nc) {
         NodeKey nodeKey = new NodeKey(node.getId());
         NodeConnectorKey nckey = new NodeConnectorKey(nc.getId());
         return InstanceIdentifier.builder(Nodes.class)
@@ -376,7 +396,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
                 .build();
     }
 
-    private InstanceIdentifier<Table> getTableInstanceId(InstanceIdentifier<Node> nodeId, short flowTableId) {
+    static public InstanceIdentifier<Table> getTableInstanceId(InstanceIdentifier<Node> nodeId, short flowTableId) {
         // get flow table key
         TableKey flowTableKey = new TableKey(flowTableId);
         return nodeId.builder()

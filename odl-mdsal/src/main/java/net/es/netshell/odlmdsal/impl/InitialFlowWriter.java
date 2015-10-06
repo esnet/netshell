@@ -29,12 +29,19 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.acti
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.Action;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowId;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.TableKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.FlowBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.FlowKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.AddFlowInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.AddFlowOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.FlowTableRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.SalFlowService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowModFlags;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.OutputPortValues;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.InstructionsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.MatchBuilder;
@@ -46,6 +53,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instru
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +61,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * This class installs a low priority "catch-all" flow on every switch,
@@ -69,17 +78,17 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
 
     OdlMdsalImpl odlMdsalImpl;
 
-    private short flowTableId;
-    private int flowPriority;
-    private int flowIdleTimeout;
-    private int flowHardTimeout;
+    private short flowTableId = 0;
+    private int flowPriority = 0;
+    private int flowIdleTimeout = 0;
+    private int flowHardTimeout = 0;
 
     // Logging
     static final private Logger logger = LoggerFactory.getLogger(InitialFlowWriter.class);
 
-    public InitialFlowWriter(SalFlowService s) {
+    public InitialFlowWriter(OdlMdsalImpl o, SalFlowService s) {
+        this.odlMdsalImpl = o;
         this.salFlowService = s;
-        odlMdsalImpl = OdlMdsalImpl.getInstance();
     }
 
     public SalFlowService getSalFlowService() {
@@ -139,6 +148,7 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
 
     @Override
     public void onNodeUpdated(NodeUpdated n) {
+        logger.debug("Fire for {}", n.toString());
         initialFlowExecutor.submit(new InitialFlowWriterProcessor(n));
     }
 
@@ -151,9 +161,17 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
 
         @Override
         public void run() {
+            logger.debug("run for {}", nodeUpdated.toString());
 
             if (nodeUpdated == null) {
                 return;
+            }
+
+            // Need to get an InstanceIdentifier.
+            try {
+                addInitialFlows((InstanceIdentifier<Node>) nodeUpdated.getNodeRef().getValue());
+            } catch (Exception e) {
+                logger.error(e.toString());
             }
         }
 
@@ -162,8 +180,40 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
 
             // Build flow
             Flow f = makeControllerFlow();
-            Node odlNode = odlMdsalImpl.getNetworkDeviceByDpid(0L);
-            odlMdsalImpl.addFlow(odlNode, f);
+
+            // At this point in the process, the new switch might not have been
+            // added to the switch inventory.  We don't have any easy way of getting
+            // the Node object corresponding to the switch (so we can do
+            // OdlMdsalImpl.addFlow()) but we don't need this either since all
+            // we need it for is to make an InstanceIdentifier<Node> and we were
+            // handed that.  So we just in-line the parts of addFlow() that make
+            // sense for us to do here.
+            //
+            // There's probably a better way to do this!
+            AddFlowInputBuilder builder = new AddFlowInputBuilder(f);
+            builder.setNode(new NodeRef(nodeId));
+
+            InstanceIdentifier<Flow> flowInstanceIdentifier =
+                    nodeId.builder().
+                    augmentation(FlowCapableNode.class).
+                    child(Table.class, new TableKey(f.getTableId())).
+                    child(Flow.class, f.getKey()).
+                    build();
+            builder.setFlowRef(new FlowRef(flowInstanceIdentifier));
+            builder.setFlowTable(new FlowTableRef(OdlMdsalImpl.getTableInstanceId(nodeId, f.getTableId())));
+
+            builder.setTransactionUri(new Uri(f.getId().getValue()));
+
+            Future<RpcResult<AddFlowOutput>> resultFuture =
+                    salFlowService.addFlow(builder.build());
+            RpcResult<AddFlowOutput> rpcResult = resultFuture.get();
+            if (rpcResult.isSuccessful()) {
+                AddFlowOutput result = rpcResult.getResult();
+            }
+            else {
+                logger.error(rpcResult.getErrors().toString());
+            }
+
         }
 
         /**
@@ -213,8 +263,8 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
             flowBuilder.setBarrier(true);
             flowBuilder.setTableId((short) 0);
             flowBuilder.setPriority(getFlowPriority());
-            flowBuilder.setHardTimeout(0);
-            flowBuilder.setIdleTimeout(0);
+            flowBuilder.setHardTimeout(flowHardTimeout);
+            flowBuilder.setIdleTimeout(flowIdleTimeout);
             flowBuilder.setBufferId(OFConstants.OFP_NO_BUFFER);
             flowBuilder.setFlags(new FlowModFlags(false, false, false, false, false));
 
