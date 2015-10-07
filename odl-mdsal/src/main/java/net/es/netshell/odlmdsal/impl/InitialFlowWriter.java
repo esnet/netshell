@@ -167,11 +167,49 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
                 return;
             }
 
-            // Need to get an InstanceIdentifier.
+            // Construct instance ID
+            InstanceIdentifier<Node> id = (InstanceIdentifier<Node>) nodeUpdated.getNodeRef().getValue();
+
+            // We need to try to get the node's record in the inventory.
+            // However due to concurrency issues, this code might run before
+            // the node shows up.  Loop until it shows up or until we give up
+            // (after 30 seconds).
             try {
-                addInitialFlows((InstanceIdentifier<Node>) nodeUpdated.getNodeRef().getValue());
+                boolean done = false;
+                int countdown = 30;
+
+                while (!done) {
+
+                    if (countdown == 0) {
+                        logger.error("Timed out waiting for switch {} to show up in inventory",
+                                nodeUpdated.getId().toString());
+                        done = true;
+                    }
+                    if (done) {
+                        break;
+                    }
+
+                    // See if the node showed up yet.
+                    Node n = odlMdsalImpl.getNetworkDeviceByInstanceId(id);
+                    if (n == null) {
+                        // Not yet.  Go to sleep for a second and try again.
+                        countdown--;
+                        Thread.sleep(1000L);
+                        continue;
+                    }
+
+                    // Figure out if this node is an OpenFlow switch but not a Corsa.
+                    // If so, then push the new flows we need.
+                    logger.info("Switch {} showed up with {} left on countdown",
+                            nodeUpdated.getId().toString(), Integer.toString(countdown));
+                    FlowCapableNode fcn = n.getAugmentation(FlowCapableNode.class);
+                    if (fcn != null && !fcn.getManufacturer().contains("Corsa")) {
+                        addInitialFlows(id);
+                    }
+                    done = true;
+                }
             } catch (Exception e) {
-                logger.error(e.toString());
+                e.printStackTrace();
             }
         }
 

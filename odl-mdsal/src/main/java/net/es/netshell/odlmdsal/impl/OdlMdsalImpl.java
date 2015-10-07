@@ -295,23 +295,18 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
     }
 
     public Node getNetworkDeviceByDpid(long dpid) {
-        List<Node> switches = this.getNetworkDevices();
-        Node sw = null;
-
         String targetId = OFConstants.OF_URI_PREFIX + String.format("%d", dpid);
+        return getNetworkDeviceById(targetId);
+    }
 
-        // Look for a switch in inventory that has that ID.
-        for (Node s : switches) {
-            if (s.getId().getValue().equals(targetId)) {
-                sw = s;
-                break;
-            }
-        }
-        return sw;
+    public Node getNetworkDeviceById(String id) {
+        InstanceIdentifier<Node> nodeId =
+            InstanceIdentifier.builder(Nodes.class).child(Node.class, new NodeKey(new NodeId(id))).build();
+        return getNetworkDeviceByInstanceId(nodeId);
     }
 
     public Node getNetworkDeviceByInstanceId(InstanceIdentifier<Node> nodeId) {
-        List<Node> switches = this.getNetworkDevices();
+/*        List<Node> switches = this.getNetworkDevices();
 
         Node sw = null;
 
@@ -326,6 +321,21 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
                 break;
             }
         }
+*/
+        Node sw = null;
+
+        try {
+            Optional<Node> maybeNode = null;
+            ReadOnlyTransaction readTransaction = dataBroker.newReadOnlyTransaction();
+            maybeNode = readTransaction.read(LogicalDatastoreType.OPERATIONAL, nodeId).get();
+            if (maybeNode.isPresent()) {
+                sw = maybeNode.get();
+            }
+        }
+        catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+
         return sw;
 
     }
@@ -333,7 +343,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
     /**
      * Get the set of node connectors for a switch
      */
-    public List<NodeConnector> getNodeConnectors(Node node) {
+    static public List<NodeConnector> getNodeConnectors(Node node) {
         // The NodeConnector in getNodeConnector() below is a list of NodeCodeConnector type objects.
         return node.getNodeConnector();
     }
@@ -345,7 +355,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      * works with OpenFlow switches (and not surprisingly with the OpenFlow
      * plugin enabled).
      */
-    public NodeConnector getNodeConnector(Node node, String nodeConnectorName) {
+    static public NodeConnector getNodeConnector(Node node, String nodeConnectorName) {
         List<NodeConnector> l = node.getNodeConnector();
         for (NodeConnector nc : l) {
 
@@ -366,7 +376,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      * @param node
      * @return
      */
-    public NodeConnector getLocalNodeConnector(Node node) {
+    static public NodeConnector getLocalNodeConnector(Node node) {
         List<NodeConnector> l = node.getNodeConnector();
         for (NodeConnector nc : l) {
             // Get the augmentation of the NodeConnector so we can get to
