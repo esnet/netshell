@@ -148,8 +148,26 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
 
     @Override
     public void onNodeUpdated(NodeUpdated n) {
-        logger.debug("Fire for {}", n.toString());
+        logger.debug("Fire for {}", n.getId().toString());
         initialFlowExecutor.submit(new InitialFlowWriterProcessor(n));
+    }
+
+    /**
+     * Install initial flows on all switches.
+     * This makes sure we cover all of the switches that come up before we do.
+     */
+    public void installAllInitialFlows() {
+
+        // Loop through all known switches and fake up NodeUpdated notifications
+        // for those switches
+        List<Node> nodes = odlMdsalImpl.getNetworkDevices();
+        for (Node node : nodes) {
+            NodeUpdatedBuilder builder = new NodeUpdatedBuilder(node);
+            builder.setNodeRef(OdlMdsalImpl.getNodeRef(node));
+            NodeUpdated n = builder.build();
+            logger.debug("Fire for {}", n.getId().toString());
+            initialFlowExecutor.submit(new InitialFlowWriterProcessor(n));
+        }
     }
 
     public class InitialFlowWriterProcessor implements Runnable {
@@ -161,11 +179,11 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
 
         @Override
         public void run() {
-            logger.debug("run for {}", nodeUpdated.toString());
-
             if (nodeUpdated == null) {
                 return;
             }
+
+            logger.debug("run for {}", nodeUpdated.getId().toString());
 
             // Construct instance ID
             InstanceIdentifier<Node> id = (InstanceIdentifier<Node>) nodeUpdated.getNodeRef().getValue();
@@ -200,10 +218,25 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
 
                     // Figure out if this node is an OpenFlow switch but not a Corsa.
                     // If so, then push the new flows we need.
-                    logger.info("Switch {} showed up with {} left on countdown",
+                    logger.debug("Switch {} showed up with {} left on countdown",
                             nodeUpdated.getId().toString(), Integer.toString(countdown));
                     FlowCapableNode fcn = n.getAugmentation(FlowCapableNode.class);
-                    if (fcn != null && !fcn.getManufacturer().contains("Corsa")) {
+                    if (fcn != null) {
+                        logger.debug("  Manufacturer:  {}", fcn.getManufacturer());
+                    }
+                    else {
+                        logger.debug("  Null FlowCapableNode augmentation");
+                    }
+
+                    // If we don't have the right OF data or no manufacturer code yet,
+                    // then we wait a little longer.  Not sure what we're supposed to do if there's
+                    // a switch with no manufacturer code at all.
+                    if (fcn == null || fcn.getManufacturer() == null) {
+                        countdown--;
+                        Thread.sleep(1000L);
+                        continue;
+                    }
+                    if (!fcn.getManufacturer().contains("Corsa")) {
                         addInitialFlows(id);
                     }
                     done = true;
@@ -219,15 +252,10 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
             // Build flow
             Flow f = makeControllerFlow();
 
-            // At this point in the process, the new switch might not have been
-            // added to the switch inventory.  We don't have any easy way of getting
-            // the Node object corresponding to the switch (so we can do
-            // OdlMdsalImpl.addFlow()) but we don't need this either since all
-            // we need it for is to make an InstanceIdentifier<Node> and we were
-            // handed that.  So we just in-line the parts of addFlow() that make
-            // sense for us to do here.
-            //
-            // There's probably a better way to do this!
+            // This is partially inlined code from OdlMdsalImpl.addFlow().  Originally
+            // we didn't have a good way to get the Node object, so we had to inline
+            // this code to avoid a lot of headache.  We have a way now, just need
+            // to determine if it makes sense to use it or not.
             AddFlowInputBuilder builder = new AddFlowInputBuilder(f);
             builder.setNode(new NodeRef(nodeId));
 

@@ -23,6 +23,7 @@ package net.es.netshell.odlmdsal.impl;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.CheckedFuture;
 import net.es.netshell.controller.OpenFlowNode;
 import net.es.netshell.controller.layer2.Layer2Controller;
 import net.es.netshell.controller.layer2.Layer2ForwardRule;
@@ -31,6 +32,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.openflowplugin.api.OFConstants;
@@ -115,7 +117,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      * There needs to be some authorization around the getter and setter here.
      */
     public interface Callback {
-        public void callback(PacketReceived notification);
+        void callback(PacketReceived notification);
     }
     private Callback packetInCallback;
     public Callback getPacketInCallback() {
@@ -177,6 +179,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
     public OdlMdsalImpl(DataBroker d, NotificationProviderService n, RpcProviderRegistry r) {
 
         System.out.println("Hello ODL MD-SAL");
+        logger.info("Netshell ODL MD-SAL Module initializing");
 
         if (instance == null) {
             instance = this;
@@ -212,9 +215,11 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
             this.registrations.add(reg);
 
             // Create an InitialFlowWriter and register it for notifications
+            // Make it install flows for all switches that are already up.
             this.initialFlowWriter = new InitialFlowWriter(this, this.salFlowService);
             Registration reg2 = notificationProviderService.registerNotificationListener(this.initialFlowWriter);
             this.registrations.add(reg2);
+            this.initialFlowWriter.installAllInitialFlows();
 
         }
         else {
@@ -234,13 +239,11 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
             for (Registration r : registrations) {
                 r.close();
             }
+            registrations.clear();
         }
-        registrations.clear();
 
         System.out.println("Goodbye ODL MD-SAL");
         instance = null;
-
-        return;
     }
 
     /**
@@ -248,8 +251,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      */
     @Override
     public void onPacketReceived(PacketReceived notification) {
-        logger.info("Received data packet " + notification.toString());
-
+        logger.info("Received data packet " + notification.getIngress().getValue().toString());
         EthernetFrame frame = EthernetFrame.packetToFrame(notification.getPayload());
 
         if (frame != null) {
@@ -397,6 +399,10 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         return InstanceIdentifier.builder(Nodes.class).child(Node.class, nodeKey).build();
     }
 
+    static public NodeRef getNodeRef(Node node) {
+        return new NodeRef(getNodeInstanceId(node));
+    }
+
     static public InstanceIdentifier<NodeConnector> getNodeConnectorInstanceId(Node node, NodeConnector nc) {
         NodeKey nodeKey = new NodeKey(node.getId());
         NodeConnectorKey nckey = new NodeConnectorKey(nc.getId());
@@ -456,6 +462,22 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         }
     }
 
+    public FlowRef addFlow2(Node odlNode, Flow flow) throws ExecutionException, InterruptedException {
+        NodeKey nodeKey = new NodeKey(odlNode.getId());
+        InstanceIdentifier<Flow> flowInstanceIdentifier =
+                InstanceIdentifier.builder(Nodes.class).
+                        child(Node.class, nodeKey).
+                        augmentation(FlowCapableNode.class).
+                        child(Table.class, new TableKey(flow.getTableId())).
+                        child(Flow.class, flow.getKey()).
+                        build();
+        FlowRef flowRef = new FlowRef(flowInstanceIdentifier);
+        WriteTransaction writeTransaction = dataBroker.newWriteOnlyTransaction();
+        writeTransaction.put(LogicalDatastoreType.CONFIGURATION, flowInstanceIdentifier, flow, true);
+        CheckedFuture<Void,TransactionCommitFailedException> cf = writeTransaction.submit();
+        return flowRef;
+    }
+
     /**
      * Create a forwarding flow between two switch ports
      * This function is mostly for testing.
@@ -474,13 +496,13 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         // Create a match object to match on the input port
         MatchBuilder matchBuilder = new MatchBuilder();
 //         NodeConnector ncIn = this.getNodeConnector(odlNode, inPort.getResourceName());
-        NodeConnector ncIn = this.getNodeConnector(odlNode, inPortName);
+        NodeConnector ncIn = getNodeConnector(odlNode, inPortName);
         matchBuilder.setInPort(ncIn.getId());
 
         // Create an output action to forward to the output port
         OutputActionBuilder output = new OutputActionBuilder();
 //          NodeConnector ncOut = this.getNodeConnector(odlNode, outPort.getResourceName());
-        NodeConnector ncOut = this.getNodeConnector(odlNode, outPortName);
+        NodeConnector ncOut = getNodeConnector(odlNode, outPortName);
         output.setOutputNodeConnector(ncOut.getId());
 
         // Put that in an action
@@ -550,8 +572,6 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      * @param q2
      * @param mt2
      * @return
-     * @throws ExecutionException
-     * @throws InterruptedException
      */
     public Flow createTransitVlanMacCircuitFlow(Node odlNode, int priority, BigInteger c,
                                                 MacAddress m1, NodeConnectorId ncid1, int vlan1,
@@ -596,7 +616,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         SetFieldBuilder setFieldBuilder = null;
         if (ncid1.getValue().equals(ncid2.getValue())) {
             setFieldBuilder = new SetFieldBuilder();
-            setFieldBuilder.setInPort(this.getLocalNodeConnector(odlNode).getId());
+            setFieldBuilder.setInPort(getLocalNodeConnector(odlNode).getId());
         }
 
         OutputActionBuilder outputActionBuilder = new OutputActionBuilder();
@@ -684,6 +704,19 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      *
      * @param flowRef
      */
+    public boolean deleteFlow2(FlowRef flowRef) throws InterruptedException, ExecutionException {
+        FlowRemovedBuilder frb = new FlowRemovedBuilder();
+        frb.setFlowRef(flowRef);
+        FlowRemoved fr = frb.build();
+
+        notificationProviderService.publish(fr);
+        return true;
+    }
+
+    /**
+     *
+     * @param flowRef
+     */
     public boolean deleteFlow(FlowRef flowRef, Flow flow) throws InterruptedException, ExecutionException {
 
         // Make a parameter block for doing removeFlow().  This seems to really really want
@@ -695,12 +728,13 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         removeFlowInputBuilder.setFlowRef(flowRef);
         removeFlowInputBuilder.setNode(new NodeRef(flowRef.getValue().firstIdentifierOf(Node.class)));
         removeFlowInputBuilder.setFlowTable(new FlowTableRef(flowRef.getValue().firstIdentifierOf(Table.class)));
+        removeFlowInputBuilder.setTransactionUri(new Uri(flowRef.getValue().firstIdentifierOf(Flow.class).toString()));
         salFlowService.removeFlow(removeFlowInputBuilder.build());
 
         Future<RpcResult<RemoveFlowOutput>> resultFuture =
                 salFlowService.removeFlow(removeFlowInputBuilder.build());
         RpcResult<RemoveFlowOutput> rpcResult = resultFuture.get();
-        if (rpcResult.isSuccessful() == true) {
+        if (rpcResult.isSuccessful()) {
             RemoveFlowOutput result = rpcResult.getResult();
             return true;
         }
@@ -713,9 +747,6 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
     }
 
     private Node findODLSwitch(OpenFlowNode enosSwitch) {
-        List<Node> switches = this.getNetworkDevices();
-        Node sw = null;
-
         // Construct the Node ID we're looking for, it'll be "openflow:xxx" where
         // xxx is the decimal representation of the DPID
         byte[] dpid = enosSwitch.dpidToByteArray();
@@ -724,24 +755,15 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
             dpidLong <<= 8;
             dpidLong |= dpid[i];
         }
-        // XXX return this.getNetworkDeviceByDpid(long dpidLong);
-        String targetId = OFConstants.OF_URI_PREFIX + String.format("%ld", dpidLong);
 
-        // Look for a switch in inventory that has that ID.
-        for (Node s : switches) {
-            if (s.getId().getValue().equals(targetId)) {
-                sw = s;
-                break;
-            }
-        }
-        return sw;
+        return this.getNetworkDeviceByDpid(dpidLong);
     }
 
     public void transmitDataPacket(Node odlNode, NodeConnector ncid, byte [] payload) {
         TransmitPacketInput input =
                 new TransmitPacketInputBuilder().setPayload(payload)
-                        .setNode(new NodeRef(this.getNodeInstanceId(odlNode)))
-                        .setEgress(new NodeConnectorRef(this.getNodeConnectorInstanceId(odlNode, ncid)))
+                        .setNode(new NodeRef(getNodeInstanceId(odlNode)))
+                        .setEgress(new NodeConnectorRef(getNodeConnectorInstanceId(odlNode, ncid)))
                         .build();
         packetProcessingService.transmitPacket(input);
     }
