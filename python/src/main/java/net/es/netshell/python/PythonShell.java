@@ -314,7 +314,7 @@ public class PythonShell {
         String [] packages = saveExportedPackageNames(bundles);
         for(String p : packages) {
              sys.add_package(p);
-            logger.info("Add package {}", p);
+            logger.debug("Add package {}", p);
         }
 
     }
