@@ -45,7 +45,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.acti
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.output.action._case.OutputActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.dl.dst.action._case.SetDlDstActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.field._case.SetFieldBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.vlan.id.action._case.SetVlanIdAction;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.vlan.id.action._case.SetVlanIdActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.Action;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionBuilder;
@@ -60,12 +59,9 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.ta
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.FlowKey;
 
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.*;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowCookie;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowModFlags;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.Instructions;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.InstructionsBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.Match;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.MatchBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.instruction.ApplyActionsCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.instruction.apply.actions._case.ApplyActionsBuilder;
@@ -78,22 +74,13 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.No
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.l2.types.rev130827.VlanId;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.MacAddressFilter;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetDestination;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetDestinationBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetSource;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetType;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.EthernetMatch;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.EthernetMatchBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.VlanMatch;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.VlanMatchBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.*;
 import org.opendaylight.yangtools.concepts.Registration;
-import org.opendaylight.yangtools.yang.binding.Augmentation;
-import org.opendaylight.yangtools.yang.binding.DataContainer;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
-import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -462,6 +449,14 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         }
     }
 
+    /**
+     * Add a flow by writing to the config data store.
+     * @param odlNode
+     * @param flow
+     * @return
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
     public FlowRef addFlow2(Node odlNode, Flow flow) throws ExecutionException, InterruptedException {
         NodeKey nodeKey = new NodeKey(odlNode.getId());
         InstanceIdentifier<Flow> flowInstanceIdentifier =
@@ -692,24 +687,35 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         flowBuilder.setFlowName(flowId.getValue());
 
         return flowBuilder.build();
-
-        /*
-        // Push the flow.  We should be getting something back that gives us a handle to the flow
-        // if we need to get back to it.
-        return addFlow(nid, flowBuilder.build());
-        */
     }
 
     /**
      *
+     */
+    public FlowRef createTransitVlanMacCircuit(Node odlNode, int priority, BigInteger c,
+                                               MacAddress m1, NodeConnectorId ncid1, int vlan1,
+                                               MacAddress m2, NodeConnectorId ncid2, int vlan2,
+                                               short vp2, short q2, long mt2)
+        throws InterruptedException, ExecutionException {
+
+        Flow f = createTransitVlanMacCircuitFlow(odlNode, priority, c,
+                m1, ncid1, vlan1,
+                m1, ncid2, vlan2,
+                vp2, q2, mt2);
+        return addFlow2(odlNode, f);
+    }
+
+    /**
+     * Delete a flow by blowing away its place in the config data store.
      * @param flowRef
      */
     public boolean deleteFlow2(FlowRef flowRef) throws InterruptedException, ExecutionException {
-        FlowRemovedBuilder frb = new FlowRemovedBuilder();
-        frb.setFlowRef(flowRef);
-        FlowRemoved fr = frb.build();
+        InstanceIdentifier<Flow> flowInstanceIdentifier = (InstanceIdentifier<Flow>) flowRef.getValue();
 
-        notificationProviderService.publish(fr);
+        WriteTransaction writeTransaction = dataBroker.newWriteOnlyTransaction();
+        writeTransaction.delete(LogicalDatastoreType.CONFIGURATION, flowInstanceIdentifier);
+        CheckedFuture<Void,TransactionCommitFailedException> cf = writeTransaction.submit();
+
         return true;
     }
 
