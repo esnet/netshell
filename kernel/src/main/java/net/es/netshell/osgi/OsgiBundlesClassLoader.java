@@ -24,7 +24,7 @@ public class OsgiBundlesClassLoader extends ClassLoader {
         bundles = buns;
 
         for (Bundle b : buns) {
-            logger.info("Looking at bundle {}", b.getSymbolicName());
+            logger.debug("Looking at bundle {}", b.getSymbolicName());
         }
     }
 
