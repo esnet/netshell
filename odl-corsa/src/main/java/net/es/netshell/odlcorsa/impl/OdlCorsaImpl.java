@@ -197,6 +197,43 @@ public class OdlCorsaImpl implements AutoCloseable {
     }
 
     /**
+     * send-vlan-mac-to-controller
+     */
+    public FlowRef sendVlanMacToController(Node odlNode, int priority, BigInteger c,
+                                           MacAddress m1, NodeConnectorId ncid1, int vlan1)
+        throws InterruptedException, ExecutionException {
+
+        // Create the match fields.
+        // Because of the structure of the tables in the Corsa pipeline, the matches
+        // are identical to create-transit-vlan-mac-circuit.
+        // XXX it is not clear to me if we should be mucking around with methods from
+        // openflowplugin directly, even though they're public and static.
+        PortId portId1 = new PortId(InventoryDataServiceUtil.portNumberfromNodeConnectorId(OpenflowVersion.OF13, ncid1.getValue()).shortValue());
+        VlanId vlanId1 = new VlanId(vlan1);
+
+        org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.send.vlan.mac.to.controller.input.Match match =
+                new org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.send.vlan.mac.to.controller.input.MatchBuilder().
+                        setEthernetDestination(m1).setInPort(portId1).setVlanId(vlanId1).build();
+
+        // Build the rest of the parameters.
+        FlowCookie cookie = new FlowCookie(c);
+        org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.SendVlanMacToControllerInput input =
+                new org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.SendVlanMacToControllerInputBuilder().
+                        setNodeId(odlNode.getId()).setPriority(priority).setCookie(cookie).setMatch(match).build();
+
+        Future<RpcResult<SendVlanMacToControllerOutput>> future =
+                sdx3Service.sendVlanMacToController(input);
+        RpcResult<SendVlanMacToControllerOutput> rpcResult = future.get();
+        if (rpcResult.isSuccessful()) {
+            SendVlanMacToControllerOutput result = rpcResult.getResult();
+            return result.getFlowRef();
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
      * Create a green-only meter.
      * Note that creating a meter with the same ID as an existing meter causes a silent failure.
      *
@@ -224,6 +261,112 @@ public class OdlCorsaImpl implements AutoCloseable {
         }
 
     }
+
+    /**
+     * Create a green-yellow meter.
+     * Note that creating a meter with the same ID as an existing meter causes a silent failure.
+     *
+     * @param odlNode
+     * @param meter
+     * @param cr
+     * @param cbs
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public MeterRef createGreenYellowMeter(Node odlNode, long meter, long cr, long cbs)
+            throws InterruptedException, ExecutionException {
+        org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId meterId =
+                new org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId(meter);
+
+        org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateGreenYellowMeterInput input =
+                new org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateGreenYellowMeterInputBuilder()
+                        .setNodeId(odlNode.getId()).setMeterId(meterId)
+                        .setCommittedRate(cr).setCommittedBurstSize(cbs)
+                        .build();
+
+        Future<RpcResult<CreateGreenYellowMeterOutput>> future = sdx3Service.createGreenYellowMeter(input);
+        RpcResult<CreateGreenYellowMeterOutput> rpcResult = future.get();
+        if (rpcResult.isSuccessful()) {
+            CreateGreenYellowMeterOutput result = rpcResult.getResult();
+            return result.getMeterRef();
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * Create a green-red meter.
+     * Note that creating a meter with the same ID as an existing meter causes a silent failure.
+     *
+     * @param odlNode
+     * @param meter
+     * @param er
+     * @param ebs
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public MeterRef createGreenRedMeter(Node odlNode, long meter, long er, long ebs)
+            throws InterruptedException, ExecutionException {
+        org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId meterId =
+                new org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId(meter);
+
+        org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateGreenRedMeterInput input =
+                new org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateGreenRedMeterInputBuilder()
+                        .setNodeId(odlNode.getId()).setMeterId(meterId)
+                        .setExcessRate(er).setExcessBurstSize(ebs)
+                        .build();
+
+        Future<RpcResult<CreateGreenRedMeterOutput>> future = sdx3Service.createGreenRedMeter(input);
+        RpcResult<CreateGreenRedMeterOutput> rpcResult = future.get();
+        if (rpcResult.isSuccessful()) {
+            CreateGreenRedMeterOutput result = rpcResult.getResult();
+            return result.getMeterRef();
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * Create a green-yellow-red meter.
+     * Note that creating a meter with the same ID as an existing meter causes a silent failure.
+     *
+     * @param odlNode
+     * @param meter
+     * @param cr
+     * @param cbs
+     * @param er
+     * @param ebs
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public MeterRef createGreenYellowRedMeter(Node odlNode, long meter, long cr, long cbs, long er, long ebs)
+            throws InterruptedException, ExecutionException {
+        org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId meterId =
+                new org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId(meter);
+
+        org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateGreenYellowRedMeterInput input =
+                new org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.CreateGreenYellowRedMeterInputBuilder()
+                        .setNodeId(odlNode.getId()).setMeterId(meterId)
+                        .setCommittedRate(cr).setCommittedBurstSize(cbs)
+                        .setExcessRate(er).setExcessBurstSize(ebs)
+                        .build();
+
+        Future<RpcResult<CreateGreenYellowRedMeterOutput>> future = sdx3Service.createGreenYellowRedMeter(input);
+        RpcResult<CreateGreenYellowRedMeterOutput> rpcResult = future.get();
+        if (rpcResult.isSuccessful()) {
+            CreateGreenYellowRedMeterOutput result = rpcResult.getResult();
+            return result.getMeterRef();
+        }
+        else {
+            return null;
+        }
+    }
+
 
     /**
      * Delete a previously-configured meter.
