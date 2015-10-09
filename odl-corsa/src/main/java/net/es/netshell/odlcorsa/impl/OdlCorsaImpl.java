@@ -142,7 +142,7 @@ public class OdlCorsaImpl implements AutoCloseable {
     /**
      * delete-flow
      */
-    public void deleteFlow(FlowRef flowRef, Flow flow) throws InterruptedException, ExecutionException {
+    public void deleteFlow(FlowRef flowRef) throws InterruptedException, ExecutionException {
         DeleteFlowInput deleteFlowInput = new DeleteFlowInputBuilder().setFlowRef(flowRef).build();
         Future<RpcResult<Void>> future = sdx3Service.deleteFlow(deleteFlowInput);
         RpcResult<Void> result = future.get();

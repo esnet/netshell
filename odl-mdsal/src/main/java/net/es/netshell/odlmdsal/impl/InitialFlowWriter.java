@@ -251,35 +251,8 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
 
             // Build flow
             Flow f = makeControllerFlow();
-
-            // This is partially inlined code from OdlMdsalImpl.addFlow().  Originally
-            // we didn't have a good way to get the Node object, so we had to inline
-            // this code to avoid a lot of headache.  We have a way now, just need
-            // to determine if it makes sense to use it or not.
-            AddFlowInputBuilder builder = new AddFlowInputBuilder(f);
-            builder.setNode(new NodeRef(nodeId));
-
-            InstanceIdentifier<Flow> flowInstanceIdentifier =
-                    nodeId.builder().
-                    augmentation(FlowCapableNode.class).
-                    child(Table.class, new TableKey(f.getTableId())).
-                    child(Flow.class, f.getKey()).
-                    build();
-            builder.setFlowRef(new FlowRef(flowInstanceIdentifier));
-            builder.setFlowTable(new FlowTableRef(OdlMdsalImpl.getTableInstanceId(nodeId, f.getTableId())));
-
-            builder.setTransactionUri(new Uri(f.getId().getValue()));
-
-            Future<RpcResult<AddFlowOutput>> resultFuture =
-                    salFlowService.addFlow(builder.build());
-            RpcResult<AddFlowOutput> rpcResult = resultFuture.get();
-            if (rpcResult.isSuccessful()) {
-                AddFlowOutput result = rpcResult.getResult();
-            }
-            else {
-                logger.error(rpcResult.getErrors().toString());
-            }
-
+            Node n = odlMdsalImpl.getNetworkDeviceByInstanceId(nodeId);
+            FlowRef flowRef = odlMdsalImpl.addFlow(n, f);
         }
 
         /**

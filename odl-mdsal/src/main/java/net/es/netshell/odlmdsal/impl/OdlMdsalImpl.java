@@ -390,46 +390,6 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
                 .build();
     }
 
-    /**
-     * Push a flow
-     * This basically just writes the flow (which already needs to have been
-     * constructed) to the datastore.  The FlowProgrammer module will pick this
-     * up and actually push the flow to the switch.
-     */
-    public FlowRef addFlow(Node odlNode, Flow flow) throws ExecutionException, InterruptedException {
-
-        AddFlowInputBuilder builder = new AddFlowInputBuilder(flow);
-        NodeKey nodeKey = new NodeKey(odlNode.getId());
-        //XXX need setNode, maybe setFlowRef, setFlowTable, setTransactionURI
-
-        InstanceIdentifier<Node> nodeInstanceIdentifier = getNodeInstanceId(odlNode);
-        builder.setNode(new NodeRef(nodeInstanceIdentifier));
-
-        InstanceIdentifier<Flow> flowInstanceIdentifier =
-                InstanceIdentifier.builder(Nodes.class).
-                        child(Node.class, nodeKey).
-                        augmentation(FlowCapableNode.class).
-                        child(Table.class, new TableKey(flow.getTableId())).
-                        child(Flow.class, flow.getKey()).
-                        build();
-        builder.setFlowRef(new FlowRef(flowInstanceIdentifier));
-        // XXX note to self:  save the FlowRef?
-        builder.setFlowTable(new FlowTableRef(getTableInstanceId(nodeInstanceIdentifier, flow.getTableId())));
-
-        builder.setTransactionUri(new Uri(flow.getId().getValue()));
-
-        Future<RpcResult<AddFlowOutput>> resultFuture =
-                salFlowService.addFlow(builder.build());
-        RpcResult<AddFlowOutput> rpcResult = resultFuture.get();
-        if (rpcResult.isSuccessful()) {
-            AddFlowOutput result = rpcResult.getResult();
-            return new FlowRef(flowInstanceIdentifier);
-        }
-        else {
-            logger.error(rpcResult.getErrors().toString());
-            return null;
-        }
-    }
 
     /**
      * Add a flow by writing to the config data store.
@@ -439,7 +399,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      * @throws ExecutionException
      * @throws InterruptedException
      */
-    public FlowRef addFlow2(Node odlNode, Flow flow) throws ExecutionException, InterruptedException {
+    public FlowRef addFlow(Node odlNode, Flow flow) throws ExecutionException, InterruptedException {
         NodeKey nodeKey = new NodeKey(odlNode.getId());
         InstanceIdentifier<Flow> flowInstanceIdentifier =
                 InstanceIdentifier.builder(Nodes.class).
@@ -673,14 +633,14 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
                 m1, ncid1, vlan1,
                 m2, ncid2, vlan2,
                 vp2, q2, mt2);
-        return addFlow2(odlNode, f);
+        return addFlow(odlNode, f);
     }
 
     /**
      * Delete a flow by blowing away its place in the config data store.
      * @param flowRef
      */
-    public boolean deleteFlow2(FlowRef flowRef) throws InterruptedException, ExecutionException {
+    public boolean deleteFlow(FlowRef flowRef) throws InterruptedException, ExecutionException {
         InstanceIdentifier<Flow> flowInstanceIdentifier = (InstanceIdentifier<Flow>) flowRef.getValue();
 
         WriteTransaction writeTransaction = dataBroker.newWriteOnlyTransaction();
@@ -688,39 +648,6 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         CheckedFuture<Void,TransactionCommitFailedException> cf = writeTransaction.submit();
 
         return true;
-    }
-
-    /**
-     *
-     * @param flowRef
-     */
-    public boolean deleteFlow(FlowRef flowRef, Flow flow) throws InterruptedException, ExecutionException {
-
-        // Make a parameter block for doing removeFlow().  This seems to really really want
-        // the actual flow being removed, although in theory it should be possible to
-        // remove the flow just given a FlowRef object (because the FlowRef has the path
-        // to the flow object in the datastore.
-        RemoveFlowInputBuilder removeFlowInputBuilder = new RemoveFlowInputBuilder(flow);
-        removeFlowInputBuilder.setBarrier(true);
-        removeFlowInputBuilder.setFlowRef(flowRef);
-        removeFlowInputBuilder.setNode(new NodeRef(flowRef.getValue().firstIdentifierOf(Node.class)));
-        removeFlowInputBuilder.setFlowTable(new FlowTableRef(flowRef.getValue().firstIdentifierOf(Table.class)));
-        removeFlowInputBuilder.setTransactionUri(new Uri(flowRef.getValue().firstIdentifierOf(Flow.class).toString()));
-        salFlowService.removeFlow(removeFlowInputBuilder.build());
-
-        Future<RpcResult<RemoveFlowOutput>> resultFuture =
-                salFlowService.removeFlow(removeFlowInputBuilder.build());
-        RpcResult<RemoveFlowOutput> rpcResult = resultFuture.get();
-        if (rpcResult.isSuccessful()) {
-            RemoveFlowOutput result = rpcResult.getResult();
-            return true;
-        }
-        else {
-            logger.error(rpcResult.getErrors().toString());
-            return false;
-        }
-
-
     }
 
     private Node findODLSwitch(OpenFlowNode enosSwitch) {
