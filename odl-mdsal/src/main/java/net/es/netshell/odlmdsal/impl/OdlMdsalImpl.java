@@ -59,6 +59,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.ta
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.FlowKey;
 
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowCookie;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowModFlags;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.InstructionsBuilder;
@@ -126,9 +127,6 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
     // We have to have something to set up the initial flows in the switches,
     // this is it.
     InitialFlowWriter initialFlowWriter;
-
-    private AtomicLong flowIdInc = new AtomicLong();
-    private AtomicLong flowCookieInc = new AtomicLong(0x8800000000000000L);
 
     // XXX These getters are mostly here for debugging from the interactive
     // Python shell.  In theory there isn't any reason to expose these
@@ -295,22 +293,6 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
     }
 
     public Node getNetworkDeviceByInstanceId(InstanceIdentifier<Node> nodeId) {
-/*        List<Node> switches = this.getNetworkDevices();
-
-        Node sw = null;
-
-        // Look for a switch in inventory whose InstanceIdentifier is the same as what was passed.
-        for (Node s : switches) {
-
-            InstanceIdentifier<Node> sid = getNodeInstanceId(s);
-            logger.info("Switch has IID {}", sid);
-
-            if (sid.equals(nodeId)) {
-                sw = s;
-                break;
-            }
-        }
-*/
         Node sw = null;
 
         try {
@@ -451,9 +433,9 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
 
     /**
      * Add a flow by writing to the config data store.
-     * @param odlNode
-     * @param flow
-     * @return
+     * @param odlNode Node to write to
+     * @param flow Pre-constructed flow object
+     * @return Flow reference
      * @throws ExecutionException
      * @throws InterruptedException
      */
@@ -477,26 +459,15 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      * Create a forwarding flow between two switch ports
      * This function is mostly for testing.
      */
-//    public Flow makeFlow(Layer2ForwardRule rule) {
     public Flow makeFlow(Node odlNode, String inPortName, String outPortName) {
-
-
-//        Layer2Port inPort, outPort;
-//        inPort = (Layer2Port) rule.getInPort();
-//        outPort = (Layer2Port) rule.getOutPort();
-
-        // Figure out the node
-//        Node odlNode = this.findODLSwitch((OpenFlowNode) inPort.getNode());
 
         // Create a match object to match on the input port
         MatchBuilder matchBuilder = new MatchBuilder();
-//         NodeConnector ncIn = this.getNodeConnector(odlNode, inPort.getResourceName());
         NodeConnector ncIn = getNodeConnector(odlNode, inPortName);
         matchBuilder.setInPort(ncIn.getId());
 
         // Create an output action to forward to the output port
         OutputActionBuilder output = new OutputActionBuilder();
-//          NodeConnector ncOut = this.getNodeConnector(odlNode, outPort.getResourceName());
         NodeConnector ncOut = getNodeConnector(odlNode, outPortName);
         output.setOutputNodeConnector(ncOut.getId());
 
@@ -531,7 +502,6 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         // Finally get to make the flow itself
         FlowBuilder flowBuilder = new FlowBuilder();
 
-//         String flowId = "L2_Rule_" + inPort.getResourceName();
         FlowId flowId = new FlowId("L2_Rule_" + inPortName);
         flowBuilder.setId(flowId);
         flowBuilder.setKey(new FlowKey(flowId));
@@ -563,9 +533,9 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
      * @param m2
      * @param ncid2
      * @param vlan2
-     * @param vp2
-     * @param q2
-     * @param mt2
+     * @param vp2 (ignored)
+     * @param q2 (ignored)
+     * @param mt2 (ignored)
      * @return
      */
     public Flow createTransitVlanMacCircuitFlow(Node odlNode, int priority, BigInteger c,
@@ -671,11 +641,12 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         FlowBuilder flowBuilder = new FlowBuilder();
         flowBuilder.setBarrier(true);
         flowBuilder.setTableId((short) 0);
-        flowBuilder.setPriority(OFConstants.DEFAULT_FLOW_PRIORITY);
+        flowBuilder.setPriority(priority);
         flowBuilder.setHardTimeout(0);
         flowBuilder.setIdleTimeout(0);
         flowBuilder.setBufferId(OFConstants.OFP_NO_BUFFER);
         flowBuilder.setFlags(new FlowModFlags(false, false, false, false, false));
+        flowBuilder.setCookie(new FlowCookie(c));
 
         flowBuilder.setMatch(matchBuilder.build());
         flowBuilder.setInstructions(instructionsBuilder.build());
@@ -700,7 +671,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
 
         Flow f = createTransitVlanMacCircuitFlow(odlNode, priority, c,
                 m1, ncid1, vlan1,
-                m1, ncid2, vlan2,
+                m2, ncid2, vlan2,
                 vp2, q2, mt2);
         return addFlow2(odlNode, f);
     }
