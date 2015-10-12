@@ -547,28 +547,33 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         OutputActionBuilder outputActionBuilder = new OutputActionBuilder();
         outputActionBuilder.setOutputNodeConnector(ncid2);
 
+        // Actions we need to do:  Do VLAN rewrite
         ActionBuilder ab1 = new ActionBuilder();
         ab1.setAction(new SetVlanIdActionCaseBuilder().setSetVlanIdAction(setVlanIdActionBuilder.build()).build());
-        ab1.setOrder(0);
-        ab1.setKey(new ActionKey(0));
+        ab1.setOrder(1);
+        ab1.setKey(new ActionKey(1));
 
+        // Destination MAC rewrite
         ActionBuilder ab2 = new ActionBuilder();
         ab2.setAction(new SetDlDstActionCaseBuilder().setSetDlDstAction(setDlDstActionBuilder.build()).build());
-        ab2.setOrder(1);
-        ab2.setKey(new ActionKey(1));
+        ab2.setOrder(2);
+        ab2.setKey(new ActionKey(2));
 
+        // If necessary, do the hack where we need to frob the input port so we
+        // can send a packet back out the same port it came in on.
         ActionBuilder ab2a = null;
         if (setFieldBuilder != null) {
             ab2a = new ActionBuilder();
             ab2a.setAction(new SetFieldCaseBuilder().setSetField(setFieldBuilder.build()).build());
-            ab2a.setOrder(2);
-            ab2a.setKey(new ActionKey(0));
+            ab2a.setOrder(3);
+            ab2a.setKey(new ActionKey(3));
         }
 
+        // Forward out the destination port
         ActionBuilder ab3 = new ActionBuilder();
         ab3.setAction(new OutputActionCaseBuilder().setOutputAction(outputActionBuilder.build()).build());
-        ab3.setOrder(2);
-        ab3.setKey(new ActionKey(2));
+        ab3.setOrder(4);
+        ab3.setKey(new ActionKey(4));
 
         // Make an action list to hold the actions
         List<Action> actionList = Lists.newArrayList();
