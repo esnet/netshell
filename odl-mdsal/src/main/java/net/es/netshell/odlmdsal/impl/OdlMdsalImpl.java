@@ -24,10 +24,6 @@ package net.es.netshell.odlmdsal.impl;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.CheckedFuture;
-import net.es.netshell.controller.OpenFlowNode;
-import net.es.netshell.controller.layer2.Layer2Controller;
-import net.es.netshell.controller.layer2.Layer2ForwardRule;
-import net.es.netshell.controller.layer2.Layer2Port;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
@@ -95,7 +91,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * This class is an interface to the OpenFlow controller (and related) functionality
  * in OpenDaylight, using the MD-SAL abstraction layer.
  */
-public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, Layer2Controller {
+public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
 
     /**
      * Callback function to pass a RawPacket to some of our code.  It's designed
@@ -655,6 +651,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
         return true;
     }
 
+    /*
     private Node findODLSwitch(OpenFlowNode enosSwitch) {
         // Construct the Node ID we're looking for, it'll be "openflow:xxx" where
         // xxx is the decimal representation of the DPID
@@ -667,6 +664,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
 
         return this.getNetworkDeviceByDpid(dpidLong);
     }
+    */
 
     public void transmitDataPacket(Node odlNode, NodeConnector ncid, byte [] payload) {
         TransmitPacketInput input =
@@ -675,16 +673,6 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener, La
                         .setEgress(new NodeConnectorRef(getNodeConnectorInstanceId(odlNode, ncid)))
                         .build();
         packetProcessingService.transmitPacket(input);
-    }
-
-    @Override
-    public boolean addForwardRule(Layer2ForwardRule rule) {
-        return false;
-    }
-
-    @Override
-    public boolean removeForwardRule(Layer2ForwardRule rule) {
-        return false;
     }
 
 }
