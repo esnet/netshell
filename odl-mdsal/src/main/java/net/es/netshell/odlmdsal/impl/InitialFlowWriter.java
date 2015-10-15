@@ -161,12 +161,14 @@ public class InitialFlowWriter implements OpendaylightInventoryListener {
         // Loop through all known switches and fake up NodeUpdated notifications
         // for those switches
         List<Node> nodes = odlMdsalImpl.getNetworkDevices();
-        for (Node node : nodes) {
-            NodeUpdatedBuilder builder = new NodeUpdatedBuilder(node);
-            builder.setNodeRef(OdlMdsalImpl.getNodeRef(node));
-            NodeUpdated n = builder.build();
-            logger.debug("Fire for {}", n.getId().toString());
-            initialFlowExecutor.submit(new InitialFlowWriterProcessor(n));
+        if (nodes != null) {
+            for (Node node : nodes) {
+                NodeUpdatedBuilder builder = new NodeUpdatedBuilder(node);
+                builder.setNodeRef(OdlMdsalImpl.getNodeRef(node));
+                NodeUpdated n = builder.build();
+                logger.debug("Fire for {}", n.getId().toString());
+                initialFlowExecutor.submit(new InitialFlowWriterProcessor(n));
+            }
         }
     }
 
