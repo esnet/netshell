@@ -97,4 +97,10 @@ ODL Hydrogen is not supported.)  These differences will be noted where necessary
         feature:install netshell-controller
         feature:install netshell-odl
         
+    NOTE:  NetShell and ENOS are moving to a model that uses OpenDaylight's MD-SAL APIs, and where
+    the netshell-controller module sits atop the netshell-odl-mdsal and netshell-odl-corsa
+    modules.  To deploy in a way compatible with that approach, do this instead:
+    
+        feature:install netshell-odl-mdsal
+        feature:install netshell-controller
 
