@@ -277,6 +277,15 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
         return switches;
     }
 
+    public Node getNetworkDeviceByDpidArray(byte [] dpid) {
+        long dpidLong = 0;
+        for (int i = 0; i < dpid.length; i++) {
+            dpidLong <<= 8;
+            dpidLong |= dpid[i];
+        }
+        return this.getNetworkDeviceByDpid(dpidLong);
+    }
+
     public Node getNetworkDeviceByDpid(long dpid) {
         String targetId = OFConstants.OF_URI_PREFIX + String.format("%d", dpid);
         return getNetworkDeviceById(targetId);
@@ -650,21 +659,6 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
 
         return true;
     }
-
-    /*
-    private Node findODLSwitch(OpenFlowNode enosSwitch) {
-        // Construct the Node ID we're looking for, it'll be "openflow:xxx" where
-        // xxx is the decimal representation of the DPID
-        byte[] dpid = enosSwitch.dpidToByteArray();
-        long dpidLong = 0;
-        for (int i = 0; i < dpid.length; i++) {
-            dpidLong <<= 8;
-            dpidLong |= dpid[i];
-        }
-
-        return this.getNetworkDeviceByDpid(dpidLong);
-    }
-    */
 
     public void transmitDataPacket(Node odlNode, NodeConnector ncid, byte [] payload) {
         TransmitPacketInput input =

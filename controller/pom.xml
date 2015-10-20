@@ -57,6 +57,17 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
+        <dependency>
+            <groupId>net.es</groupId>
+            <artifactId>netshell-odl-mdsal</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.es</groupId>
+            <artifactId>netshell-odl-corsa</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
 

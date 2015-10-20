@@ -14,6 +14,8 @@ import java.util.Hashtable;
 import net.es.netshell.api.NetShellException;
 import net.es.netshell.api.PropertyKeys;
 import net.es.netshell.boot.BootStrap;
+import net.es.netshell.odlcorsa.impl.OdlCorsaImpl;
+import net.es.netshell.odlmdsal.impl.OdlMdsalImpl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -31,6 +33,12 @@ public class Activator implements BundleActivator {
     public void start(BundleContext bundleContext) throws Exception {
         this.bundleContext = bundleContext;
         System.out.println("NetShell Generic Controller and API: started");
+
+        // XXX Find OdlCorsaImpl and OdlMdsalImpl objects.
+        // Create Controller object passing these as constructor arguments.
+        OdlMdsalImpl omi = OdlMdsalImpl.getInstance();
+        OdlCorsaImpl oci = OdlCorsaImpl.getInstance();
+        Controller controller = new Controller(omi, oci);
     }
 
     @Override
