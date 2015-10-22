@@ -22,6 +22,7 @@ package net.es.netshell.controller.core;
 
 import net.es.netshell.odlcorsa.impl.OdlCorsaImpl;
 import net.es.netshell.odlmdsal.impl.OdlMdsalImpl;
+import org.opendaylight.openflowplugin.api.OFConstants;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
@@ -57,25 +58,32 @@ public class Controller {
         return oci;
     }
 
-    public class L2Translation {
-        byte [] dpid;
+    static public class L2Translation {
+        public byte [] dpid;
 
-        int priority;
-        BigInteger c;
+        public int priority;
+        public BigInteger c;
 
-        String inPort;
+        public String inPort;
         public short vlan1;
         public MacAddress dstMac1;
 
-        String outPort;
+        public String outPort;
         public short vlan2;
-        MacAddress dstMac2;
+        public MacAddress dstMac2;
 
-        short pcp;
-        short queue;
-        long meter;
+        public short pcp;
+        public short queue;
+        public long meter;
 
-        FlowRef flowRef;
+        public FlowRef flowRef;
+
+        public L2Translation() {
+            // Initialize some fields that have reasonable defaults.
+            this.priority = OFConstants.DEFAULT_FLOW_PRIORITY;
+            this.c = BigInteger.ZERO;
+            this.pcp = 0;
+        }
     }
 
     public Controller(OdlMdsalImpl omi, OdlCorsaImpl oci) {
