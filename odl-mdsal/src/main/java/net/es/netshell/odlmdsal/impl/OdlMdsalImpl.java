@@ -152,7 +152,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
     // a structure for specifying outputs, sometimes more than one of them in the
     // cases of tapping and broadcasts.  To make things less unwieldy, define a
     // structure as a way of expressing these tuples.
-    public class L2Output {
+    public static class L2Output {
         public MacAddress mac;
         public NodeConnectorId ncid;
         public int vlan;
