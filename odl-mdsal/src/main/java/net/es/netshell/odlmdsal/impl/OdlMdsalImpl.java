@@ -148,6 +148,16 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
     // Logging
     static final private Logger logger = LoggerFactory.getLogger(OdlMdsalImpl.class);
 
+    // Translation structure.  In our port/vlan/mac translations we need to have
+    // a structure for specifying outputs, sometimes more than one of them in the
+    // cases of tapping and broadcasts.  To make things less unwieldy, define a
+    // structure as a way of expressing these tuples.
+    public class L2Output {
+        public MacAddress mac;
+        public NodeConnectorId ncid;
+        public int vlan;
+    }
+
     // This is a quasi-singleton.  In theory there can be multiple of these objects
     // in a system, but in practice it seems that each one of these is associated
     // with a single instance of the OSGi bundle, which basically just means just
@@ -502,6 +512,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
      * @param q2 (ignored)
      * @param mt2 (ignored)
      * @return
+     * XXX Should probably be rewritten in terms of createMultipointVlanMacCircuitFlow()
      */
     public Flow createTransitVlanMacCircuitFlow(Node odlNode, int priority, BigInteger c,
                                                 MacAddress m1, NodeConnectorId ncid1, int vlan1,
@@ -631,7 +642,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
     }
 
     /**
-     *
+     * Push a transit L2 translation flow entry
      */
     public FlowRef createTransitVlanMacCircuit(Node odlNode, int priority, BigInteger c,
                                                MacAddress m1, NodeConnectorId ncid1, int vlan1,
@@ -642,6 +653,151 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
         Flow f = createTransitVlanMacCircuitFlow(odlNode, priority, c,
                 m1, ncid1, vlan1,
                 m2, ncid2, vlan2,
+                vp2, q2, mt2);
+        return addFlow(odlNode, f);
+    }
+
+    public Flow createMultipointVlanMacCircuitFlow(Node odlNode, int priority, BigInteger c,
+                                                   MacAddress m1, NodeConnectorId ncid1, int vlan1,
+                                                   L2Output[] outputs,
+                                                   short vp2, short q2, long mt2) {
+
+        // Create the new match object first.  We do exact matches on the port, VLAN,
+        // and MAC address.
+        MatchBuilder matchBuilder = new MatchBuilder();
+        matchBuilder.setInPort(ncid1);
+
+        org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.vlan.match.fields.VlanIdBuilder
+                vlanIdBuilder = new org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.vlan.match.fields.VlanIdBuilder();
+        vlanIdBuilder.setVlanId(new VlanId(vlan1));
+        vlanIdBuilder.setVlanIdPresent(true);
+        VlanMatchBuilder vlanMatchBuilder = new VlanMatchBuilder();
+        vlanMatchBuilder.setVlanId(vlanIdBuilder.build());
+        matchBuilder.setVlanMatch(vlanMatchBuilder.build());
+
+        EthernetDestinationBuilder ethernetDestinationBuilder = new EthernetDestinationBuilder();
+        ethernetDestinationBuilder.setAddress(new MacAddress(m1));
+        EthernetMatchBuilder ethernetMatchBuilder = new EthernetMatchBuilder();
+        ethernetMatchBuilder.setEthernetDestination(ethernetDestinationBuilder.build());
+        matchBuilder.setEthernetMatch(ethernetMatchBuilder.build());
+
+        // Make action list to hold the actions
+        List<Action> actionList = Lists.newArrayList();
+        int actionNumber = 1;
+
+        // Open vSwitch (and possibly other switches too?) has a restriction that
+        // a packet cannot be output to the same port from which it entered the
+        // switch.  In the SDN testbed we may very well have reasons for doing
+        // things like this.  If we're asked to set up a flow like this, use an
+        // instruction to overwrite the in_port metadata with something that can't
+        // possibly be the output port.  This allows us to set the output port to
+        // the original input port.  Only do this hack if necessary, both for
+        // runtime performance and to avoid unnecessarily obfuscating the flow
+        // entry.
+        boolean needInPortHack = false;
+        for (L2Output o : outputs) {
+            if (ncid1.getValue().equals(o.ncid.getValue())) {
+                needInPortHack = true;
+            }
+        }
+        if (needInPortHack) {
+            SetFieldBuilder setFieldBuilder = new SetFieldBuilder();
+            setFieldBuilder.setInPort(getLocalNodeConnector(odlNode).getId());
+
+            ActionBuilder setFieldActionBuilder = new ActionBuilder();
+            setFieldActionBuilder.setAction(new SetFieldCaseBuilder().setSetField(setFieldBuilder.build()).build());
+            setFieldActionBuilder.setOrder(actionNumber);
+            setFieldActionBuilder.setKey(new ActionKey(actionNumber));
+            actionNumber++;
+            actionList.add(setFieldActionBuilder.build());
+        }
+
+        // Iterate over all the outputs, and generate actions.
+        for (L2Output o : outputs) {
+            // VLAN rewrite
+            SetVlanIdActionBuilder setVlanIdActionBuilder = new SetVlanIdActionBuilder();
+            setVlanIdActionBuilder.setVlanId(new VlanId(o.vlan));
+            ActionBuilder ab1 = new ActionBuilder();
+            ab1.setAction(new SetVlanIdActionCaseBuilder().setSetVlanIdAction(setVlanIdActionBuilder.build()).build());
+            ab1.setOrder(actionNumber);
+            ab1.setKey(new ActionKey(actionNumber));
+            actionList.add(ab1.build());
+            actionNumber++;
+
+            // Destination MAC rewrite
+            SetDlDstActionBuilder setDlDstActionBuilder = new SetDlDstActionBuilder();
+            setDlDstActionBuilder.setAddress(o.mac);
+            ActionBuilder ab2 = new ActionBuilder();
+            ab2.setAction(new SetDlDstActionCaseBuilder().setSetDlDstAction(setDlDstActionBuilder.build()).build());
+            ab2.setOrder(actionNumber);
+            ab2.setKey(new ActionKey(actionNumber));
+            actionList.add(ab2.build());
+            actionNumber++;
+
+            // Output to destination port
+            OutputActionBuilder outputActionBuilder = new OutputActionBuilder();
+            outputActionBuilder.setOutputNodeConnector(o.ncid);
+            ActionBuilder ab3 = new ActionBuilder();
+            ab3.setAction(new OutputActionCaseBuilder().setOutputAction(outputActionBuilder.build()).build());
+            ab3.setOrder(actionNumber);
+            ab3.setKey(new ActionKey(actionNumber));
+            actionList.add(ab3.build());
+            actionNumber++;
+        }
+
+        // Create APPLY ACTIONS instruction
+        ApplyActionsBuilder applyActionsBuilder = new ApplyActionsBuilder();
+        applyActionsBuilder.setAction(actionList);
+
+        // Create an instruction to include the APPLY ACTION instruction
+        InstructionBuilder instructionBuilder = new InstructionBuilder();
+        instructionBuilder.setInstruction(new ApplyActionsCaseBuilder().setApplyActions(applyActionsBuilder.build()).build());
+        instructionBuilder.setOrder(0);
+        instructionBuilder.setKey(new InstructionKey(0));
+
+        // Now need a one-element list to hold this instruction
+        List<Instruction> instructionList = Lists.newArrayList();
+        instructionList.add(instructionBuilder.build());
+
+        // Set the instructions
+        InstructionsBuilder instructionsBuilder = new InstructionsBuilder();
+        instructionsBuilder.setInstruction(instructionList);
+
+        // Make the flow
+        FlowBuilder flowBuilder = new FlowBuilder();
+        flowBuilder.setBarrier(true);
+        flowBuilder.setTableId((short) 0);
+        flowBuilder.setPriority(priority);
+        flowBuilder.setHardTimeout(0);
+        flowBuilder.setIdleTimeout(0);
+        flowBuilder.setBufferId(OFConstants.OFP_NO_BUFFER);
+        flowBuilder.setFlags(new FlowModFlags(false, false, false, false, false));
+        flowBuilder.setCookie(new FlowCookie(c));
+
+        flowBuilder.setMatch(matchBuilder.build());
+        flowBuilder.setInstructions(instructionsBuilder.build());
+
+        // Do these last
+        FlowId flowId = new FlowId("TransitVlanMacCircuit_" + Long.toString(flowBuilder.hashCode()));
+        flowBuilder.setId(flowId);
+        flowBuilder.setKey(new FlowKey(flowId));
+        flowBuilder.setFlowName(flowId.getValue());
+
+        return flowBuilder.build();
+    }
+
+    /**
+     * Push a multipoint Layer 2 translation flow
+     */
+    public FlowRef createMultipointVlanMacCircuit(Node odlNode, int priority, BigInteger c,
+                                                  MacAddress m1, NodeConnectorId ncid1, int vlan1,
+                                                  L2Output[] outputs,
+                                                  short vp2, short q2, long mt2)
+            throws InterruptedException, ExecutionException {
+
+        Flow f = createMultipointVlanMacCircuitFlow(odlNode, priority, c,
+                m1, ncid1, vlan1,
+                outputs,
                 vp2, q2, mt2);
         return addFlow(odlNode, f);
     }

@@ -58,7 +58,24 @@ public class Controller {
         return oci;
     }
 
+    /**
+     * Abstract Layer 2 Translation specification
+     * Somewhat decoupled from OpenFlow, and assuming exact matches on, and
+     * forwarding to, port/VLAN/destMAC only.
+     */
     static public class L2Translation {
+
+        /**
+         * Output specification.
+         * A "normal" L2Translation structure will have ony one of these,
+         * but broadcast and tapping will have more than one.
+         */
+        static public class L2TranslationOutput{
+            public String outPort;
+            public short vlan;
+            public MacAddress dstMac;
+        }
+
         public byte [] dpid;
 
         public int priority;
@@ -68,9 +85,7 @@ public class Controller {
         public short vlan1;
         public MacAddress dstMac1;
 
-        public String outPort;
-        public short vlan2;
-        public MacAddress dstMac2;
+        public L2TranslationOutput [] outputs;
 
         public short pcp;
         public short queue;
@@ -82,7 +97,9 @@ public class Controller {
             // Initialize some fields that have reasonable defaults.
             this.priority = OFConstants.DEFAULT_FLOW_PRIORITY;
             this.c = BigInteger.ZERO;
+            this.outputs = new L2TranslationOutput[0];
             this.pcp = 0;
+            this.meter = 0;
         }
     }
 
@@ -116,31 +133,77 @@ public class Controller {
     public FlowRef installL2ForwardingRule(L2Translation translation) {
         Node node;
         NodeConnector inNc;
-        NodeConnector outNc;
 
         FlowRef fr = null;
 
+        // Make sure the node and its input connector exist
         node = omi.getNetworkDeviceByDpidArray(translation.dpid);
         if (node == null) {
             return null;
         }
         inNc = OdlMdsalImpl.getNodeConnector(node, translation.inPort);
-        outNc = OdlMdsalImpl.getNodeConnector(node, translation.outPort);
-        if (inNc == null || outNc == null) {
+        if (inNc == null) {
             return null;
         }
 
         try {
             if (isCorsa(translation.dpid)) {
-                fr = oci.createTransitVlanMacCircuit(node, translation.priority, translation.c,
-                        translation.dstMac1, inNc.getId(), translation.vlan1,
-                        translation.dstMac2, outNc.getId(), translation.vlan2,
-                        translation.pcp, translation.queue, translation.meter);
+
+                // The Corsa can only do one translation at a time...no packet copying
+                if (translation.outputs.length == 1) {
+
+                    // Make sure we can resolve the output connector
+                    NodeConnector outNc = OdlMdsalImpl.getNodeConnector(node, translation.outputs[0].outPort);
+                    if (outNc != null) {
+                        fr = oci.createTransitVlanMacCircuit(node, translation.priority, translation.c,
+                                translation.dstMac1, inNc.getId(), translation.vlan1,
+                                translation.outputs[0].dstMac, outNc.getId(), translation.outputs[0].vlan,
+                                translation.pcp, translation.queue, translation.meter);
+                    } else {
+                        return null;
+                    }
+                }
+                else {
+                    return null;
+                }
             } else if (isOVS(translation.dpid)) {
-                fr = omi.createTransitVlanMacCircuit(node, translation.priority, translation.c,
-                        translation.dstMac1, inNc.getId(), translation.vlan1,
-                        translation.dstMac2, outNc.getId(), translation.vlan2,
-                        translation.pcp, translation.queue, translation.meter);
+
+                // For now we only support a single translation, like the Corsa.
+                // We should be able to take a vector of translations.
+                // XXX do this
+                if (translation.outputs.length == 1) {
+
+                    // Make sure we can resolve the output connector
+                    NodeConnector outNc = OdlMdsalImpl.getNodeConnector(node, translation.outputs[0].outPort);
+                    if (outNc != null) {
+                        fr = omi.createTransitVlanMacCircuit(node, translation.priority, translation.c,
+                                translation.dstMac1, inNc.getId(), translation.vlan1,
+                                translation.outputs[0].dstMac, outNc.getId(), translation.outputs[0].vlan,
+                                translation.pcp, translation.queue, translation.meter);
+                    } else {
+                        return null;
+                    }
+                }
+                else {
+                    // Multipoint circuit
+
+                    // Construct vector of output tuples
+                    OdlMdsalImpl.L2Output[] outputs = new OdlMdsalImpl.L2Output[translation.outputs.length];
+                    for (int i = 0; i < translation.outputs.length; i++) {
+                        NodeConnector outNc = OdlMdsalImpl.getNodeConnector(node, translation.outputs[i].outPort);
+                        if (outNc == null) {
+                            return null;
+                        }
+                        outputs[i].mac = translation.outputs[i].dstMac;
+                        outputs[i].ncid = outNc.getId();
+                        outputs[i].vlan = translation.outputs[i].vlan;
+                    }
+                    fr = omi.createMultipointVlanMacCircuit(node, translation.priority, translation.c,
+                            translation.dstMac1, inNc.getId(), translation.vlan1,
+                            outputs,
+                            translation.pcp, translation.queue, translation.meter);
+                    return null;
+                }
             } else {
                 // XXX log something
             }
