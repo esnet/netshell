@@ -114,8 +114,16 @@ public class Controller {
         this.omi = omi;
         this.oci = oci;
     }
-
     public static Controller getInstance() { return instance; }
+
+    public void reinit() {
+        if (this.omi == null) {
+            this.omi = OdlMdsalImpl.getInstance();
+        }
+        if (this.oci == null) {
+            this.oci = OdlCorsaImpl.getInstance();
+        }
+    }
 
     // Logging
     static final private Logger logger = LoggerFactory.getLogger(Controller.class);
@@ -146,8 +154,12 @@ public class Controller {
             return null;
         }
 
+        logger.debug("checked node and ncid");
+
         try {
             if (isCorsa(translation.dpid)) {
+
+                logger.debug("Corsa");
 
                 // The Corsa can only do one translation at a time...no packet copying
                 if (translation.outputs.length == 1) {
@@ -168,10 +180,14 @@ public class Controller {
                 }
             } else if (isOVS(translation.dpid)) {
 
+                logger.debug("OVS");
+
                 // For now we only support a single translation, like the Corsa.
                 // We should be able to take a vector of translations.
                 // XXX do this
                 if (translation.outputs.length == 1) {
+
+                    logger.debug("single");
 
                     // Make sure we can resolve the output connector
                     NodeConnector outNc = OdlMdsalImpl.getNodeConnector(node, translation.outputs[0].outPort);
@@ -186,6 +202,8 @@ public class Controller {
                 }
                 else {
                     // Multipoint circuit
+
+                    logger.debug("multi");
 
                     // Construct vector of output tuples
                     OdlMdsalImpl.L2Output[] outputs = new OdlMdsalImpl.L2Output[translation.outputs.length];
@@ -202,7 +220,6 @@ public class Controller {
                             translation.dstMac1, inNc.getId(), translation.vlan1,
                             outputs,
                             translation.pcp, translation.queue, translation.meter);
-                    return null;
                 }
             } else {
                 // XXX log something
