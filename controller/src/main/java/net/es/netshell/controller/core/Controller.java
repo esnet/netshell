@@ -25,7 +25,6 @@ import net.es.netshell.odlmdsal.impl.OdlMdsalImpl;
 import org.opendaylight.openflowplugin.api.OFConstants;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
 import org.slf4j.Logger;
@@ -83,6 +82,7 @@ public class Controller {
 
         public String inPort;
         public short vlan1;
+        public MacAddress srcMac1;
         public MacAddress dstMac1;
 
         public L2TranslationOutput [] outputs;
@@ -193,9 +193,8 @@ public class Controller {
                     NodeConnector outNc = OdlMdsalImpl.getNodeConnector(node, translation.outputs[0].outPort);
                     if (outNc != null) {
                         fr = omi.createTransitVlanMacCircuit(node, translation.priority, translation.c,
-                                translation.dstMac1, inNc.getId(), translation.vlan1,
-                                translation.outputs[0].dstMac, outNc.getId(), translation.outputs[0].vlan,
-                                translation.pcp, translation.queue, translation.meter);
+                                translation.srcMac1, translation.dstMac1, inNc.getId(), translation.vlan1,
+                                translation.outputs[0].dstMac, outNc.getId(), translation.outputs[0].vlan);
                     } else {
                         return null;
                     }
@@ -217,9 +216,8 @@ public class Controller {
                         outputs[i].vlan = translation.outputs[i].vlan;
                     }
                     fr = omi.createMultipointVlanMacCircuit(node, translation.priority, translation.c,
-                            translation.dstMac1, inNc.getId(), translation.vlan1,
-                            outputs,
-                            translation.pcp, translation.queue, translation.meter);
+                            translation.srcMac1, translation.dstMac1, inNc.getId(), translation.vlan1,
+                            outputs);
                 }
             } else {
                 // XXX log something

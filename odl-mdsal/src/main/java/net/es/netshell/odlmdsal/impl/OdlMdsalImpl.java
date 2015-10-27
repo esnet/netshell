@@ -32,7 +32,6 @@ import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFaile
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.openflowplugin.api.OFConstants;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Uri;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.OutputActionCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.SetDlDstActionCaseBuilder;
@@ -72,20 +71,18 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.N
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.l2.types.rev130827.VlanId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetDestinationBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetSourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.EthernetMatchBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.VlanMatchBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.*;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This class is an interface to the OpenFlow controller (and related) functionality
@@ -502,25 +499,22 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
      * @param odlNode
      * @param priority
      * @param c
-     * @param m1
+     * @param ms1
+     * @param md1
      * @param ncid1
      * @param vlan1
-     * @param m2
+     * @param md2
      * @param ncid2
      * @param vlan2
-     * @param vp2 (ignored)
-     * @param q2 (ignored)
-     * @param mt2 (ignored)
-     * @return
+     * @return org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow
      * XXX Should probably be rewritten in terms of createMultipointVlanMacCircuitFlow()
      */
     public Flow createTransitVlanMacCircuitFlow(Node odlNode, int priority, BigInteger c,
-                                                MacAddress m1, NodeConnectorId ncid1, int vlan1,
-                                                MacAddress m2, NodeConnectorId ncid2, int vlan2,
-                                                short vp2, short q2, long mt2) {
+                                                MacAddress ms1, MacAddress md1, NodeConnectorId ncid1, int vlan1,
+                                                MacAddress md2, NodeConnectorId ncid2, int vlan2) {
 
         // Create the new match object first.  We do exact matches on the port, VLAN,
-        // and MAC address.
+        // and destination MAC address.
         MatchBuilder matchBuilder = new MatchBuilder();
         matchBuilder.setInPort(ncid1);
 
@@ -533,9 +527,18 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
         matchBuilder.setVlanMatch(vlanMatchBuilder.build());
 
         EthernetDestinationBuilder ethernetDestinationBuilder = new EthernetDestinationBuilder();
-        ethernetDestinationBuilder.setAddress(new MacAddress(m1));
+        ethernetDestinationBuilder.setAddress(new MacAddress(md1));
         EthernetMatchBuilder ethernetMatchBuilder = new EthernetMatchBuilder();
         ethernetMatchBuilder.setEthernetDestination(ethernetDestinationBuilder.build());
+
+        // There might be a source MAC address match in addition to the destination match
+        // If there is, add that to the match criteria
+        if (ms1 != null) {
+            EthernetSourceBuilder ethernetSourceBuilder = new EthernetSourceBuilder();
+            ethernetSourceBuilder.setAddress(new MacAddress(ms1));
+            ethernetMatchBuilder.setEthernetSource(ethernetSourceBuilder.build());
+        }
+
         matchBuilder.setEthernetMatch(ethernetMatchBuilder.build());
 
         // Create set and output actions
@@ -543,7 +546,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
         setVlanIdActionBuilder.setVlanId(new VlanId(vlan2));
 
         SetDlDstActionBuilder setDlDstActionBuilder = new SetDlDstActionBuilder();
-        setDlDstActionBuilder.setAddress(m2);
+        setDlDstActionBuilder.setAddress(md2);
 
         // Open vSwitch (and possibly other switches too?) has a restriction that
         // a packet cannot be output to the same port from which it entered the
@@ -645,22 +648,19 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
      * Push a transit L2 translation flow entry
      */
     public FlowRef createTransitVlanMacCircuit(Node odlNode, int priority, BigInteger c,
-                                               MacAddress m1, NodeConnectorId ncid1, int vlan1,
-                                               MacAddress m2, NodeConnectorId ncid2, int vlan2,
-                                               short vp2, short q2, long mt2)
+                                               MacAddress ms1, MacAddress md1, NodeConnectorId ncid1, int vlan1,
+                                               MacAddress md2, NodeConnectorId ncid2, int vlan2)
         throws InterruptedException, ExecutionException {
 
         Flow f = createTransitVlanMacCircuitFlow(odlNode, priority, c,
-                m1, ncid1, vlan1,
-                m2, ncid2, vlan2,
-                vp2, q2, mt2);
+                ms1, md1, ncid1, vlan1,
+                md2, ncid2, vlan2);
         return addFlow(odlNode, f);
     }
 
     public Flow createMultipointVlanMacCircuitFlow(Node odlNode, int priority, BigInteger c,
-                                                   MacAddress m1, NodeConnectorId ncid1, int vlan1,
-                                                   L2Output[] outputs,
-                                                   short vp2, short q2, long mt2) {
+                                                   MacAddress ms1, MacAddress md1, NodeConnectorId ncid1, int vlan1,
+                                                   L2Output[] outputs) {
 
         // Create the new match object first.  We do exact matches on the port, VLAN,
         // and MAC address.
@@ -676,9 +676,18 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
         matchBuilder.setVlanMatch(vlanMatchBuilder.build());
 
         EthernetDestinationBuilder ethernetDestinationBuilder = new EthernetDestinationBuilder();
-        ethernetDestinationBuilder.setAddress(new MacAddress(m1));
+        ethernetDestinationBuilder.setAddress(new MacAddress(md1));
         EthernetMatchBuilder ethernetMatchBuilder = new EthernetMatchBuilder();
         ethernetMatchBuilder.setEthernetDestination(ethernetDestinationBuilder.build());
+
+        // There might be a source MAC address match in addition to the destination match
+        // If there is, add that to the match criteria
+        if (ms1 != null) {
+            EthernetSourceBuilder ethernetSourceBuilder = new EthernetSourceBuilder();
+            ethernetSourceBuilder.setAddress(new MacAddress(ms1));
+            ethernetMatchBuilder.setEthernetSource(ethernetSourceBuilder.build());
+        }
+
         matchBuilder.setEthernetMatch(ethernetMatchBuilder.build());
 
         // Make action list to hold the actions
@@ -790,15 +799,13 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
      * Push a multipoint Layer 2 translation flow
      */
     public FlowRef createMultipointVlanMacCircuit(Node odlNode, int priority, BigInteger c,
-                                                  MacAddress m1, NodeConnectorId ncid1, int vlan1,
-                                                  L2Output[] outputs,
-                                                  short vp2, short q2, long mt2)
+                                                  MacAddress ms1, MacAddress md1, NodeConnectorId ncid1, int vlan1,
+                                                  L2Output[] outputs)
             throws InterruptedException, ExecutionException {
 
         Flow f = createMultipointVlanMacCircuitFlow(odlNode, priority, c,
-                m1, ncid1, vlan1,
-                outputs,
-                vp2, q2, mt2);
+                ms1, md1, ncid1, vlan1,
+                outputs);
         return addFlow(odlNode, f);
     }
 
