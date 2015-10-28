@@ -211,6 +211,7 @@ public class Controller {
                         if (outNc == null) {
                             return null;
                         }
+                        outputs[i] = new OdlMdsalImpl.L2Output();
                         outputs[i].mac = translation.outputs[i].dstMac;
                         outputs[i].ncid = outNc.getId();
                         outputs[i].vlan = translation.outputs[i].vlan;
