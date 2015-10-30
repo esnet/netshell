@@ -24,14 +24,10 @@ public class NetworkInterfaces {
 
     private final Logger logger = LoggerFactory.getLogger(NetworkInterfaces.class);
 
-    private static HashMap<String,Boolean> availableInterfaces;
-
     private static NetworkInterfaces instance;
 
     private NetworkInterfaces(){
-        availableInterfaces = new HashMap<String,Boolean>();
-        availableInterfaces.put("eth1.10",false);
-        availableInterfaces.put("eth2.10", false);
+
     }
 
     public static NetworkInterfaces getInstance(){
@@ -76,6 +72,43 @@ public class NetworkInterfaces {
             } else {
 		return false;
 	    }
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+            return false;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        //return false;
+    }
+
+    public boolean ipconfig (String interfaceName, int mtu) {
+        Method method = null;
+        try {
+            method = KernelThread.getSysCallMethod(this.getClass(), "do_mtuconfig");
+
+            KernelThread kt = KernelThread.currentKernelThread();
+            String currentUserName = kt.getUser().getName();
+
+
+
+            logger.info("current user {}", currentUserName);
+            Users currentUsers = Users.getUsers();
+            // Access per Application
+            UserAccess currentUserAccess = UserAccess.getUsers();
+            if (currentUsers.isPrivileged(currentUserName) || currentUserAccess.isAccessPrivileged(currentUserName, String.format("network:ipconfig:interface:%s",interfaceName))) {
+                logger.info("OK to change");
+                System.out.println("OK to change \n");
+
+                KernelThread.doSysCall(this,
+                        method,
+                        interfaceName,
+                        mtu);
+                return true;
+            } else {
+                return false;
+            }
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
             return false;
@@ -147,7 +180,29 @@ public class NetworkInterfaces {
             System.out.println(s);
         }
 
+    }
 
+    @SysCall(
+            name="do_mtuconfig"
+    )
+    public void do_mtuconfig(String interfaceName, int mtu)throws IOException {
+
+        logger.info("Entered method do_mtuconfig");
+
+        String cmd = "/sbin/ip link set mtu " + mtu + " dev " + interfaceName;
+        logger.info(cmd);
+
+        Process p = null;
+        try {
+            p = Runtime.getRuntime().exec(cmd);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String s;
+        while ((s = br.readLine()) != null) {
+            System.out.println(s);
+        }
     }
 
 
