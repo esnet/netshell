@@ -46,15 +46,12 @@ public class Controller {
     // instance, and keep a class member variable pointing to that one instance.
     static private volatile Controller instance = null;
 
-    private OdlMdsalImpl omi;
-    private OdlCorsaImpl oci;
-
     public OdlMdsalImpl getOdlMdsalImpl() {
-        return omi;
+        return OdlMdsalImpl.getInstance();
     }
 
     public OdlCorsaImpl getOdlCorsaImpl() {
-        return oci;
+        return OdlCorsaImpl.getInstance();
     }
 
     /**
@@ -103,26 +100,17 @@ public class Controller {
         }
     }
 
-    public Controller(OdlMdsalImpl omi, OdlCorsaImpl oci) {
+    public Controller() {
         if (instance == null) {
             instance = this;
         }
         else {
             throw new RuntimeException("Attempt to create multiple " + Controller.class.getName());
         }
-
-        this.omi = omi;
-        this.oci = oci;
     }
     public static Controller getInstance() { return instance; }
 
     public void reinit() {
-        if (this.omi == null) {
-            this.omi = OdlMdsalImpl.getInstance();
-        }
-        if (this.oci == null) {
-            this.oci = OdlCorsaImpl.getInstance();
-        }
     }
 
     // Logging
@@ -131,7 +119,7 @@ public class Controller {
     // Glue to get some stuff from MD-SAL without the caller needing to have a handle
     // to the MD-SAL implementation
     public List<Node> getNetworkDevices() {
-        return this.omi.getNetworkDevices();
+        return this.getOdlMdsalImpl().getNetworkDevices();
     }
 
     static public NodeConnector getNodeConnector(Node node, String nodeConnectorName) {
@@ -145,7 +133,7 @@ public class Controller {
         FlowRef fr = null;
 
         // Make sure the node and its input connector exist
-        node = omi.getNetworkDeviceByDpidArray(translation.dpid);
+        node = this.getOdlMdsalImpl().getNetworkDeviceByDpidArray(translation.dpid);
         if (node == null) {
             return null;
         }
@@ -167,7 +155,7 @@ public class Controller {
                     // Make sure we can resolve the output connector
                     NodeConnector outNc = OdlMdsalImpl.getNodeConnector(node, translation.outputs[0].outPort);
                     if (outNc != null) {
-                        fr = oci.createTransitVlanMacCircuit(node, translation.priority, translation.c,
+                        fr = this.getOdlCorsaImpl().createTransitVlanMacCircuit(node, translation.priority, translation.c,
                                 translation.dstMac1, inNc.getId(), translation.vlan1,
                                 translation.outputs[0].dstMac, outNc.getId(), translation.outputs[0].vlan,
                                 translation.pcp, translation.queue, translation.meter);
@@ -192,7 +180,7 @@ public class Controller {
                     // Make sure we can resolve the output connector
                     NodeConnector outNc = OdlMdsalImpl.getNodeConnector(node, translation.outputs[0].outPort);
                     if (outNc != null) {
-                        fr = omi.createTransitVlanMacCircuit(node, translation.priority, translation.c,
+                        fr = this.getOdlMdsalImpl().createTransitVlanMacCircuit(node, translation.priority, translation.c,
                                 translation.srcMac1, translation.dstMac1, inNc.getId(), translation.vlan1,
                                 translation.outputs[0].dstMac, outNc.getId(), translation.outputs[0].vlan);
                     } else {
@@ -216,7 +204,7 @@ public class Controller {
                         outputs[i].ncid = outNc.getId();
                         outputs[i].vlan = translation.outputs[i].vlan;
                     }
-                    fr = omi.createMultipointVlanMacCircuit(node, translation.priority, translation.c,
+                    fr = this.getOdlMdsalImpl().createMultipointVlanMacCircuit(node, translation.priority, translation.c,
                             translation.srcMac1, translation.dstMac1, inNc.getId(), translation.vlan1,
                             outputs);
                 }
@@ -240,7 +228,7 @@ public class Controller {
 
         FlowRef fr = null;
 
-        node = omi.getNetworkDeviceByDpidArray(translation.dpid);
+        node = this.getOdlMdsalImpl().getNetworkDeviceByDpidArray(translation.dpid);
         if (node == null) {
             return null;
         }
@@ -251,10 +239,10 @@ public class Controller {
 
         try {
             if (isCorsa(translation.dpid)) {
-                fr = oci.sendVlanMacToController(node, translation.priority, translation.c,
+                fr = this.getOdlCorsaImpl().sendVlanMacToController(node, translation.priority, translation.c,
                         translation.dstMac1, inNc.getId(), translation.vlan1);
             } else if (isOVS(translation.dpid)) {
-//                fr = omi.sendVlanMacToController(node, translation.priority, translation.c,
+//                fr = this.getOdlMdsalImpl().sendVlanMacToController(node, translation.priority, translation.c,
 //                        translation.dstMac1, inNc.getId(), translation.vlan1);
             } else {
                 // XXX log something
@@ -278,10 +266,10 @@ public class Controller {
             // XXX in theory if we have the FlowRef we know what switch it applies to,
             // and therefore know what the switch vendor is.
             if (isCorsa(dpid)) {
-                oci.deleteFlow(flowRef);
+                this.getOdlCorsaImpl().deleteFlow(flowRef);
                 rc = true;
             } else if (isOVS(dpid)) {
-                rc = omi.deleteFlow(flowRef);
+                rc = this.getOdlMdsalImpl().deleteFlow(flowRef);
             } else {
                 /// XXX log something
             }
@@ -295,18 +283,18 @@ public class Controller {
 
     public boolean transmitDataPacket(byte [] dpid, String outPort, byte [] payload) {
         Node node;
-        node = omi.getNetworkDeviceByDpidArray(dpid);
+        node = this.getOdlMdsalImpl().getNetworkDeviceByDpidArray(dpid);
         if (node == null) {
             // XXX log something
             return false;
         }
-        NodeConnector outNc = omi.getNodeConnector(node, outPort);
+        NodeConnector outNc = this.getOdlMdsalImpl().getNodeConnector(node, outPort);
         if (outNc == null) {
             // XXX log something
             return false;
         }
         boolean rc = false;
-        omi.transmitDataPacket(node, outNc, payload);
+        this.getOdlMdsalImpl().transmitDataPacket(node, outNc, payload);
         return true;
     }
 

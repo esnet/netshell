@@ -34,11 +34,7 @@ public class Activator implements BundleActivator {
         this.bundleContext = bundleContext;
         System.out.println("NetShell Generic Controller and API: started");
 
-        // XXX Find OdlCorsaImpl and OdlMdsalImpl objects.
-        // Create Controller object passing these as constructor arguments.
-        OdlMdsalImpl omi = OdlMdsalImpl.getInstance();
-        OdlCorsaImpl oci = OdlCorsaImpl.getInstance();
-        Controller controller = new Controller(omi, oci);
+        Controller controller = new Controller();
     }
 
     @Override
