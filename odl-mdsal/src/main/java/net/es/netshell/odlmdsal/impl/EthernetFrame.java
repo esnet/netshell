@@ -21,6 +21,9 @@
 
 package net.es.netshell.odlmdsal.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 
 /**
@@ -34,6 +37,7 @@ import java.util.Arrays;
  */
 public class EthernetFrame {
 
+    private final Logger logger = LoggerFactory.getLogger(EthernetFrame.class);
     // Sizes of things
     public static final int MIN_ETHERNET_HEADER_SIZE = 14;
     public static final int MAC_ADDRESS_SIZE = 6;
@@ -168,7 +172,6 @@ public class EthernetFrame {
     }
 
     public byte [] toPacket() {
-
         // Compute the correct packet size, depending on whether there's a VLAN tag.
         int packetLength = MIN_ETHERNET_HEADER_SIZE + this.payload.length;
         if (this.vid != 0) {
@@ -177,7 +180,6 @@ public class EthernetFrame {
 
         // Make a space for the packet
         byte[] bytes = new byte[packetLength];
-
         // Copy source and destination Ethernet headers
         System.arraycopy(this.dstMac, 0, bytes, DST_MAC_START, MAC_ADDRESS_SIZE);
         System.arraycopy(this.srcMac, 0, bytes, SRC_MAC_START, MAC_ADDRESS_SIZE);
@@ -186,23 +188,20 @@ public class EthernetFrame {
         if (this.vid != 0) {
             bytes[VLAN_8021Q_START] = (byte) ((ETHERTYPE_VLAN >> 8) & 0xff);
             bytes[VLAN_8021Q_START + 1] = (byte) (ETHERTYPE_VLAN & 0xff);
-
             int tci = (this.pcp & 0x7) << 13 |
                     (this.dei & 0x1) << 12 |
                     (this.vid & 0xfff);
             bytes[VLAN_8021Q_TCI_START] = (byte) ((tci >> 8) & 0xff);
             bytes[VLAN_8021Q_TCI_START + 1] = (byte) (tci & 0xff);
-
             bytes[VLAN_ETHERTYPE_START] = (byte) ((this.etherType >> 8) & 0xff);
             bytes[VLAN_ETHERTYPE_START + 1] = (byte) (this.etherType & 0xff);
-            System.arraycopy(this.payload, 0, bytes, VLAN_PAYLOAD_START, bytes.length);
+            System.arraycopy(this.payload, 0, bytes, VLAN_PAYLOAD_START, this.payload.length);
         }
         else {
             bytes[BASE_ETHERTYPE_START] = (byte) ((this.etherType >> 8) & 0xff);
             bytes[BASE_ETHERTYPE_START + 1] = (byte) (this.etherType & 0xff);
-            System.arraycopy(this.payload, 0, bytes, BASE_PAYLOAD_START, bytes.length);
+            System.arraycopy(this.payload, 0, bytes, BASE_PAYLOAD_START, this.payload.length);
         }
-
         return bytes;
     }
 
