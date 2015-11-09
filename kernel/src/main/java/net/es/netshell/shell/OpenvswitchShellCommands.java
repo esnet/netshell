@@ -90,7 +90,7 @@ public class OpenvswitchShellCommands {
         Openvswitch ovs = Openvswitch.getInstance();
 
         if (ovs.ovs_addport(bridgeName, portName, vlanTag)) {
-            o.println("Removed ovs port from bridge");
+            o.println("Added ovs port to bridge");
         } else {
             o.println("No permission to create");
         }
