@@ -150,7 +150,7 @@ public class EthernetFrame {
             // VLAN tagged packet, throw away the TPID and then fill in the "real" etherType,
             // plus VLAN fields.
             etBytes =  Arrays.copyOfRange(bytes, VLAN_ETHERTYPE_START, VLAN_ETHERTYPE_START + ETHERTYPE_SIZE);
-            f.etherType = (etBytes[0] & 0xff) << 8 + (etBytes[1] & 0xff);
+            f.etherType = ((etBytes[0] & 0xff) << 8) + (etBytes[1] & 0xff);
 
             byte[] tciBytes = Arrays.copyOfRange(bytes, VLAN_8021Q_TCI_START, VLAN_8021Q_TCI_START + VLAN_TCI_SIZE);
             int tci = ((tciBytes[0] & 0xff) << 8) + (tciBytes[1] & 0xff);
