@@ -35,7 +35,7 @@ public final class AllowedSysCalls {
         allowedSysCallClasses.add(net.es.netshell.boot.BootStrap.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.networking.NetworkInterfaces.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.perfsonar.Bwctl.class);
-	
+        allowedSysCallClasses.add(net.es.netshell.kernel.ovs.Openvswitch.class);
     }
 
     public static List<Class> getAllowedClasses() {
