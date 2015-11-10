@@ -27,8 +27,7 @@ def main():
 						help='Password on remote host')
 	parser.add_argument('-c','--command',
 						required=True,
-						help='Command to be executed in the remote host. Place the command within double quotes\
-						For example: -c "ls -l"',
+						help='Command to be executed in the remote host',
 						nargs='+')
 
 	args = parser.parse_args()
