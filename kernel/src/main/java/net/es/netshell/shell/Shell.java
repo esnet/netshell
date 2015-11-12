@@ -151,6 +151,11 @@ public class Shell {
                     continue;
                 }
 
+                // Any line whose first non-whitespace character is a hash sign is a comment.
+                if (args[0].startsWith("#")) {
+                    continue;
+                }
+
                 // The shell has a few built-in command handlers.  Generally these
                 // built-in commands should be so because they require some special
                 // handling (i.e. access to the Shell member variables).  Other command
