@@ -27,13 +27,17 @@ def main():
 						help='Password on remote host')
 	parser.add_argument('-c','--command',
 						required=True,
-						help='Command to be executed in the remote host',
-						nargs='+')
+						help='Command to be executed in the remote host. NOTE: -c <command> must always the last \
+						option',
+						nargs=argparse.REMAINDER)
 
 	args = parser.parse_args()
+	print args
 
 	if(args.command):
 		command = " ".join(args.command)
+		print command
+		print args.command
 	else:
 		print "Please specify command to be executed in remote host"
 

@@ -32,7 +32,7 @@ public class RemoteExecution {
             channel.setErr(new NoCloseOutputStream(System.err));
             channel.open();
 
-            channel.waitFor(ClientChannel.CLOSED, 3000);
+            channel.waitFor(ClientChannel.CLOSED, 120000);
             channel.close(true);
             session.close(true);
             client.stop();
