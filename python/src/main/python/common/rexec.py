@@ -36,8 +36,6 @@ def main():
 
 	if(args.command):
 		command = " ".join(args.command)
-		print command
-		print args.command
 	else:
 		print "Please specify command to be executed in remote host"
 
@@ -45,7 +43,7 @@ def main():
 
 	net.es.netshell.api.RemoteExecution.sshExec(args.host,args.port,args.login,args.password,command)
 
-	print "Executed successfully: "+command
+	print "Done"
 
 if __name__ == '__main__':
 	main()
