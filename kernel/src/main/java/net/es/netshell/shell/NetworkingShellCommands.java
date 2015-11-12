@@ -17,8 +17,8 @@ import java.net.UnknownHostException;
 public class NetworkingShellCommands {
 
     @ShellCommand(name = "ipconfig",
-            shortHelp = "Configure interface",
-            longHelp = "Configure interface address \n" +
+            shortHelp = "Configure/List interface parameters",
+            longHelp = "Configure/List interface address \n" +
                     "ipconfig interface-name address <address>\n"+
                     "ipconfig interface-name mtu <mtu>\n",
             privNeeded = true)
@@ -28,7 +28,7 @@ public class NetworkingShellCommands {
 
         PrintStream o = new PrintStream(out);
 
-        if(args.length < 4){
+        if(args.length==3){
             o.println("Insufficent arguments. Please specify interface name and ip address/mtu in the correct format");
             return;
         }
@@ -36,29 +36,43 @@ public class NetworkingShellCommands {
         NetworkInterfaces interfaces = NetworkInterfaces.getInstance();
 
         String interfaceName = args[1];
-        if(args[2].equals("address")){
-            try {
-                InetAddress address = InetAddress.getByName(args[3]);
-                if (interfaces.ipconfig(interfaceName,address)){
+
+        if(args.length>2) {
+
+
+            if (args[2].equals("address")) {
+                try {
+                    InetAddress address = InetAddress.getByName(args[3]);
+                    if (interfaces.ipconfig(interfaceName, address)) {
+                        o.println("Executed ipconfig");
+                    } else {
+                        o.println("No permission to execute");
+                    }
+                } catch (UnknownHostException e) {
+                    o.println("Please check the ip address");
+                    o.println(e);
+                }
+
+            } else if (args[2].equals("mtu")) {
+                int mtusize = Integer.parseInt(args[3]);
+                if (interfaces.ipconfig(interfaceName, mtusize)) {
                     o.println("Executed ipconfig");
                 } else {
                     o.println("No permission to execute");
                 }
-            } catch (UnknownHostException e) {
-            o.println("Please check the ip address");
-            o.println(e);
-        }
 
-        }else if(args[2].equals("mtu")){
-            int mtusize = Integer.parseInt(args[3]);
-            if (interfaces.ipconfig(interfaceName,mtusize)){
+
+            }
+        }else if(args.length==2){
+            boolean result = interfaces.ipconfig(interfaceName, out, err);
+            if (result) {
                 o.println("Executed ipconfig");
-            } else {
-                o.println("No permission to execute");
+            }else{
+                o.println("Error executing ipconfig");
             }
 
-
         }
+
     }
 
     @ShellCommand(name = "vconfig",

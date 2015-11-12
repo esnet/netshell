@@ -1,19 +1,15 @@
 package net.es.netshell.kernel.networking;
 
+import net.es.netshell.kernel.acl.UserAccess;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.users.Users;
-import net.es.netshell.kernel.acl.UserAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Author: sowmya
@@ -46,6 +42,41 @@ public class NetworkInterfaces {
         }
     }
 
+    public boolean ipconfig (String interfaceName, OutputStream out, OutputStream err) {
+        Method method = null;
+        try {
+            method = KernelThread.getSysCallMethod(this.getClass(), "do_iplist");
+
+            KernelThread kt = KernelThread.currentKernelThread();
+            String currentUserName = kt.getUser().getName();
+
+
+
+            logger.info("current user {}", currentUserName);
+            Users currentUsers = Users.getUsers();
+            // Access per Application
+            UserAccess currentUserAccess = UserAccess.getUsers();
+            if (currentUsers.isPrivileged(currentUserName) || currentUserAccess.isAccessPrivileged(currentUserName, String.format("network:ipconfig:interface:%s",interfaceName))) {
+                logger.info("Authorized to execute ipconfig  \n");
+                System.out.println("Authorized to execute ipconfig  \n");
+
+                KernelThread.doSysCall(this,
+                        method,
+                        interfaceName, out, err);
+                return true;
+            } else {
+                return false;
+            }
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+            return false;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean ipconfig (String interfaceName, InetAddress address) {
         Method method = null;
         try {
@@ -61,8 +92,8 @@ public class NetworkInterfaces {
 	    // Access per Application
 	    UserAccess currentUserAccess = UserAccess.getUsers();
             if (currentUsers.isPrivileged(currentUserName) || currentUserAccess.isAccessPrivileged(currentUserName, String.format("network:ipconfig:interface:%s",interfaceName))) {
-                logger.info("OK to change");
-		System.out.println("OK to change \n");
+                logger.info("Authorized to execute ipconfig  \n");
+		        System.out.println("Authorized to execute ipconfig  \n");
 
                 KernelThread.doSysCall(this,
                         method,
@@ -203,6 +234,38 @@ public class NetworkInterfaces {
         while ((s = br.readLine()) != null) {
             System.out.println(s);
         }
+    }
+
+    @SysCall(
+            name="do_iplist"
+    )
+    public void do_iplist(String interfaceName, OutputStream out, OutputStream err)throws IOException {
+        logger.info("do_ipconfig entry");
+
+        String cmd = "/sbin/ip addr list "+interfaceName;
+        logger.info(cmd);
+
+        Process p = null;
+        try {
+            p = Runtime.getRuntime().exec(cmd);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String s;
+        PrintStream resultStream = new PrintStream(out);
+        //StringBuffer resultBuffer = new StringBuffer();
+        while ((s = br.readLine()) != null) {
+            System.out.println(s);
+
+            resultStream.print(s);
+            //resultBuffer.append(s);
+        }
+
+
+
+
+
     }
 
 

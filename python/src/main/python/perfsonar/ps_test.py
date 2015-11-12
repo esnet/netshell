@@ -3,6 +3,8 @@
 import argparse
 import sys
 import net.es.netshell.kernel.perfsonar.Bwctl
+import java.io.OutputStream
+import sys
 
 
 #Note: If argparse throws error related to sys.path or sys.prefix, please ensure both are set to the
@@ -30,12 +32,16 @@ def main():
 
 	bwctl = net.es.netshell.kernel.perfsonar.Bwctl.getInstance()
 
+	#outstream = java.io.OutputStream(sys.stdout)
+	#errstream = java.io.OutputStream(sys.stderr)
+
+
 	result=None
 
 	if(args.source and args.client and args.username and args.key and args.uri):
-		result = bwctl.runPersistentBwctlTest(args.source,args.client, args.username, args.key, args.uri)
+		result = bwctl.runPersistentBwctlTest(args.source,args.client, args.username, args.key, args.uri, sys.stdout,sys.stderr)
 	elif (args.source and args.client):
-		result = bwctl.runBwctlTest(args.source,args.client)
+		result = bwctl.runBwctlTest(args.source,args.client,sys.stdout,sys.stderr)
 	else:
 		print "Insufficient arguments \n"
 
