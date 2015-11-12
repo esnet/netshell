@@ -30,7 +30,7 @@ def main():
 
 	bwctl = net.es.netshell.kernel.perfsonar.Bwctl.getInstance()
 
-	result=''
+	result=None
 
 	if(args.source and args.client and args.username and args.key and args.uri):
 		result = bwctl.runPersistentBwctlTest(args.source,args.client, args.username, args.key, args.uri)

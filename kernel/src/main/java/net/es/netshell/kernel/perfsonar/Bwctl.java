@@ -11,7 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
-
+import java.util.Arrays;
 /**
  * Author: sowmya
  * Date: 10/30/15
@@ -129,7 +129,7 @@ public class Bwctl {
         logger.info("Entered method do_runbwctl");
 
         //TODO: Change default tool to iperf3.
-        String cmd = "bwctl -s " + source + "  -c " + destination +" -T iperf -t 10 -a 1 --parsable --verbose ";
+        String cmd = "bwctl -s " + source + "  -c " + destination +" -T iperf3 -t 10 -a 1 --parsable --verbose ";
         logger.info(cmd);
 
         Process p = null;
@@ -152,10 +152,12 @@ public class Bwctl {
 
         logger.info("Entered method do_runpersistentbwctl");
 
-        String cmd = "bwctl -s " + source + "  -c " + destination +" -T iperf3 -t 10 -a 1 --parsable --verbose" +
-                     " | " +
-                     "esmond-ps-pipe --user "+user +" --key "+key+ " -U "+dburi;
-        logger.info(cmd);
+        String[] cmd = {"/bin/sh", "-c",
+                       "bwctl -s " + source + "  -c " + destination +" -T iperf3 -t 10 -a 1 --parsable --verbose" +
+                     " |& " +
+                     "esmond-ps-pipe --user "+user +" --key "+key+ " -U "+dburi};
+        String cmdString = Arrays.toString(cmd);
+        logger.info(cmdString);
 
         Process p = null;
         try {
