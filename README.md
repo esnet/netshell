@@ -61,9 +61,9 @@ ODL Hydrogen is not supported.)  These differences will be noted where necessary
 
         feature:install odl-dlux-core odl-openflowplugin-all
         
-    On ODL Lithium, it might also be necessary to load some additional DLUX modules:
+    On ODL Lithium, it might also be necessary to load features like this:
     
-        feature:install odl-dlux-all
+        feature:install odl-dlux-all odl-openflowplugin-all
         
     Note that on ODL Helium the default URL for the DLUX interface is:
     
