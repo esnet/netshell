@@ -142,6 +142,7 @@ public class SshdShell extends Shell implements Command, SessionAware, FileSyste
         this.callback.onExit(0);
     }
 
+
     @Override
     public void setSession(ServerSession serverSession) {
         this.session = serverSession;

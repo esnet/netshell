@@ -43,6 +43,8 @@ import org.slf4j.LoggerFactory;
 public class PythonShell {
     private static final Logger logger = LoggerFactory.getLogger(PythonShell.class);
     private static HashMap<InputStream,PyDictionary> locals = new HashMap<InputStream, PyDictionary>();
+    private static HashMap<String,HashMap<String,PyDictionary>> userLocals = new HashMap<String,HashMap<String,PyDictionary>>();
+    private static HashMap<String,PyDictionary> userCurrentLocals = new HashMap<String,PyDictionary>();
     public static String INIT_SCRIPT = "/etc/init.py";
     public static String PROFILE_SCRIPT = "/etc/profile.py";
 
@@ -62,6 +64,48 @@ public class PythonShell {
         PythonShell.startPython(args, System.in, System.out, System.err);
     }
 
+    @ShellCommand(
+            name="pyenv",
+            forwardLines=false,
+            shortHelp="Change the python session environment",
+            longHelp="Change the current python environment that has been shared. If no argument is provided," +
+                "the SSH session is then set as current."
+    )
+    public static void pyenv (String[] args, InputStream in, OutputStream out, OutputStream err) {
+        User user = KernelThread.currentKernelThread().getUser();
+        if (user == null) {
+            // No user, no user locals
+            return;
+        }
+        String userName = user.getName();
+        if (args.length > 2) {
+            String envName = args[1];
+            if (args.length > 3) {
+                if (args.length == 4) {
+                    if (!user.isPrivileged()) {
+                        // Not authorized to see users environment
+                        return;
+                    }
+                    userName = args[4];
+                }
+                HashMap<String, PyDictionary> userEnvs = PythonShell.userLocals.get(userName);
+                if ((userEnvs != null) && userEnvs.containsKey(envName)) {
+                    PythonShell.userCurrentLocals.put(userName, userEnvs.get(envName));
+                    return;
+                }
+            }
+        } else {
+            // Set the current environment to the curren SSH session's environonment.
+            PyDictionary userEnv = PythonShell.locals.get(in);
+            if (userEnv == null) {
+                // No SSH session environment. Nothing to do
+                return;
+            }
+            PythonShell.userCurrentLocals.put(userName,userEnv);
+            return;
+        }
+
+    }
     @ShellCommand(
             name="python",
             forwardLines=false,
@@ -93,6 +137,7 @@ public class PythonShell {
             } else {
                 // First python for this session. Create locals
                 sessionLocals = new PyDictionary();
+                // TODO: this creates a memory leak since the environment is not removed after the SSH session is closed.
                 PythonShell.locals.put(in,sessionLocals);
                 // Don't try to import site.py.  The move from Jython 2.5.2 to 2.7beta4 seems to
                 // require this, because it appears that we can't find site.py and blow up.
@@ -108,7 +153,21 @@ public class PythonShell {
                 python.exec("import sys");
                 python.exec("sys.path = sys.path + ['" + BootStrap.rootPath.resolve("bin/") + "']");
                 if (KernelThread.currentKernelThread().getUser() != null) {
-                    python.exec("sys.path = sys.path + ['" + KernelThread.currentKernelThread().getUser().getHomePath()
+                    User user =KernelThread.currentKernelThread().getUser();
+                    if (!PythonShell.userLocals.containsKey(user.getName())) {
+                        // First session for this user.
+                        HashMap<String,PyDictionary> userEnv = new HashMap<String,PyDictionary>();
+                        PythonShell.userLocals.put(user.getName(),userEnv);
+                    }
+                    HashMap<String,PyDictionary> userEnv = PythonShell.userLocals.get(user.getName());
+                    sessionLocals.put("_user_locals",userEnv);
+                    // If the user is privileged, add all user locals
+                    if (user.isPrivileged()) {
+                        sessionLocals.put("_current_locals",PythonShell.userCurrentLocals);
+                        sessionLocals.put("_ssh_locals",PythonShell.locals);
+                        sessionLocals.put("_users_locals",PythonShell.userLocals);
+                    }
+                    python.exec("sys.path = sys.path + ['" + user.getHomePath()
                             + "']");
                 }
                 try {

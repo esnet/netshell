@@ -46,7 +46,7 @@ public class NetShellTerminal extends TerminalSupport {
     @Override
     public int getWidth() {
         // TODO: should be a option of the constructor
-        return 80;
+        return 200;
     }
 
     /**
