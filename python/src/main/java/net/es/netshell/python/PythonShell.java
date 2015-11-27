@@ -37,12 +37,18 @@ import org.slf4j.LoggerFactory;
 
 
 
-/**
- * Created by lomax on 2/20/14.
- */
 public class PythonShell {
+
+    public static class ActiveLocals {
+        public PyDictionary currentLocals;
+        public PyDictionary inputStreamLocals;
+        public ActiveLocals(PyDictionary inputStreamLocals) {
+            this.inputStreamLocals = inputStreamLocals;
+            this.currentLocals = inputStreamLocals;
+        }
+    }
     private static final Logger logger = LoggerFactory.getLogger(PythonShell.class);
-    private static HashMap<InputStream,PyDictionary> locals = new HashMap<InputStream, PyDictionary>();
+    private static HashMap<InputStream,ActiveLocals> locals = new HashMap<InputStream, ActiveLocals>();
     private static HashMap<String,HashMap<String,PyDictionary>> userLocals = new HashMap<String,HashMap<String,PyDictionary>>();
     private static HashMap<String,PyDictionary> userCurrentLocals = new HashMap<String,PyDictionary>();
     public static String INIT_SCRIPT = "/etc/init.py";
@@ -64,57 +70,7 @@ public class PythonShell {
         PythonShell.startPython(args, System.in, System.out, System.err);
     }
 
-    @ShellCommand(
-            name="pyenv",
-            forwardLines=false,
-            shortHelp="Change the python session environment",
-            longHelp="Change the current python environment that has been shared. If no argument is provided," +
-                "the SSH session is then set as current."
-    )
-    public static void pyenv (String[] args, InputStream in, OutputStream out, OutputStream err) {
-        User user = KernelThread.currentKernelThread().getUser();
-        if (user == null) {
-            // No user, no user locals
-            return;
-        }
-        String userName = user.getName();
-        if (args.length > 2) {
-            String envName = args[1];
-            if (args.length > 3) {
-                if (args.length == 4) {
-                    if (!user.isPrivileged()) {
-                        // Not authorized to see users environment
-                        return;
-                    }
-                    userName = args[4];
-                }
-                HashMap<String, PyDictionary> userEnvs = PythonShell.userLocals.get(userName);
-                if ((userEnvs != null) && userEnvs.containsKey(envName)) {
-                    PythonShell.userCurrentLocals.put(userName, userEnvs.get(envName));
-                    return;
-                }
-            }
-        } else {
-            // Set the current environment to the curren SSH session's environonment.
-            PyDictionary userEnv = PythonShell.locals.get(in);
-            if (userEnv == null) {
-                // No SSH session environment. Nothing to do
-                return;
-            }
-            PythonShell.userCurrentLocals.put(userName,userEnv);
-            return;
-        }
-
-    }
-    @ShellCommand(
-            name="python",
-            forwardLines=false,
-            shortHelp="Invoke interactive Python shell",
-            longHelp="EOF in the shell exits the shell and returns control to the top-level\n" +
-                    "NetShell."
-    )
-    public static void startPython (String[] args, InputStream in, OutputStream out, OutputStream err) {
-
+    static private PyDictionary getSessionEnv (InputStream in, OutputStream out, OutputStream err) {
         if (in instanceof ShellInputStream) {
             if (((ShellInputStream) in).getSourceInputStream() instanceof TabFilteringInputStream) {
                 ((TabFilteringInputStream) ((ShellInputStream) in).getSourceInputStream()).setFilters(true);
@@ -132,13 +88,16 @@ public class PythonShell {
         synchronized (PythonShell.locals) {
             if (PythonShell.locals.containsKey(in)) {
                 // Already has a locals created for this session, re-use
-                sessionLocals = PythonShell.locals.get(in);
+                sessionLocals = PythonShell.locals.get(in).currentLocals;
+                if (sessionLocals == null) {
+                    sessionLocals = PythonShell.locals.get(in).inputStreamLocals;
+                }
                 isFirstSession = false;
             } else {
                 // First python for this session. Create locals
                 sessionLocals = new PyDictionary();
                 // TODO: this creates a memory leak since the environment is not removed after the SSH session is closed.
-                PythonShell.locals.put(in,sessionLocals);
+                PythonShell.locals.put(in,new ActiveLocals(sessionLocals));
                 // Don't try to import site.py.  The move from Jython 2.5.2 to 2.7beta4 seems to
                 // require this, because it appears that we can't find site.py and blow up.
                 org.python.core.Options.importSite = false;
@@ -165,7 +124,7 @@ public class PythonShell {
                     if (user.isPrivileged()) {
                         sessionLocals.put("_current_locals",PythonShell.userCurrentLocals);
                         sessionLocals.put("_ssh_locals",PythonShell.locals);
-                        sessionLocals.put("_users_locals",PythonShell.userLocals);
+                        sessionLocals.put("_all_user_locals",PythonShell.userLocals);
                     }
                     python.exec("sys.path = sys.path + ['" + user.getHomePath()
                             + "']");
@@ -198,6 +157,91 @@ public class PythonShell {
                 }
             }
         }
+        return sessionLocals;
+    }
+
+    @ShellCommand(
+            name="pyenv",
+            forwardLines=false,
+            shortHelp="Manage the python session environment",
+            longHelp="Save, load or delete a python environment\n"  +
+                    "\tpyenv save <env_name> [user_name] saves the current environment. If a user name is provided\n" +
+                    "\t\tthe environment is saved into the user's environments. This requires privileged access." +
+                    "\tpyenv load <env_name> [user_name] next python session will be loaded with the environment.\n" +
+                    "\t\tIf a user name is provided tthe environment is saved into the user's environments." +
+                    "\t\tThis requires privileged access." +
+                    "\tpyenv list <pattern|'all'>[user_name] lists environments"
+    )
+    public static void pyenv (String[] args, InputStream in, OutputStream out, OutputStream err) {
+        User user = KernelThread.currentKernelThread().getUser();
+        if (user == null) {
+            // No user, no user locals
+            return;
+        }
+        String userName = user.getName();
+        if (args.length < 3) {
+            // Syntax error. Should do better reporting
+            return;
+        }
+        HashMap<String,PyDictionary> userEnvs = PythonShell.userLocals.get(user.getName());
+        String cmd = args[1];
+        String env = args[2];
+        String optUser = null;
+        if (args.length == 4) {
+            optUser = args[3];
+            if (user.isPrivileged()) {
+                userEnvs = PythonShell.userLocals.get(optUser);
+            }
+        }
+        // Makes sure the python has been initialized at least once.
+        PyDictionary sessionLocals = PythonShell.getSessionEnv(in,out,err);
+        if (cmd.equalsIgnoreCase("save")) {
+            userEnvs.put(env,PythonShell.locals.get(in).currentLocals);
+        } else if (cmd.equalsIgnoreCase("load")) {
+            if (userEnvs.containsKey(env)) {
+                PythonShell.locals.get(in).currentLocals = userEnvs.get(env);
+            }
+        } else if (cmd.equals("delete")) {
+            if (userEnvs.containsKey(env)) {
+                userEnvs.remove(env);
+            }
+        } else if (cmd.equals("list")) {
+            for (String envName : userEnvs.keySet()) {
+                if (env.equalsIgnoreCase("all") || envName.contains(env)) {
+                    try {
+                        out.write((envName + "\n").getBytes());
+                        out.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+    }
+    @ShellCommand(
+            name="python",
+            forwardLines=false,
+            shortHelp="Invoke interactive Python shell",
+            longHelp="EOF in the shell exits the shell and returns control to the top-level\n" +
+                    "NetShell."
+    )
+    public static void startPython (String[] args, InputStream in, OutputStream out, OutputStream err) {
+
+        if (in instanceof ShellInputStream) {
+            if (((ShellInputStream) in).getSourceInputStream() instanceof TabFilteringInputStream) {
+                ((TabFilteringInputStream) ((ShellInputStream) in).getSourceInputStream()).setFilters(true);
+            }
+        }
+        boolean isFirstSession = true;
+        // Find or create locals
+        if (out == null) {
+            out = System.out;
+        }
+        if (err == null) {
+            err = out;
+        }
+        PyDictionary sessionLocals = PythonShell.getSessionEnv(in, out, err);
         logger.debug("Starting Python");
         if (isFirstSession) {
             // Run profile
