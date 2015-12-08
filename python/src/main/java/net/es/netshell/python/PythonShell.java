@@ -30,6 +30,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.python.core.PyDictionary;
 import org.python.core.PySystemState;
+import org.python.core.PyFile;
+import org.python.core.Options;
 import org.python.util.PythonInterpreter;
 import org.python.util.InteractiveConsole;
 import org.slf4j.Logger;
@@ -102,7 +104,15 @@ public class PythonShell {
                 // require this, because it appears that we can't find site.py and blow up.
                 org.python.core.Options.importSite = false;
                 // Sets the default search path
-                PythonInterpreter python = new PythonInterpreter(sessionLocals);
+                PySystemState systemState = new PySystemState();
+                String mode = Options.unbuffered ? "b" : "";
+                int buffering = Options.unbuffered ? 0 : 1;
+                systemState.stdin = systemState.__stdin__ = new PyFile(System.in, "<stdin>", "r" + mode, buffering, false);
+                systemState.stdout = systemState.__stdout__ = new PyFile(System.out, "<stdout>", "w" + mode, buffering, false);
+                systemState.stderr = systemState.__stderr__ = new PyFile(System.err, "<stderr>", "w" + mode, 0, false);
+
+                PythonInterpreter python = new PythonInterpreter(sessionLocals,systemState);
+
                 logger.debug("Created new PythonInterpreter for setting up locals and search path");
 
                 python.setIn(in);
@@ -194,7 +204,6 @@ public class PythonShell {
             }
         }
         // Makes sure the python has been initialized at least once.
-        PyDictionary sessionLocals = PythonShell.getSessionEnv(in,out,err);
         if (cmd.equalsIgnoreCase("save")) {
             userEnvs.put(env,PythonShell.locals.get(in).currentLocals);
         } else if (cmd.equalsIgnoreCase("load")) {
@@ -227,7 +236,6 @@ public class PythonShell {
                     "NetShell."
     )
     public static void startPython (String[] args, InputStream in, OutputStream out, OutputStream err) {
-
         if (in instanceof ShellInputStream) {
             if (((ShellInputStream) in).getSourceInputStream() instanceof TabFilteringInputStream) {
                 ((TabFilteringInputStream) ((ShellInputStream) in).getSourceInputStream()).setFilters(true);
@@ -293,15 +301,15 @@ public class PythonShell {
                     sessionLocals.put("command_args", new String[] {"python"});
                 }
                 InteractiveConsole console = new InteractiveConsole(sessionLocals);
+                console.setOut(out);
+                console.setErr(err);
+                console.setIn(in);
                 if (System.getProperty("python.home") == null) {
                     System.setProperty("python.home", "");
                 }
                 InteractiveConsole.initialize(System.getProperties(),
                         null, new String[0]);
 
-                console.setOut(out);
-                console.setErr(err);
-                console.setIn(in);
                 osgiSetup(console);
                 // Start the interactive session
                 if (in instanceof ShellInputStream) {
