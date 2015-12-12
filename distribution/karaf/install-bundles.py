@@ -18,7 +18,7 @@
 # publicly and display publicly, and to permit other to do so.
 #
 
-import pxssh
+from pexpect import pxssh
 
 hostname="localhost"
 username="karaf"
