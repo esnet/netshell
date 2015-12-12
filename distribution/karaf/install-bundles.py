@@ -36,8 +36,8 @@ cmds = [
 ("feature:install netshell-odl-corsa",2),
 ("feature:install netshell-odl-mdsal",2),
 ("feature:install netshell-controller",2),
-{"feature:repo-add mvn:net.es/enos-esnet/1.0-SNAPSHOT/xml/features",2),
-{"feature:install enos-esnet",5)
+("feature:repo-add mvn:net.es/enos-esnet/1.0-SNAPSHOT/xml/features",2),
+("feature:install enos-esnet",5)
 ]
 
 prompt=['opendaylight-user@root>']
