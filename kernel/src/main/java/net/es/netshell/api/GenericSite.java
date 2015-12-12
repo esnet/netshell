@@ -27,6 +27,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import java.util.ArrayList;
 
 public class GenericSite extends Resource {
+    private String owner;
     private ArrayList<GenericLink> links;
     private ArrayList<GenericHost> hosts;
     public GenericSite (String name) {
@@ -44,5 +45,59 @@ public class GenericSite extends Resource {
         } else {
             this.hosts.add(host);
         }
+    }
+
+    @JsonIgnore
+    public synchronized void removeHost(GenericHost host) {
+        if (this.hosts.contains(host)) {
+            // nothing to do
+            return;
+        } else {
+            this.hosts.remove(host);
+        }
+    }
+
+    @JsonIgnore
+    public synchronized void addLink(GenericLink link) {
+        if (this.links.contains(link)) {
+            // nothing to do
+            return;
+        } else {
+            this.links.add(link);
+        }
+    }
+
+    @JsonIgnore
+    public synchronized void removeLink(GenericLink link) {
+        if (this.links.contains(link)) {
+            // nothing to do
+            return;
+        } else {
+            this.links.remove(link);
+        }
+    }
+
+    public ArrayList<GenericHost> getHosts() {
+        return hosts;
+    }
+
+    public void setHosts(ArrayList<GenericHost> hosts) {
+        this.hosts = hosts;
+    }
+
+    public ArrayList<GenericLink> getLinks() {
+        return links;
+    }
+
+    public void setLinks(ArrayList<GenericLink> links) {
+        this.links = links;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 }
