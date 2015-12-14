@@ -18,6 +18,8 @@
 # publicly and display publicly, and to permit other to do so.
 #
 
+from time import sleep
+import pexpect
 from pexpect import pxssh
 
 hostname="localhost"
@@ -41,21 +43,25 @@ cmds = [
 ]
 
 prompt=['opendaylight-user@root>']
-
+debug=False
 options = ("-o 'RSAAuthentication=no' -o 'PubkeyAuthentication=no' -o 'StrictHostKeyChecking=no' -o 'UserKnownHostsFile=/dev/null'")
 
 try:
-	s = pxssh.pxssh() 
+	print "This will take up to a couple of minutes."
+	s = pexpect.pxssh.pxssh()
 	s.SSH_OPTS = options
 	s.force_password=True
 	s.login(hostname, username, password,port=port,auto_prompt_reset=False)
-	s.synch_original_prompt()
-	r = s.prompt(timeout=20)
+	s.sync_original_prompt()
+	#r = s.prompt(timeout=20)
 	for (cmd,timeout) in cmds:
+		print cmd
 		s.sendline(cmd)
-		r = s.prompt (timeout = timeout)
+		sleep(10)
+		#r = s.prompt (timeout = timeout)
 	s.logout()
-except pxssh.ExceptionPxssh as e:
-	print("pxssh failed on login.")
-	print(e)
+except pexpect.pxssh.ExceptionPxssh as e:
+	if debug:
+		print("pxssh failed on login.")
+		print(e)
 
