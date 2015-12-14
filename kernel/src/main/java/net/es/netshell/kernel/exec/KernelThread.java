@@ -74,7 +74,6 @@ public final class  KernelThread {
     public KernelThread (Thread thread) throws SecurityException {
         this.thread = thread;
         this.init();
-
         if ((BootStrap.getBootStrap() == null)
            || (BootStrap.getBootStrap().getSecurityManager() == null)
            || (this.thread.getThreadGroup() == null)
