@@ -21,6 +21,7 @@
 import sys
 from net.es.netshell.boot import BootStrap
 from java.nio.file import Paths
+from org.python.util import jython
 
 def realPathName(path):
     return Paths.get(sys.netshell_root.toString(), path)
@@ -34,10 +35,13 @@ def cd(path):
 sys.netshell_root = BootStrap.rootPath
 
 # Fix for not having $JARFILE/Lib in path
-if not sys.netshell_root.toString() + "/lib" in sys.path:
-    from org.python.util import jython
+jythonjar = jython().getClass().getProtectionDomain().getCodeSource().getLocation().getPath()
+if not jythonjar + "/Lib" in sys.path:
     # We should really do os.path.join(jython()..., 'Lib') here but we can't
     # import os (chicken & egg)
-    path=jython().getClass().getProtectionDomain().getCodeSource().getLocation().getPath()
-    sys.path.append(path + '/Lib')
-    sys.path.append(path + '/Lib/site-packages')
+    sys.path.append(jythonjar + '/Lib')
+    sys.path.append(jythonjar + '/Lib/site-packages')
+
+if not sys.netshell_root.toString() + "/lib" in sys.path:
+	sys.path.append (sys.netshell_root.toString() + "/lib")
+
