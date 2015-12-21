@@ -1,12 +1,21 @@
 /*
- * Copyright (c) 2014, Regents of the University of California  All rights reserved.
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ESnet Network Operating System (ENOS) Copyright (c) 2015, The Regents
+ * of the University of California, through Lawrence Berkeley National
+ * Laboratory (subject to receipt of any required approvals from the
+ * U.S. Dept. of Energy).  All rights reserved.
+ *
+ * If you have questions about your rights to use or distribute this
+ * software, please contact Berkeley Lab's Innovation & Partnerships
+ * Office at IPO@lbl.gov.
+ *
+ * NOTICE.  This Software was developed under funding from the
+ * U.S. Department of Energy and the U.S. Government consequently retains
+ * certain rights. As such, the U.S. Government has been granted for
+ * itself and others acting on its behalf a paid-up, nonexclusive,
+ * irrevocable, worldwide license in the Software to reproduce,
+ * distribute copies to the public, prepare derivative works, and perform
+ * publicly and display publicly, and to permit other to do so.
  */
-
 package net.es.netshell.python;
 
 import net.es.netshell.boot.BootStrap;
@@ -30,6 +39,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.python.core.PyDictionary;
 import org.python.core.PySystemState;
+import org.python.core.PyFile;
+import org.python.core.Options;
 import org.python.util.PythonInterpreter;
 import org.python.util.InteractiveConsole;
 import org.slf4j.Logger;
@@ -37,12 +48,20 @@ import org.slf4j.LoggerFactory;
 
 
 
-/**
- * Created by lomax on 2/20/14.
- */
 public class PythonShell {
+
+    public static class ActiveLocals {
+        public PyDictionary currentLocals;
+        public PyDictionary inputStreamLocals;
+        public ActiveLocals(PyDictionary inputStreamLocals) {
+            this.inputStreamLocals = inputStreamLocals;
+            this.currentLocals = inputStreamLocals;
+        }
+    }
     private static final Logger logger = LoggerFactory.getLogger(PythonShell.class);
-    private static HashMap<InputStream,PyDictionary> locals = new HashMap<InputStream, PyDictionary>();
+    private static HashMap<InputStream,ActiveLocals> locals = new HashMap<InputStream, ActiveLocals>();
+    private static HashMap<String,HashMap<String,PyDictionary>> userLocals = new HashMap<String,HashMap<String,PyDictionary>>();
+    private static HashMap<String,PyDictionary> userCurrentLocals = new HashMap<String,PyDictionary>();
     public static String INIT_SCRIPT = "/etc/init.py";
     public static String PROFILE_SCRIPT = "/etc/profile.py";
 
@@ -62,15 +81,7 @@ public class PythonShell {
         PythonShell.startPython(args, System.in, System.out, System.err);
     }
 
-    @ShellCommand(
-            name="python",
-            forwardLines=false,
-            shortHelp="Invoke interactive Python shell",
-            longHelp="EOF in the shell exits the shell and returns control to the top-level\n" +
-                    "NetShell."
-    )
-    public static void startPython (String[] args, InputStream in, OutputStream out, OutputStream err) {
-
+    static private PyDictionary getSessionEnv (InputStream in, OutputStream out, OutputStream err) {
         if (in instanceof ShellInputStream) {
             if (((ShellInputStream) in).getSourceInputStream() instanceof TabFilteringInputStream) {
                 ((TabFilteringInputStream) ((ShellInputStream) in).getSourceInputStream()).setFilters(true);
@@ -88,17 +99,29 @@ public class PythonShell {
         synchronized (PythonShell.locals) {
             if (PythonShell.locals.containsKey(in)) {
                 // Already has a locals created for this session, re-use
-                sessionLocals = PythonShell.locals.get(in);
+                sessionLocals = PythonShell.locals.get(in).currentLocals;
+                if (sessionLocals == null) {
+                    sessionLocals = PythonShell.locals.get(in).inputStreamLocals;
+                }
                 isFirstSession = false;
             } else {
                 // First python for this session. Create locals
                 sessionLocals = new PyDictionary();
-                PythonShell.locals.put(in,sessionLocals);
+                // TODO: this creates a memory leak since the environment is not removed after the SSH session is closed.
+                PythonShell.locals.put(in,new ActiveLocals(sessionLocals));
                 // Don't try to import site.py.  The move from Jython 2.5.2 to 2.7beta4 seems to
                 // require this, because it appears that we can't find site.py and blow up.
                 org.python.core.Options.importSite = false;
                 // Sets the default search path
-                PythonInterpreter python = new PythonInterpreter(sessionLocals);
+                PySystemState systemState = new PySystemState();
+                String mode = Options.unbuffered ? "b" : "";
+                int buffering = Options.unbuffered ? 0 : 1;
+                systemState.stdin = systemState.__stdin__ = new PyFile(System.in, "<stdin>", "r" + mode, buffering, false);
+                systemState.stdout = systemState.__stdout__ = new PyFile(System.out, "<stdout>", "w" + mode, buffering, false);
+                systemState.stderr = systemState.__stderr__ = new PyFile(System.err, "<stderr>", "w" + mode, 0, false);
+
+                PythonInterpreter python = new PythonInterpreter(sessionLocals,systemState);
+
                 logger.debug("Created new PythonInterpreter for setting up locals and search path");
 
                 python.setIn(in);
@@ -108,7 +131,21 @@ public class PythonShell {
                 python.exec("import sys");
                 python.exec("sys.path = sys.path + ['" + BootStrap.rootPath.resolve("bin/") + "']");
                 if (KernelThread.currentKernelThread().getUser() != null) {
-                    python.exec("sys.path = sys.path + ['" + KernelThread.currentKernelThread().getUser().getHomePath()
+                    User user =KernelThread.currentKernelThread().getUser();
+                    if (!PythonShell.userLocals.containsKey(user.getName())) {
+                        // First session for this user.
+                        HashMap<String,PyDictionary> userEnv = new HashMap<String,PyDictionary>();
+                        PythonShell.userLocals.put(user.getName(),userEnv);
+                    }
+                    HashMap<String,PyDictionary> userEnv = PythonShell.userLocals.get(user.getName());
+                    sessionLocals.put("_user_locals",userEnv);
+                    // If the user is privileged, add all user locals
+                    if (user.isPrivileged()) {
+                        sessionLocals.put("_current_locals",PythonShell.userCurrentLocals);
+                        sessionLocals.put("_ssh_locals",PythonShell.locals);
+                        sessionLocals.put("_all_user_locals",PythonShell.userLocals);
+                    }
+                    python.exec("sys.path = sys.path + ['" + user.getHomePath()
                             + "']");
                 }
                 try {
@@ -139,6 +176,89 @@ public class PythonShell {
                 }
             }
         }
+        return sessionLocals;
+    }
+
+    @ShellCommand(
+            name="pyenv",
+            forwardLines=false,
+            shortHelp="Manage the python session environment",
+            longHelp="Save, load or delete a python environment\n"  +
+                    "\tpyenv save <env_name> [user_name] saves the current environment. If a user name is provided\n" +
+                    "\t\tthe environment is saved into the user's environments. This requires privileged access." +
+                    "\tpyenv load <env_name> [user_name] next python session will be loaded with the environment.\n" +
+                    "\t\tIf a user name is provided tthe environment is saved into the user's environments." +
+                    "\t\tThis requires privileged access." +
+                    "\tpyenv list <pattern|'all'>[user_name] lists environments"
+    )
+    public static void pyenv (String[] args, InputStream in, OutputStream out, OutputStream err) {
+        User user = KernelThread.currentKernelThread().getUser();
+        if (user == null) {
+            // No user, no user locals
+            return;
+        }
+        String userName = user.getName();
+        if (args.length < 3) {
+            // Syntax error. Should do better reporting
+            return;
+        }
+        HashMap<String,PyDictionary> userEnvs = PythonShell.userLocals.get(user.getName());
+        String cmd = args[1];
+        String env = args[2];
+        String optUser = null;
+        if (args.length == 4) {
+            optUser = args[3];
+            if (user.isPrivileged()) {
+                userEnvs = PythonShell.userLocals.get(optUser);
+            }
+        }
+        // Makes sure the python has been initialized at least once.
+        if (cmd.equalsIgnoreCase("save")) {
+            userEnvs.put(env,PythonShell.locals.get(in).currentLocals);
+        } else if (cmd.equalsIgnoreCase("load")) {
+            if (userEnvs.containsKey(env)) {
+                PythonShell.locals.get(in).currentLocals = userEnvs.get(env);
+            }
+        } else if (cmd.equals("delete")) {
+            if (userEnvs.containsKey(env)) {
+                userEnvs.remove(env);
+            }
+        } else if (cmd.equals("list")) {
+            for (String envName : userEnvs.keySet()) {
+                if (env.equalsIgnoreCase("all") || envName.contains(env)) {
+                    try {
+                        out.write((envName + "\n").getBytes());
+                        out.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+    }
+    @ShellCommand(
+            name="python",
+            forwardLines=false,
+            shortHelp="Invoke interactive Python shell",
+            longHelp="EOF in the shell exits the shell and returns control to the top-level\n" +
+                    "NetShell."
+    )
+    public static void startPython (String[] args, InputStream in, OutputStream out, OutputStream err) {
+        if (in instanceof ShellInputStream) {
+            if (((ShellInputStream) in).getSourceInputStream() instanceof TabFilteringInputStream) {
+                ((TabFilteringInputStream) ((ShellInputStream) in).getSourceInputStream()).setFilters(true);
+            }
+        }
+        boolean isFirstSession = true;
+        // Find or create locals
+        if (out == null) {
+            out = System.out;
+        }
+        if (err == null) {
+            err = out;
+        }
+        PyDictionary sessionLocals = PythonShell.getSessionEnv(in, out, err);
         logger.debug("Starting Python");
         if (isFirstSession) {
             // Run profile
@@ -190,15 +310,15 @@ public class PythonShell {
                     sessionLocals.put("command_args", new String[] {"python"});
                 }
                 InteractiveConsole console = new InteractiveConsole(sessionLocals);
+                console.setOut(out);
+                console.setErr(err);
+                console.setIn(in);
                 if (System.getProperty("python.home") == null) {
                     System.setProperty("python.home", "");
                 }
                 InteractiveConsole.initialize(System.getProperties(),
                         null, new String[0]);
 
-                console.setOut(out);
-                console.setErr(err);
-                console.setIn(in);
                 osgiSetup(console);
                 // Start the interactive session
                 if (in instanceof ShellInputStream) {

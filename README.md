@@ -10,7 +10,9 @@ These steps install NetShell into a generic Karaf container.  For use with a cus
 Karaf container that is an artifact of an OpenDaylight integration build, see the "OpenDaylight
 Integration" section of this document.
 
-1.  Build and install netshell-kernel (and netshell-python if desired, and netshell-odl if applicable).
+1.  Build and install netshell-kernel.  netshell-python is usually desirable.  For use with
+    OpenDaylight, build the netshell-odl-mdsal and netshell-controller modules
+    (and netshell-odl-corsa if applicable).
     This will result in JAR artifacts being copied to the local Maven repository / cache.
     It will also result in an XML features file being copied.
 
@@ -27,21 +29,20 @@ Integration" section of this document.
 OpenDaylight Integration
 ------------------------
 
-Like NetShell, OpenDaylight (as of the Helium release) is composed of a number of OSGi features and bundles
+Like NetShell, OpenDaylight is composed of a number of OSGi features and bundles
 running inside a Karaf container.  However, OpenDaylight (henceforth referred to as ODL) and NetShell require some
 "encouragement" to play together.  For the most part, this is because ODL is distributed in a somewhat
 customized Karaf container, and some of those customizations are incompatible with NetShell.  The approach
 to integration is basically to start with a ODL Karaf container and tweak it a bit so that NetShell
 can run inside it.
 
-In some cases, slightly different steps are needed depending on the version of OpenDaylight being
-used.  (As of this writing, some success has been had with both ODL Helium and ODL Lithium.  
-ODL Hydrogen is not supported.)  These differences will be noted where necessary.
+As of this writing, the current NetShell code has been tested with ODL Lithium.  An earlier version
+of code worked with ODL Helium.  ODL Hydrogen was never tested.
 
 1.  Download an ODL Karaf distribution from the OpenDaylight Web site.
-    As mentioned above, both ODL Helium and ODL Lithium have been tested, as of this writing.  Unpack it.
+    As mentioned above, this should be ODL Lithium.  Unpack it.
 
-2.  From the top-level directory of the ODL Karaf distribution, execute the ```fixup-karaf.sh```
+2.  From the top-level directory of the ODL Karaf distribution, execute the ```distribution/karaf/fixup-karaf.sh```
     script found in the top-level directory of this source tree.
     This change restores the default search behavior for finding bundles in Maven
     repositories (in particular it's needed to read the NetShell bundles from the local Maven
@@ -52,32 +53,20 @@ ODL Hydrogen is not supported.)  These differences will be noted where necessary
     believed to be a problem, the security manager can be disabled by creating a ```netshell.json```
     file 
     in the top level of the ODL Karaf installation and setting the value of the
-    ```securityManagerDisabled``` parameter to 1.
+    ```securityManagerDisabled``` parameter to ```1```.
 
 4.  Start up the ODL Karaf container from the top-level directory of the ODL Karaf installation with ```bin/karaf```.
 
 5.  Within the Karaf instance, load the ODL features of interest, such as OpenFlow support and the
     DLUX GUI:
-
-        feature:install odl-dlux-core odl-openflowplugin-all
-        
-    On ODL Lithium, it might also be necessary to load some additional DLUX modules:
     
-        feature:install odl-dlux-all
-        
-    Note that on ODL Helium the default URL for the DLUX interface is:
-    
-        http://localhost:8181/dlux/index.html
-        
-    This URL has changed for ODL Lithium:
+        feature:install odl-dlux-all odl-openflowplugin-all
+            
+    It is possible (but not required) to test the ODL DLUX WebUI by going to the following URL:
     
         http://localhost:8181/index.html
 
-5.  Features necessary for NetShell integration can be loaded as follows on ODL Helium:
-
-        feature:install odl-adsal-compatibility odl-nsf-managers
-        
-    On ODL Lithium, it is necessary to do this instead:
+5.  Features necessary for NetShell integration can be loaded as follows:
     
         feature:install odl-openflowplugin-adsal-compatibility odl-nsf-managers
 
@@ -92,15 +81,29 @@ ODL Hydrogen is not supported.)  These differences will be noted where necessary
 
 7.  Follow the instructions in "NetShell Quickstart" above to load and run the base NetShell modules.
 
-8.  To load the NetShell OpenDaylight AD-SAL bundle:
+8.  To load the NetShell OpenDaylight MD-SAL bundles:
 
-        feature:install netshell-controller
-        feature:install netshell-odl
-        
-    NOTE:  NetShell and ENOS are moving to a model that uses OpenDaylight's MD-SAL APIs, and where
-    the netshell-controller module sits atop the netshell-odl-mdsal and netshell-odl-corsa
-    modules.  To deploy in a way compatible with that approach, do this instead:
-    
         feature:install netshell-odl-mdsal
+        feature:install netshell-odl-corsa
         feature:install netshell-controller
+
+Copyright
+---------
+
+ESnet Network Operating System (ENOS) Copyright (c) 2015, The Regents
+of the University of California, through Lawrence Berkeley National
+Laboratory (subject to receipt of any required approvals from the
+U.S. Dept. of Energy).  All rights reserved.
+
+If you have questions about your rights to use or distribute this
+software, please contact Berkeley Lab's Innovation & Partnerships
+Office at IPO@lbl.gov.
+
+NOTICE.  This Software was developed under funding from the
+U.S. Department of Energy and the U.S. Government consequently retains
+certain rights. As such, the U.S. Government has been granted for
+itself and others acting on its behalf a paid-up, nonexclusive,
+irrevocable, worldwide license in the Software to reproduce,
+distribute copies to the public, prepare derivative works, and perform
+publicly and display publicly, and to permit other to do so.
 
