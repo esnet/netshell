@@ -44,7 +44,7 @@ public class Bwctl {
     /**
      * Method to run a standard bwctl test with default tool=iperf3, test_duration=10s
      * */
-    public boolean runBwctlTest (String source, String destination, OutputStream out, OutputStream err) {
+    public boolean runBwctlTest (String source, String destination) {
         Method method = null;
         try {
             method = KernelThread.getSysCallMethod(this.getClass(), "do_runbwctl");
@@ -64,7 +64,7 @@ public class Bwctl {
 
                 KernelThread.doSysCall(this,
                         method,
-                        source, destination,out, err);
+                        source, destination);
                 return true;
             } else {
                 return false;
@@ -80,7 +80,7 @@ public class Bwctl {
     }
 
 
-    public boolean runPersistentBwctlTest (String source, String destination, String user, String key, String dburi,OutputStream out, OutputStream err) {
+    public boolean runPersistentBwctlTest (String source, String destination, String user, String key, String dburi) {
         Method method = null;
         try {
             method = KernelThread.getSysCallMethod(this.getClass(), "do_runpersistentbwctl");
@@ -100,7 +100,7 @@ public class Bwctl {
 
                 KernelThread.doSysCall(this,
                         method,
-                        source, destination,user,key,dburi,out,err);
+                        source, destination,user,key,dburi);
                 return true;
             } else {
                 return false;
@@ -122,16 +122,13 @@ public class Bwctl {
     @SysCall(
             name="do_runbwctl"
     )
-    public void do_runbwctl(String source, String destination, OutputStream out, OutputStream err) throws IOException {
+    public void do_runbwctl(String source, String destination) throws IOException {
 
         logger.info("Entered method do_runbwctl");
 
-        PrintStream resultStream = new PrintStream(out);
-
         //TODO: Change default tool to iperf3.
-        String cmd = "bwctl -s " + source + "  -c " + destination +" -T iperf3 -t 10 -a 1 --parsable --verbose ";
+        String cmd = "bwctl -s " + source + "  -c " + destination +" -T iperf -t 10 -a 1 --parsable --verbose ";
         logger.info(cmd);
-        resultStream.println(cmd);
 
 
         Process p = null;
@@ -144,18 +141,15 @@ public class Bwctl {
         String s;
         while ((s = br.readLine()) != null) {
             System.out.println(s);
-            resultStream.println(s);
         }
     }
 
     @SysCall(
             name="do_runpersistentbwctl"
     )
-    public void do_runpersistentbwctl(String source, String destination, String user, String key, String dburi,OutputStream out, OutputStream err) throws IOException {
+    public void do_runpersistentbwctl(String source, String destination, String user, String key, String dburi) throws IOException {
 
         logger.info("Entered method do_runpersistentbwctl");
-
-        PrintStream resultStream = new PrintStream(out);
 
         String[] cmd = {"/bin/sh", "-c",
                        "bwctl -s " + source + "  -c " + destination +" -T iperf3 -t 10 -a 1 --parsable --verbose" +
@@ -163,7 +157,6 @@ public class Bwctl {
                      "esmond-ps-pipe --user "+user +" --key "+key+ " -U "+dburi};
         String cmdString = Arrays.toString(cmd);
         logger.info(cmdString);
-        resultStream.println(cmdString);
 
         Process p = null;
         try {
@@ -175,7 +168,6 @@ public class Bwctl {
         String s;
         while ((s = br.readLine()) != null) {
             System.out.println(s);
-            resultStream.println(s);
         }
     }
 

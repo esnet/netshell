@@ -32,16 +32,13 @@ def main():
 
 	bwctl = net.es.netshell.kernel.perfsonar.Bwctl.getInstance()
 
-	#outstream = java.io.OutputStream(sys.stdout)
-	#errstream = java.io.OutputStream(sys.stderr)
-
 
 	result=None
 
 	if(args.source and args.client and args.username and args.key and args.uri):
-		result = bwctl.runPersistentBwctlTest(args.source,args.client, args.username, args.key, args.uri, sys.stdout,sys.stderr)
+		result = bwctl.runPersistentBwctlTest(args.source,args.client, args.username, args.key, args.uri)
 	elif (args.source and args.client):
-		result = bwctl.runBwctlTest(args.source,args.client,sys.stdout,sys.stderr)
+		result = bwctl.runBwctlTest(args.source,args.client)
 	else:
 		print "Insufficient arguments \n"
 
