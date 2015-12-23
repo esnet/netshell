@@ -15,22 +15,12 @@
  * irrevocable, worldwide license in the Software to reproduce,
  * distribute copies to the public, prepare derivative works, and perform
  * publicly and display publicly, and to permit other to do so.
+ *
  */
 package net.es.netshell.controller.core;
 
-import java.util.Hashtable;
-
-
-import net.es.netshell.api.NetShellException;
-import net.es.netshell.api.PropertyKeys;
-import net.es.netshell.boot.BootStrap;
-import net.es.netshell.odlcorsa.impl.OdlCorsaImpl;
-import net.es.netshell.odlmdsal.impl.OdlMdsalImpl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 /**
  * Activator class for the API and Generic SDN controller support

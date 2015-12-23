@@ -15,9 +15,12 @@
  * irrevocable, worldwide license in the Software to reproduce,
  * distribute copies to the public, prepare derivative works, and perform
  * publicly and display publicly, and to permit other to do so.
+ *
  */
 
 package net.es.netshell.odlcorsa.impl;
+
+import net.es.netshell.odlcorsa.OdlCorsaIntf;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
@@ -25,34 +28,27 @@ import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.openflowplugin.api.openflow.md.util.OpenflowVersion;
 import org.opendaylight.openflowplugin.openflow.md.util.InventoryDataServiceUtil;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNodeConnector;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNodeConnectorUpdateFieldsBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.Flow;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowCookie;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Node;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeId;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.l2.types.rev130827.VlanId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.l2.types.rev130827.VlanPcp;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterRef;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketReceived;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sdx3.rev150814.*;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
  * This class provides some glue to the Corsa SDX3 driver.
  */
-public class OdlCorsaImpl implements AutoCloseable {
+public class OdlCorsaImpl implements AutoCloseable, OdlCorsaIntf {
 
     // ODL objects
     DataBroker dataBroker;

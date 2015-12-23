@@ -15,19 +15,25 @@
  * irrevocable, worldwide license in the Software to reproduce,
  * distribute copies to the public, prepare derivative works, and perform
  * publicly and display publicly, and to permit other to do so.
+ *
  */
 package net.es.netshell.controller.core;
 
-import net.es.netshell.odlcorsa.impl.OdlCorsaImpl;
+import net.es.netshell.boot.BootStrap;
+import net.es.netshell.odlcorsa.OdlCorsaIntf;
 import net.es.netshell.odlmdsal.impl.OdlMdsalImpl;
+import net.es.netshell.osgi.OsgiBundlesClassLoader;
 import org.opendaylight.openflowplugin.api.OFConstants;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -48,8 +54,50 @@ public class Controller {
         return OdlMdsalImpl.getInstance();
     }
 
-    public OdlCorsaImpl getOdlCorsaImpl() {
-        return OdlCorsaImpl.getInstance();
+    /**
+     * Get an object that implements the Corsa glue interface.
+     * Note that even loading the code/class for the Corsa glue is optional,
+     * so we have to be able to do this even if the implementation class
+     * isn't loaded.
+     * @return OdlCorsaImpl object
+     */
+    public OdlCorsaIntf getOdlCorsaImpl() {
+        try {
+            // We need to use our OSGi-aware class loader to find the OdlCorsaImpl object
+            // and then some reflection techniques to find its getInstance() method.
+            Class c = null;
+            try {
+                // This is clunky.  We can't do this everytime we need to invoke this method,
+                // maybe need to cache it or something like that?  The difficulty, as always,
+                // is knowing when to invalidate the cache.
+                BundleContext bc = BootStrap.getBootStrap().getBundleContext();
+                Bundle[] bundles = bc.getBundles();
+                OsgiBundlesClassLoader classLoader =
+                        new OsgiBundlesClassLoader(bundles, OdlCorsaIntf.class.getClassLoader());
+                c = classLoader.findClass("net.es.netshell.odlcorsa.impl.OdlCorsaImpl");
+            }
+            catch (ClassNotFoundException e) {
+                return null;
+            }
+
+            Method m = null;
+            try {
+                m = c.getMethod("getInstance");
+            }
+            catch (NoSuchMethodException e) {
+                return null;
+            }
+
+            // We found the method, invoke it.  Note that we pass a null
+            // as the object to invoke on, because this is a static method.
+            Object o = m.invoke(null);
+            OdlCorsaIntf oci = (OdlCorsaIntf) o;
+            return oci;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
