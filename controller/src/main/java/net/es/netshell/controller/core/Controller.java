@@ -1,5 +1,5 @@
 /*
- * ESnet Network Operating System (ENOS) Copyright (c) 2015, The Regents
+ * ESnet Network Operating System (ENOS) Copyright (c) 2016, The Regents
  * of the University of California, through Lawrence Berkeley National
  * Laboratory (subject to receipt of any required approvals from the
  * U.S. Dept. of Energy).  All rights reserved.
@@ -20,6 +20,7 @@
 package net.es.netshell.controller.core;
 
 import net.es.netshell.boot.BootStrap;
+import net.es.netshell.controller.impl.SdnController;
 import net.es.netshell.odlcorsa.OdlCorsaIntf;
 import net.es.netshell.odlmdsal.impl.OdlMdsalImpl;
 import net.es.netshell.osgi.OsgiBundlesClassLoader;
@@ -153,6 +154,28 @@ public class Controller {
         else {
             throw new RuntimeException("Attempt to create multiple " + Controller.class.getName());
         }
+
+        // Automatically start up an instance of SdnController, running in its own thread,
+        // to listen for RabbitMQ messages.
+        //
+        // XXX When we move the SdnController stuff to a different bundle, this code should be
+        // a part of the activator of that bundle.
+        //
+        // XXX When we start up a Karaf container that has netshell-controller already loaded,
+        // there appears to be a (not yet well understood) race condition with the startup of the ODL
+        // MD-SAL and ODL Corsa bundles.  The symptom is that SdnController doesn't get
+        // PacketReceived notifications.  If we delay the instantiation of the SdnController object
+        // by 20 seconds, this appears to let things settle down so that notifications work.
+
+        try {
+            Thread.sleep(20000);
+        }
+        catch (InterruptedException e) {
+        }
+        SdnController sdncont = new SdnController();
+        sdncont.setCallback();
+        Thread sdnthr = new Thread(sdncont);
+        sdnthr.start();
     }
     public static Controller getInstance() { return instance; }
 

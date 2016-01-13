@@ -17,29 +17,29 @@
  * publicly and display publicly, and to permit other to do so.
  *
  */
-package net.es.netshell.controller.core;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+package net.es.netshell.controller.intf;
+
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
- * Activator class for the API and Generic SDN controller support
+ * Created by bmah on 1/7/16.
  */
-public class Activator implements BundleActivator {
+public class SdnPingReply extends SdnReply {
+    @JsonIgnore
+    public static String TYPE = "SdnPingReply";
 
-    BundleContext bundleContext;
+    public String payload;
 
-    @Override
-    public void start(BundleContext bundleContext) throws Exception {
-        this.bundleContext = bundleContext;
-
-        Controller controller = new Controller();
-
-        System.out.println("NetShell Generic Controller and API: started");
+    public String getPayload() {
+        return payload;
     }
 
-    @Override
-    public void stop(BundleContext bundleContext) throws Exception {
-        System.out.println("NetShell Generic Controller and API: stopped");
+    public void setPayload(String payload) {
+        this.payload = payload;
+    }
+
+    public SdnPingReply() {
+        setReplyType(TYPE);
     }
 }

@@ -17,29 +17,44 @@
  * publicly and display publicly, and to permit other to do so.
  *
  */
-package net.es.netshell.controller.core;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+package net.es.netshell.controller.intf;
+
+import org.codehaus.jackson.annotate.JsonIgnore;
+
+import java.math.BigInteger;
 
 /**
- * Activator class for the API and Generic SDN controller support
+ * Created by bmah on 1/7/16.
  */
-public class Activator implements BundleActivator {
+public class SdnForwardRequest extends SdnRequest {
 
-    BundleContext bundleContext;
+    @JsonIgnore
+    public static String TYPE = "SdnForwardRequest";
 
-    @Override
-    public void start(BundleContext bundleContext) throws Exception {
-        this.bundleContext = bundleContext;
+    class L2TranslationOutput {
+        public String outPort;
+        public int vlan;
+        public String dstMac; // XXX type?
+    };
 
-        Controller controller = new Controller();
+    public byte [] dpid;
 
-        System.out.println("NetShell Generic Controller and API: started");
-    }
+    public int priority;
+    public BigInteger c;
 
-    @Override
-    public void stop(BundleContext bundleContext) throws Exception {
-        System.out.println("NetShell Generic Controller and API: stopped");
+    public String inPort;
+    public int vlan1;
+    public String srcMac1;  // XXX type?
+    public String dstMac1;  // XXX type?
+
+    public L2TranslationOutput [] outputs;
+
+    public int pcp;
+    public int queue;
+    public int meter;
+
+    public SdnForwardRequest() {
+        setRequestType(TYPE);
     }
 }

@@ -17,29 +17,26 @@
  * publicly and display publicly, and to permit other to do so.
  *
  */
-package net.es.netshell.controller.core;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+package net.es.netshell.controller.intf;
+
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
- * Activator class for the API and Generic SDN controller support
+ * Base class of all SDN request messages
+ * We need to use JsonIgnoreProperties because we need to receive and parse a subset
+ * of fields/properties for messages that contain these fields plus others.
  */
-public class Activator implements BundleActivator {
+@JsonIgnoreProperties(ignoreUnknown=true)
+public class SdnRequest {
 
-    BundleContext bundleContext;
+    private String requestType; // All messages need a message type.
 
-    @Override
-    public void start(BundleContext bundleContext) throws Exception {
-        this.bundleContext = bundleContext;
-
-        Controller controller = new Controller();
-
-        System.out.println("NetShell Generic Controller and API: started");
+    public String getRequestType() {
+        return requestType;
     }
 
-    @Override
-    public void stop(BundleContext bundleContext) throws Exception {
-        System.out.println("NetShell Generic Controller and API: stopped");
+    public void setRequestType(String requestType) {
+        this.requestType = requestType;
     }
 }

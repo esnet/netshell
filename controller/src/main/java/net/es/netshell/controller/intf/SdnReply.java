@@ -17,29 +17,43 @@
  * publicly and display publicly, and to permit other to do so.
  *
  */
-package net.es.netshell.controller.core;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+package net.es.netshell.controller.intf;
+
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
- * Activator class for the API and Generic SDN controller support
+ * Base class of all SDN controller reply messages.
+ * We need to use JsonIgnoreProperties because we need to receive and parse a subset
+ * of fields/properties for messages that contain these fields plus others.
  */
-public class Activator implements BundleActivator {
+@JsonIgnoreProperties(ignoreUnknown=true)
+public class SdnReply {
+    public String replyType;
+    public boolean error;
+    public String errorMessage;
 
-    BundleContext bundleContext;
-
-    @Override
-    public void start(BundleContext bundleContext) throws Exception {
-        this.bundleContext = bundleContext;
-
-        Controller controller = new Controller();
-
-        System.out.println("NetShell Generic Controller and API: started");
+    public String getReplyType() {
+        return replyType;
     }
 
-    @Override
-    public void stop(BundleContext bundleContext) throws Exception {
-        System.out.println("NetShell Generic Controller and API: stopped");
+    public void setReplyType(String replyType) {
+        this.replyType = replyType;
+    }
+
+    public boolean isError() {
+        return error;
+    }
+
+    public void setError(boolean error) {
+        this.error = error;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 }

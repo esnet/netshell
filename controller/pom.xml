@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ ESnet Network Operating System (ENOS) Copyright (c) 2015, The Regents
+  ~ ESnet Network Operating System (ENOS) Copyright (c) 2016, The Regents
   ~ of the University of California, through Lawrence Berkeley National
   ~ Laboratory (subject to receipt of any required approvals from the
   ~ U.S. Dept. of Energy).  All rights reserved.
@@ -79,6 +79,14 @@
             <artifactId>netshell-odl-corsa-intf</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+
+        <!-- RabbitMQ only needed for SDN Controller -->
+        <dependency>
+            <groupId>com.rabbitmq</groupId>
+            <artifactId>amqp-client</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+
     </dependencies>
 
 
