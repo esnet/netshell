@@ -51,7 +51,6 @@ public class SdnControllerClient implements AutoCloseable {
 
     private Connection connection;
     private Channel channel;
-    private String requestQueueName = "sdn-controller-request-queue";
     private String replyQueueName;
     private QueueingConsumer consumer;
 
@@ -108,7 +107,7 @@ public class SdnControllerClient implements AutoCloseable {
         String response = null;
 
         // Send it.
-        channel.basicPublish("", requestQueueName, props, message.getBytes("UTF-8"));
+        channel.basicPublish("", Common.controllerRequestQueueName, props, message.getBytes("UTF-8"));
 
         // Wait for reply.
         while (true) {

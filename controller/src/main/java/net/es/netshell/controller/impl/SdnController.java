@@ -49,9 +49,6 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
     static final private Logger logger = LoggerFactory.getLogger(SdnController.class);
 
     // RabbitMQ stuff
-
-    private static final String RPC_QUEUE_NAME = "sdn-controller-request-queue";
-
     private Connection connection;
     private Channel channel;
     private QueueingConsumer consumer;
@@ -61,10 +58,6 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
     // OpenFlow stuff
     Controller controller;
 
-    public static String getRpcQueueName() {
-        return RPC_QUEUE_NAME;
-    }
-
     public SdnController() {
         try {
             // Get a connection to the AMPQ broker (e.g. RabbitMQ server)
@@ -73,11 +66,11 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
             connection = factory.newConnection();
             channel = connection.createChannel();
             // Create the SDN controller queue, non-durable, non-exclusive, non-auto-delete, no other args
-            channel.queueDeclare(RPC_QUEUE_NAME, false, false, false, null);
+            channel.queueDeclare(Common.controllerRequestQueueName, false, false, false, null);
             channel.basicQos(1); // what does this do?
             // Set up a consumer who will read messages from the queue
             consumer = new QueueingConsumer(channel);
-            channel.basicConsume(RPC_QUEUE_NAME, false, consumer);
+            channel.basicConsume(Common.controllerRequestQueueName, false, consumer);
 
             // XXX we need to do some error-checking here to handle the case that the AMPQ server is dead
             // or unreachable.
@@ -298,7 +291,7 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
             BasicProperties props = new BasicProperties.Builder().build();
 
             // Send it.
-            channel.basicPublish("", "packet-receive", props, callbackMessage.getBytes("UTF-8"));
+            channel.basicPublish("", Common.receivePacketReplyQueueName, props, callbackMessage.getBytes("UTF-8"));
 
         }
         catch (Exception e) {

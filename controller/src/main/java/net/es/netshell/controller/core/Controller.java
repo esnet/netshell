@@ -17,6 +17,7 @@
  * publicly and display publicly, and to permit other to do so.
  *
  */
+
 package net.es.netshell.controller.core;
 
 import net.es.netshell.boot.BootStrap;
@@ -166,16 +167,21 @@ public class Controller {
         // MD-SAL and ODL Corsa bundles.  The symptom is that SdnController doesn't get
         // PacketReceived notifications.  If we delay the instantiation of the SdnController object
         // by 20 seconds, this appears to let things settle down so that notifications work.
-
         try {
             Thread.sleep(20000);
         }
         catch (InterruptedException e) {
         }
-        SdnController sdncont = new SdnController();
-        sdncont.setCallback();
-        Thread sdnthr = new Thread(sdncont);
-        sdnthr.start();
+        try {
+            SdnController sdncont = new SdnController();
+            sdncont.setCallback();
+            Thread sdnthr = new Thread(sdncont);
+            sdnthr.start();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            logger.error("Unable to start SDNController instance");
+        }
     }
     public static Controller getInstance() { return instance; }
 
