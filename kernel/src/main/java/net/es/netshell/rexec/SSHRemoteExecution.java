@@ -27,6 +27,7 @@ import org.apache.sshd.ClientSession;
 import org.apache.sshd.SshClient;
 import org.apache.sshd.client.channel.ChannelExec;
 import org.apache.sshd.client.future.AuthFuture;
+import sun.security.ntlm.Client;
 
 public class SSHRemoteExecution implements RemoteExecution {
 
@@ -188,8 +189,7 @@ public class SSHRemoteExecution implements RemoteExecution {
 
     public SSHRemoteExecution(String host, int port) {
 
-        this.host = host;
-        this.port = port;
+        this(host,port,"admin","/users/admin/.ssh/admin-key");
 
     }
 
@@ -199,6 +199,8 @@ public class SSHRemoteExecution implements RemoteExecution {
         this.port = port;
         this.username = username;
         this.timeout = 60000;
+
+        this.client =  SshClient.setUpDefaultClient();
 
         this.setKeyDirectory(keyFile);
 
