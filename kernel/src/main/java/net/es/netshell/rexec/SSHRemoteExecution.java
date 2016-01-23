@@ -27,7 +27,6 @@ import org.apache.sshd.ClientSession;
 import org.apache.sshd.SshClient;
 import org.apache.sshd.client.channel.ChannelExec;
 import org.apache.sshd.client.future.AuthFuture;
-import sun.security.ntlm.Client;
 
 public class SSHRemoteExecution implements RemoteExecution {
 
