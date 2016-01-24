@@ -120,7 +120,7 @@ public class SSHRemoteExecution implements RemoteExecution {
 
     }
 
-    private boolean loadkeys() {
+    public boolean loadKeys() {
 
         List<String> files = new ArrayList<String>();
         File f = new File(this.keyFile);
@@ -194,7 +194,7 @@ public class SSHRemoteExecution implements RemoteExecution {
 
     public SSHRemoteExecution(String host, int port) {
 
-        this(host,port,"admin","/users/admin/.ssh/admin-key");
+        this(host, port, "admin", "/users/admin/.ssh/admin-key");
 
     }
 
@@ -205,7 +205,7 @@ public class SSHRemoteExecution implements RemoteExecution {
         this.username = username;
         this.timeout = 60000;
 
-        this.client =  SshClient.setUpDefaultClient();
+        this.client = SshClient.setUpDefaultClient();
 
         this.keyFile = keyFile;
 
@@ -215,20 +215,19 @@ public class SSHRemoteExecution implements RemoteExecution {
     public synchronized void exec() {
 
         client.start();
-        ClientSession session=null;
+        ClientSession session = null;
 
 
-
-        try{
+        try {
             session = client.connect(username, host, port).await().getSession();
-        }catch(IOException e){
+        } catch (IOException e) {
             try {
                 writeToOutputStream("Cannot connect to host/port with the username");
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
 
-        }catch(InterruptedException ie){
+        } catch (InterruptedException ie) {
             try {
                 writeToOutputStream("Interrupted Exception. Cannot connect to host/port, username");
             } catch (IOException e1) {
@@ -237,7 +236,7 @@ public class SSHRemoteExecution implements RemoteExecution {
 
         }
 
-        if(session == null){
+        if (session == null) {
             try {
                 writeToOutputStream("Error creating session. Exiting");
             } catch (IOException e) {
@@ -248,24 +247,12 @@ public class SSHRemoteExecution implements RemoteExecution {
 
 
         //add ssh key to session
-        if(loadkeys()){
-            if (keyPair != null && keyPair.size() > 0) {
-                session.addPublicKeyIdentity(keyPair.get(0));
-
-            } else {
-                try {
-                    writeToOutputStream("Error adding key. Cannot connect without ssh keys");
-
-                } catch (IOException e) {
-                    e.printStackTrace();//just print to standard out
-                }
-                return;
-
-            }
+        if (keyPair != null && keyPair.size() > 0) {
+            session.addPublicKeyIdentity(keyPair.get(0));
 
         } else {
             try {
-                writeToOutputStream("Error loading key. Cannot connect without ssh keys");
+                writeToOutputStream("Error adding key. Cannot connect without ssh keys");
 
             } catch (IOException e) {
                 e.printStackTrace();//just print to standard out
