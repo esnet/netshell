@@ -212,7 +212,7 @@ public class SSHRemoteExecution implements RemoteExecution {
         ClientSession session=null;
 
         try{
-            client.connect(username, host, port).await().getSession();
+            session = client.connect(username, host, port).await().getSession();
         }catch(IOException e){
             try {
                 writeToOutputStream("Cannot connect to host/port with the username");
