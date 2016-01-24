@@ -114,10 +114,9 @@ public class SSHRemoteExecution implements RemoteExecution {
     }
 
     //return true if key was successfully loaded from the directory
-    public boolean setKeyDirectory(String keyDirectory) {
+    public void setKeyDirectory(String keyDirectory) {
 
         this.keyFile = keyDirectory;
-        return loadkeys();
 
     }
 
@@ -143,11 +142,18 @@ public class SSHRemoteExecution implements RemoteExecution {
                     }
 
                 } else {
-                    System.out.println("Bouncy castle check failed");
+                    try {
+                        writeToOutputStream("Bouncy castle check failed");
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
                 }
             } catch (Throwable t) {
-                t.printStackTrace();
-                System.exit(1);
+                try {
+                    writeToOutputStream("Error reading key from file");
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
             }
         }
 
@@ -201,7 +207,7 @@ public class SSHRemoteExecution implements RemoteExecution {
 
         this.client =  SshClient.setUpDefaultClient();
 
-        this.setKeyDirectory(keyFile);
+        this.keyFile = keyFile;
 
     }
 
@@ -210,6 +216,8 @@ public class SSHRemoteExecution implements RemoteExecution {
 
         client.start();
         ClientSession session=null;
+
+
 
         try{
             session = client.connect(username, host, port).await().getSession();
@@ -240,12 +248,24 @@ public class SSHRemoteExecution implements RemoteExecution {
 
 
         //add ssh key to session
-        if (keyPair != null && keyPair.size() > 0) {
-            session.addPublicKeyIdentity(keyPair.get(0));
+        if(loadkeys()){
+            if (keyPair != null && keyPair.size() > 0) {
+                session.addPublicKeyIdentity(keyPair.get(0));
+
+            } else {
+                try {
+                    writeToOutputStream("Error adding key. Cannot connect without ssh keys");
+
+                } catch (IOException e) {
+                    e.printStackTrace();//just print to standard out
+                }
+                return;
+
+            }
 
         } else {
             try {
-                writeToOutputStream("Error adding key. Cannot connect without ssh keys");
+                writeToOutputStream("Error loading key. Cannot connect without ssh keys");
 
             } catch (IOException e) {
                 e.printStackTrace();//just print to standard out
@@ -253,6 +273,7 @@ public class SSHRemoteExecution implements RemoteExecution {
             return;
 
         }
+
 
         //try auth
         try {
