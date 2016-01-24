@@ -140,6 +140,7 @@ public class SSHRemoteExecution implements RemoteExecution {
                         keyPair.add(key);
 
                     }
+                    return true;
 
                 } else {
                     try {
