@@ -246,9 +246,11 @@ public class SSHRemoteExecution implements RemoteExecution {
         } else {
             try {
                 writeToOutputStream("Error adding key. Cannot connect without ssh keys");
+
             } catch (IOException e) {
                 e.printStackTrace();//just print to standard out
             }
+            return;
 
         }
 
@@ -260,9 +262,11 @@ public class SSHRemoteExecution implements RemoteExecution {
         } catch (IOException e) {
             try {
                 writeToOutputStream("Auth failed");
+
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
+            return;
         }
 
         int ret = ClientSession.WAIT_AUTH;
@@ -275,6 +279,7 @@ public class SSHRemoteExecution implements RemoteExecution {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            return;
         }
 
         //send command
@@ -302,7 +307,13 @@ public class SSHRemoteExecution implements RemoteExecution {
 
 
         } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                writeToOutputStream("Error executing command in remote host");
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            return;
+
         }
 
     }
