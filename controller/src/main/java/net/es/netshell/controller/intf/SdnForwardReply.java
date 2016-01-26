@@ -29,7 +29,9 @@ public class SdnForwardReply extends SdnReply {
     @JsonIgnore
     public static String TYPE = "SdnForwardReply";
 
-    public String flowRef;
+    public byte[] dpid;
+    public short tableId;
+    public String flowId;
 
     public SdnForwardReply() {
         setReplyType(TYPE);

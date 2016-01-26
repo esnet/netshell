@@ -29,7 +29,9 @@ public class SdnDeleteForwardRequest extends SdnRequest {
     @JsonIgnore
     public static String TYPE = "SdnDeleteForwardRequest";
 
-    public String flowRef;
+    public byte[] dpid;
+    public short tableId;
+    public String flowId;
 
     public SdnDeleteForwardRequest() {
         setRequestType(TYPE);

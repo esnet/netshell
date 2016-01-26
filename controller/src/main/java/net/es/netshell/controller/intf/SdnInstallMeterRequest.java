@@ -36,6 +36,54 @@ public class SdnInstallMeterRequest extends SdnRequest {
     public long er;
     public long ebs;
 
+    public byte[] getDpid() {
+        return dpid;
+    }
+
+    public void setDpid(byte[] dpid) {
+        this.dpid = dpid;
+    }
+
+    public long getMeter() {
+        return meter;
+    }
+
+    public void setMeter(long meter) {
+        this.meter = meter;
+    }
+
+    public long getCr() {
+        return cr;
+    }
+
+    public void setCr(long cr) {
+        this.cr = cr;
+    }
+
+    public long getCbs() {
+        return cbs;
+    }
+
+    public void setCbs(long cbs) {
+        this.cbs = cbs;
+    }
+
+    public long getEr() {
+        return er;
+    }
+
+    public void setEr(long er) {
+        this.er = er;
+    }
+
+    public long getEbs() {
+        return ebs;
+    }
+
+    public void setEbs(long ebs) {
+        this.ebs = ebs;
+    }
+
     public SdnInstallMeterRequest() {
         setRequestType(TYPE);
     }

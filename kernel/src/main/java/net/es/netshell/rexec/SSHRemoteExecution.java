@@ -145,7 +145,7 @@ public class SSHRemoteExecution implements RemoteExecution {
 
                 //need bouncy-provider and bouncy-pkix-openssl jar file for this line to work.
                 if (SecurityUtils.isBouncyCastleRegistered()) {
-                    //try{
+                    try{
                           FileKeyPairProvider fileKeyPairProvider = new FileKeyPairProvider();
         
                           if (fileKeyPairProvider != null){
@@ -180,7 +180,7 @@ public class SSHRemoteExecution implements RemoteExecution {
                               }
                               return false;
                           }
-                /*      }catch(Exception e){
+                      }catch(Exception e){
 			     try{
 				writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.loadKeys: Error reading file\n"+e.getStackTrace().toString());
  			      }catch(IOException e1){
@@ -188,7 +188,7 @@ public class SSHRemoteExecution implements RemoteExecution {
 			      }
                              return false;
 
-                     }*/
+                     }
 
                 } else {
                     try {
