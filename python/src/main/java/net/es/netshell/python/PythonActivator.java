@@ -1,5 +1,5 @@
 /*
- * ESnet Network Operating System (ENOS) Copyright (c) 2015, The Regents
+ * ESnet Network Operating System (ENOS) Copyright (c) 2016, The Regents
  * of the University of California, through Lawrence Berkeley National
  * Laboratory (subject to receipt of any required approvals from the
  * U.S. Dept. of Energy).  All rights reserved.
@@ -15,6 +15,7 @@
  * irrevocable, worldwide license in the Software to reproduce,
  * distribute copies to the public, prepare derivative works, and perform
  * publicly and display publicly, and to permit other to do so.
+ *
  */
 package net.es.netshell.python;
 
@@ -31,20 +32,24 @@ import java.util.Hashtable;
  */
 public class PythonActivator implements BundleActivator{
 
+    // XXX Why are these static?  Why are many members of PythonShell static?
     static BundleContext bundleContext;
+    static ServiceRegistration registration;
 
     public void start(BundleContext b) {
         System.out.println("Hello Python");
 
         bundleContext = b;
 
+        // Make the python command available to Netshell.
+        // XXX Should we be doing this after OSGI service registry?
         ShellCommandsFactory.registerShellModule(PythonShell.class);
 
         // Register us as a service with OSGi, so the Shell class in the main
         // netshell-kernel module can find us.
         Hashtable<String, String> props = new Hashtable<String, String>();
         // props.put("foo", "bar");
-        ServiceRegistration s =
+        registration =
                 bundleContext.registerService(PythonShellService.class.getName(), new PythonShellServiceImpl(), props);
         // The python shell bundle requires to load OSGi and Karaf jar files when it first execute a python
         // command or script. This can be done only by a privileged thread.
@@ -55,6 +60,9 @@ public class PythonActivator implements BundleActivator{
     }
     public void stop(BundleContext b) {
         ShellCommandsFactory.unregisterShellModule(PythonShell.class);
+        registration.unregister();
+        registration = null;
+
         System.out.println("Goodbye Python");
     }
 
