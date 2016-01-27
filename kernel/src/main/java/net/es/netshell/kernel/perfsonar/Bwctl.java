@@ -38,31 +38,74 @@ public class Bwctl {
     private final Logger logger = LoggerFactory.getLogger(Bwctl.class);
 
     private static Bwctl instance;
+    private String destination;
+    private String maURI;
+    private String maKey;
+    private String maUser;
+    private String source;
 
-    private Bwctl(){
+    public OutputStream getOutputStream() {
 
+        return outputStream;
     }
 
-    public static Bwctl getInstance(){
-        if(instance != null){
-            return instance;
-        }else{
-            createInstance();
-            return instance;
-        }
+    public void setOutputStream(OutputStream outputStream) {
 
+        this.outputStream = outputStream;
     }
 
-    private static synchronized void createInstance(){
-        if (instance == null){
-            instance = new Bwctl();
-        }
+    private OutputStream outputStream;
+
+    public String getSource() {
+
+        return source;
+    }
+
+    public void setSource(String source) {
+
+        this.source = source;
+    }
+
+    public String getMaKey() {
+
+        return maKey;
+    }
+
+    public String getMaUser() {
+
+        return maUser;
+    }
+
+    public String getDestination() {
+
+        return destination;
+    }
+
+    public void setDestination(String destination) {
+
+        this.destination = destination;
+    }
+
+    public String getMaURI() {
+
+        return maURI;
+    }
+
+    public void setMaURI(String maURI) {
+
+        this.maURI = maURI;
+    }
+
+    private Bwctl(String source, String destination){
+        this.source=source;
+        this.destination = destination;
+
     }
 
     /**
      * Method to run a standard bwctl test with default tool=iperf3, test_duration=10s
      * */
-    public boolean runBwctlTest (String source, String destination, OutputStream out) {
+    public boolean runSingleTest() {
         Method method = null;
         try {
             method = KernelThread.getSysCallMethod(this.getClass(), "do_runbwctl");
@@ -78,57 +121,21 @@ public class Bwctl {
             UserAccess currentUserAccess = UserAccess.getUsers();
             if (currentUsers.isPrivileged(currentUserName)) {
                 logger.info("OK to run test");
-                writeToOutputStream(out,"OK to run bwctl test \n");
+                writeToOutputStream( "OK to run bwctl test \n");
 
                 KernelThread.doSysCall(this,
                         method,
-                        source, destination, out);
+                        source, destination);
                 return true;
             } else {
                 return false;
             }
         } catch (NoSuchMethodException e) {
-            writeToOutputStream(out, e.getMessage());
+            writeToOutputStream(e.getMessage());
             return false;
         }
         catch (Exception e) {
-            writeToOutputStream(out, e.getMessage());
-            return false;
-        }
-    }
-
-
-    public boolean runPersistentBwctlTest (String source, String destination, String user, String key, String dburi) {
-        Method method = null;
-        try {
-            method = KernelThread.getSysCallMethod(this.getClass(), "do_runpersistentbwctl");
-
-            KernelThread kt = KernelThread.currentKernelThread();
-            String currentUserName = kt.getUser().getName();
-
-
-
-            logger.info("current user {}", currentUserName);
-            Users currentUsers = Users.getUsers();
-            // Access per Application
-            UserAccess currentUserAccess = UserAccess.getUsers();
-            if (currentUsers.isPrivileged(currentUserName)) {
-                logger.info("OK to run test");
-                System.out.println("OK to run bwctl test \n");
-
-                KernelThread.doSysCall(this,
-                        method,
-                        source, destination,user,key,dburi);
-                return true;
-            } else {
-                return false;
-            }
-        } catch (NoSuchMethodException e) {
-            //writeToOutputStream(e.getMessage(),out);
-            return false;
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+            writeToOutputStream(e.getMessage());
             return false;
         }
     }
@@ -140,13 +147,13 @@ public class Bwctl {
     @SysCall(
             name="do_runbwctl"
     )
-    public void do_runbwctl(String source, String destination, OutputStream out) throws IOException {
+    public void do_runbwctl(String source, String destination) throws IOException {
 
         logger.info("Entered method do_runbwctl");
 
         //TODO: Change default tool to iperf3.
         String cmd = "bwctl -s " + source + "  -c " + destination +" -T iperf -t 10 -a 1 --parsable --verbose ";
-        writeToOutputStream(out, "Running command:\n"+cmd);
+        writeToOutputStream("Running command:\n"+cmd);
         logger.info(cmd);
 
 
@@ -154,48 +161,22 @@ public class Bwctl {
         try {
             p = Runtime.getRuntime().exec(cmd);
         } catch (IOException e) {
-            writeToOutputStream(out, e.getMessage());
+            writeToOutputStream(e.getMessage());
         }
         BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
         String s;
         while ((s = br.readLine()) != null) {
-            writeToOutputStream(out, s);
-        }
-    }
-
-    @SysCall(
-            name="do_runpersistentbwctl"
-    )
-    public void do_runpersistentbwctl(String source, String destination, String user, String key, String dburi) throws IOException {
-
-        logger.info("Entered method do_runpersistentbwctl");
-
-        String[] cmd = {"/bin/sh", "-c",
-                       "bwctl -s " + source + "  -c " + destination +" -T iperf3 -t 10 -a 1 --parsable --verbose" +
-                     " |& " +
-                     "esmond-ps-pipe --user "+user +" --key "+key+ " -U "+dburi};
-        String cmdString = Arrays.toString(cmd);
-        logger.info(cmdString);
-
-        Process p = null;
-        try {
-            p = Runtime.getRuntime().exec(cmd);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        String s;
-        while ((s = br.readLine()) != null) {
-            System.out.println(s);
+            writeToOutputStream(s);
         }
     }
 
 
-    private void writeToOutputStream(OutputStream out, String message)  {
+
+    private void writeToOutputStream(String message)  {
 
         byte[] byteMessage = message.getBytes();
         try {
-            out.write(byteMessage);
+            outputStream.write(byteMessage);
         } catch (IOException e) {
             logger.info("Error writing to outputstream"+e.getMessage());
             e.printStackTrace(); //default to standard out
