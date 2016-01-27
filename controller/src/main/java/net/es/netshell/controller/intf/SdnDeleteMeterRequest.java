@@ -29,7 +29,24 @@ public class SdnDeleteMeterRequest extends SdnRequest {
     @JsonIgnore
     public static String TYPE = "SdnDeleteMeterRequest";
 
+    public byte [] dpid;
     public long meter;
+
+    public byte[] getDpid() {
+        return dpid;
+    }
+
+    public void setDpid(byte[] dpid) {
+        this.dpid = dpid;
+    }
+
+    public long getMeter() {
+        return meter;
+    }
+
+    public void setMeter(long meter) {
+        this.meter = meter;
+    }
 
     public SdnDeleteMeterRequest() {
         setRequestType(TYPE);

@@ -126,39 +126,87 @@ public class SSHRemoteExecution implements RemoteExecution {
         File f = new File(this.keyFile);
         if (f.exists() && f.isFile() && f.canRead()) {
             files.add(f.getAbsolutePath());
-        }
-        if (files.size() > 0) {
-            try {
-
-                //need bouncy-provider and bouncy-pkix-openssl jar file for this line to work.
-                if (SecurityUtils.isBouncyCastleRegistered()) {
-                    FileKeyPairProvider fileKeyPairProvider = new FileKeyPairProvider(files.toArray(new String[files.size()]));
-                    Iterable<KeyPair> keys = fileKeyPairProvider.loadKeys();
-                    KeyPair key = null;
-                    while (keys.iterator().hasNext()) {
-                        key = keys.iterator().next();
-                        keyPair.add(key);
-
-                    }
-                    return true;
-
-                } else {
-                    try {
-                        writeToOutputStream("Bouncy castle check failed");
+             try {
+                        writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.loadKeys: Adding key from file "+f.getAbsolutePath());
                     } catch (IOException e1) {
                         e1.printStackTrace();
                     }
-                }
-            } catch (Throwable t) {
-                try {
-                    writeToOutputStream("Error reading key from file");
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-            }
-        }
+        }else{
+              try {
+                        writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.loadKeys:Invalid file "+f.getAbsolutePath());
+         
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }	
+	 return false;
 
-        return false;
+        }
+        if (files.size() > 0) {
+
+                //need bouncy-provider and bouncy-pkix-openssl jar file for this line to work.
+                if (SecurityUtils.isBouncyCastleRegistered()) {
+                    try{
+                          FileKeyPairProvider fileKeyPairProvider = new FileKeyPairProvider();
+        
+                          if (fileKeyPairProvider != null){
+                          String[] filesAsArray = files.toArray(new String[files.size()]);
+
+                          fileKeyPairProvider.setFiles(filesAsArray);
+                          Iterable<KeyPair> keys = fileKeyPairProvider.loadKeys();
+
+
+                          KeyPair key = null;
+                          
+                          if(keys.iterator().hasNext()) {
+                             key = keys.iterator().next();
+                             keyPair.add(key);
+                             
+
+                          }
+                          try{
+                                writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.loadKeys: Keys loaded successfully");
+                              }catch(IOException e1){
+                                  e1.printStackTrace();
+                              }
+
+
+                          return true;
+                          }else{
+
+			     try{
+                                writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.loadKeys: Error instantiating filekeyProvider");
+                              }catch(IOException e1){
+                                  e1.printStackTrace();
+                              }
+                              return false;
+                          }
+                      }catch(Exception e){
+			     try{
+				writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.loadKeys: Error reading file\n"+e.getStackTrace().toString());
+ 			      }catch(IOException e1){
+				  e1.printStackTrace();
+			      }
+                             return false;
+
+                     }
+
+                } else {
+                    try {
+                        writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.loadKeys: Bouncy castle check failed");
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                  return false;
+                }
+        }else{
+  		try {
+                     writeToOutputStream("\nNo valid key files found");
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                return false;
+	}
+
     }
 
     public InputStream getIn() {
@@ -209,6 +257,7 @@ public class SSHRemoteExecution implements RemoteExecution {
         this.client = SshClient.setUpDefaultClient();
 
         this.keyFile = keyFile;
+        keyPair = new ArrayList<KeyPair>();
 
     }
 
@@ -223,14 +272,14 @@ public class SSHRemoteExecution implements RemoteExecution {
             session = client.connect(username, host, port).await().getSession();
         } catch (IOException e) {
             try {
-                writeToOutputStream("Cannot connect to host/port with the username");
+                writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.exec: Cannot connect to given host/port with the username");
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
 
         } catch (InterruptedException ie) {
             try {
-                writeToOutputStream("Interrupted Exception. Cannot connect to host/port, username");
+                writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.exec: Interrupted Exception. Connection to given host/port interrupted");
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
@@ -239,7 +288,7 @@ public class SSHRemoteExecution implements RemoteExecution {
 
         if (session == null) {
             try {
-                writeToOutputStream("Error creating session. Exiting");
+                writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.exec: Error creating session. Exiting");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -253,7 +302,7 @@ public class SSHRemoteExecution implements RemoteExecution {
 
         } else {
             try {
-                writeToOutputStream("Error adding key. Cannot connect without ssh keys");
+                writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.exec: Error adding key. Cannot connect without ssh keys");
 
             } catch (IOException e) {
                 e.printStackTrace();//just print to standard out
@@ -270,7 +319,7 @@ public class SSHRemoteExecution implements RemoteExecution {
 
         } catch (IOException e) {
             try {
-                writeToOutputStream("Auth failed");
+                writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.exec: Auth failed");
 
             } catch (IOException e1) {
                 e1.printStackTrace();
@@ -284,7 +333,7 @@ public class SSHRemoteExecution implements RemoteExecution {
         }
         if ((ret & ClientSession.CLOSED) != 0) {
             try {
-                writeToOutputStream("SSH connection error: Error authenticating. Please check your ssh keys");
+                writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.exec: SSH connection error: Error authenticating. Please check your ssh keys");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -295,7 +344,7 @@ public class SSHRemoteExecution implements RemoteExecution {
 
         try {
 
-            writeToOutputStream("Connecting input and output streams");
+            writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.exec: Connecting input and output streams");
             connectionOutputStream = new PipedOutputStream();
 
             accessRemoteOutputStream = new PipedInputStream();
@@ -317,7 +366,7 @@ public class SSHRemoteExecution implements RemoteExecution {
 
         } catch (IOException e) {
             try {
-                writeToOutputStream("Error executing command in remote host");
+                writeToOutputStream("\nnet.es.netshell.rexec.SSHRemoteExecution.exec: Error executing command in remote host");
             } catch (IOException e1) {
                 e1.printStackTrace();
             }

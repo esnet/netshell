@@ -27,18 +27,34 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
 import net.es.netshell.controller.core.Controller;
 import net.es.netshell.controller.intf.*;
+import net.es.netshell.odlcorsa.OdlCorsaIntf;
 import net.es.netshell.odlmdsal.impl.OdlMdsalImpl;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowId;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.meters.Meter;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.meters.MeterKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.TableKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.FlowKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnectorKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketReceived;
+import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by bmah on 1/8/16.
@@ -118,41 +134,269 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
         return true;
     }
 
-
+    Node getNetworkDeviceByDpidArray(byte [] dpid) {
+        return controller.getOdlMdsalImpl().getNetworkDeviceByDpidArray(dpid);
+    }
 
     private SdnDeleteMeterReply doSdnDeleteMeter(SdnDeleteMeterRequest req) {
         SdnDeleteMeterReply rep = new SdnDeleteMeterReply();
         rep.setError(false);
+
+        // This feature only works on Corsas (for now)
+        if (Controller.isCorsa(req.dpid)) {
+
+            // Figure out what node
+            Node node = getNetworkDeviceByDpidArray(req.dpid);
+            if (node == null) {
+                rep.setErrorMessage("Cannot find switch with DPID");
+                rep.setError(true);
+            }
+            NodeKey nodeKey = new NodeKey(node.getId());
+
+            // Get the Corsa driver
+            OdlCorsaIntf odlc = controller.getOdlCorsaImpl();
+            if (odlc == null) {
+                rep.setErrorMessage("Cannot find Corsa driver");
+                rep.setError(true);
+            }
+
+            // Get a meter ref from the string we got passed in.
+            // See OdlMdsalImpl.addFlow to see how to do this
+            //   build instanceidentifier to a meter
+            //   MeterRef comes from the instance identifier
+
+            // XXX maybe the right thing to do is to have the delete meter request
+            // include a dpid and a meter number, not just a string.  The guy who created the meter had
+            // to have had these in the first place.  From that, we can construct a
+            // a MeterRef, similar to how we do that in OdlMdsalImpl.addFlow.
+            //
+            //>>> mr.value.getPath()
+            //[org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes, org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node[key=NodeKey [_id=Uri [_value=openflow:144397094251034113]]], org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode, org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.meters.Meter[key=MeterKey [_meterId=MeterId [_value=20]]]]
+            //>>> print mr.toString()
+            //MeterRef [_value=KeyedInstanceIdentifier{targetType=interface org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.meters.Meter, path=[org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes, org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node[key=NodeKey [_id=Uri [_value=openflow:144397094251034113]]], org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode, org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.meters.Meter[key=MeterKey [_meterId=MeterId [_value=20]]]]}]
+            //>>> print mr.value
+            //KeyedInstanceIdentifier{targetType=interface org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.meters.Meter, path=[org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes, org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node[key=NodeKey [_id=Uri [_value=openflow:144397094251034113]]], org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode, org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.meters.Meter[key=MeterKey [_meterId=MeterId [_value=20]]]]}
+/*
+        InstanceIdentifier<Flow> flowInstanceIdentifier =
+                InstanceIdentifier.builder(Nodes.class).
+                        child(Node.class, nodeKey).
+                        augmentation(FlowCapableNode.class).
+                        child(Table.class, new TableKey(flow.getTableId())).
+                        child(Flow.class, flow.getKey()).
+                        build();
+*/
+            // Another approach (suggested by macauley) is to maintain a mapping of active (dpid, meterid) =>
+            // MeterRef.
+
+            MeterId mid = new MeterId(req.getMeter());
+            InstanceIdentifier<Meter> meterInstanceIdentifier = InstanceIdentifier.builder(Nodes.class).
+                child(Node.class, nodeKey).
+                augmentation(FlowCapableNode.class).
+                child(Meter.class, new MeterKey(mid)).build();
+            MeterRef meterRef = new MeterRef(meterInstanceIdentifier);
+
+            try {
+                odlc.deleteMeter(meterRef);
+            }
+            catch (InterruptedException | ExecutionException e) {
+                rep.setErrorMessage(e.toString());
+                rep.setError(true);
+            }
+        }
         return rep;
     }
 
     private SdnDeleteForwardReply doSdnDeleteForward(SdnDeleteForwardRequest req) {
         SdnDeleteForwardReply rep = new SdnDeleteForwardReply();
         rep.setError(false);
+
+        // Figure out what node
+        Node node = getNetworkDeviceByDpidArray(req.dpid);
+        if (node == null) {
+            rep.setErrorMessage("Cannot find switch with DPID");
+            rep.setError(true);
+        }
+
+        FlowId fid = new FlowId(req.flowId);
+
+        // Construct a FlowRef for the flow to go away.  This derived by dpid and flowId.
+        InstanceIdentifier<Flow> flowInstanceIdentifier =
+                InstanceIdentifier.builder(Nodes.class).
+                        child(Node.class, node.getKey()).
+                        augmentation(FlowCapableNode.class).
+                        child(Table.class, new TableKey(req.tableId)).
+                        child(Flow.class, new FlowKey(fid)).
+                        build();
+        FlowRef flowRef = new FlowRef(flowInstanceIdentifier);
+
+        boolean rc = controller.deleteFlow(req.dpid, flowRef);
+        if (!rc) {
+            rep.setErrorMessage("Could not delete flow");
+            rep.setError(true);
+        }
+
         return rep;
     }
 
     private SdnForwardReply doSdnForward(SdnForwardRequest req) {
         SdnForwardReply rep = new SdnForwardReply();
         rep.setError(false);
+
+        // Translate SdnForwardRequest to L2Translation
+        Controller.L2Translation l2t = new Controller.L2Translation();
+        l2t.dpid = req.dpid;
+        l2t.priority = req.priority;
+        l2t.c = req.c;
+        l2t.inPort = req.inPort;
+        l2t.vlan1 = (short) req.vlan1;
+        l2t.srcMac1 = new MacAddress(req.srcMac1);
+        l2t.dstMac1 = new MacAddress(req.dstMac1);
+
+        int numOutputs = req.outputs.length;
+        l2t.outputs = new Controller.L2Translation.L2TranslationOutput[numOutputs];
+        for (int i = 0; i < numOutputs; i++) {
+            l2t.outputs[i] = new Controller.L2Translation.L2TranslationOutput();
+            l2t.outputs[i].outPort = req.outputs[i].outPort;
+            l2t.outputs[i].vlan = (short) req.outputs[i].vlan;
+            l2t.outputs[i].dstMac = new MacAddress(req.outputs[i].dstMac);
+        }
+
+        l2t.pcp = (short) req.pcp;
+        l2t.queue = (short) req.queue;
+        l2t.meter = req.meter;
+
+        FlowRef fr = controller.installL2ForwardingRule(l2t);
+        if (fr == null) {
+            rep.setErrorMessage("Unable to install forwarding flow");
+            rep.setError(true);
+        }
+        rep.dpid = req.dpid;
+        TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
+        rep.tableId = tk.getId().shortValue();
+        FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
+        rep.flowId = fk.getId().getValue();
+
         return rep;
     }
 
     private SdnForwardReply doSdnForwardToController(SdnForwardToControllerRequest req) {
         SdnForwardReply rep = new SdnForwardReply();
         rep.setError(false);
+
+        // Translate SdnForwardToControllerRequest to L2Translation
+        // This code based on doSdnForward()
+        Controller.L2Translation l2t = new Controller.L2Translation();
+        l2t.dpid = req.dpid;
+        l2t.priority = req.priority;
+        l2t.c = req.c;
+        l2t.inPort = req.inPort;
+        l2t.vlan1 = (short) req.vlan1;
+        l2t.srcMac1 = new MacAddress(req.srcMac1);
+        l2t.dstMac1 = new MacAddress(req.dstMac1);
+
+        FlowRef fr = controller.installL2ControllerRule(l2t);
+        if (fr == null) {
+            rep.setErrorMessage("Unable to install forwarding flow");
+            rep.setError(true);
+        }
+        rep.dpid = req.dpid;
+        TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
+        rep.tableId = tk.getId().shortValue();
+        FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
+        rep.flowId = fk.getId().getValue();
+
         return rep;
     }
 
     private SdnInstallMeterReply doSdnInstallMeter(SdnInstallMeterRequest req) {
         SdnInstallMeterReply rep = new SdnInstallMeterReply();
         rep.setError(false);
+
+        // This feature only works on Corsas (for now)
+        if (Controller.isCorsa(req.dpid)) {
+
+            // Figure out what node
+            Node node = getNetworkDeviceByDpidArray(req.dpid);
+            if (node == null) {
+                rep.setErrorMessage("Cannot find switch with DPID");
+                rep.setError(true);
+            }
+
+            // Get the Corsa driver
+            OdlCorsaIntf odlc = controller.getOdlCorsaImpl();
+            if (odlc == null) {
+                rep.setErrorMessage("Cannot find Corsa driver");
+                rep.setError(true);
+            }
+
+            // Figure out what kind of meter we need to set and do it.
+            //
+            // If there's no committed or excess rate, then it's a green meter
+            if (req.getCr() == 0 && req.getEr() == 0) {
+                try {
+                    MeterRef mr = odlc.createGreenMeter(node, req.getMeter());
+//                    rep.setId(mr.toString());
+                }
+                catch (Exception e) {
+                    rep.setErrorMessage(e.toString());
+                    rep.setError(true);
+                }
+            }
+            // If there's a committed rate but no excess rate, then a green-yellow meter
+            else if (req.getCr() != 0 && req.getEr() == 0) {
+                try {
+                    MeterRef mr = odlc.createGreenYellowMeter(node, req.getMeter(), req.getCr(), req.getCbs());
+//                    rep.setId(mr.toString());
+                }
+                catch (Exception e) {
+                    rep.setErrorMessage(e.toString());
+                    rep.setError(true);
+                }
+            }
+            // If there's an excess rate by no committed rate, then a green-red meter
+            else if (req.getCr() == 0 && req.getEr() != 0) {
+                try {
+                    MeterRef mr = odlc.createGreenRedMeter(node, req.getMeter(), req.getEr(), req.getEbs());
+//                    rep.setId(mr.toString());
+                }
+                catch (Exception e) {
+                    rep.setErrorMessage(e.toString());
+                    rep.setError(true);
+                }
+            }
+            // If there is both a committed and excess rate, then it's a green-yellow-red meter
+            else if (req.getCr() != 0 && req.getEr() != 0) {
+                try {
+                    MeterRef mr = odlc.createGreenYellowRedMeter(node, req.getMeter(), req.getCr(), req.getCbs(), req.getEr(), req.getEbs());
+//                    rep.setId(mr.toString());
+                }
+                catch (Exception e) {
+                    rep.setErrorMessage(e.toString());
+                    rep.setError(true);
+                }
+            }
+            // The preceding chain of conditionals shouldn't let us get here...
+            else {
+                rep.setErrorMessage("Cannot determine meter type.");
+                rep.setError(true);
+            }
+        }
+        else {
+            rep.setError(true);
+            rep.setErrorMessage("Functionality not available on this switch.");
+        }
         return rep;
     }
 
     private SdnTransmitPacketReply doSdnTransmitPacket(SdnTransmitPacketRequest req) {
         SdnTransmitPacketReply rep = new SdnTransmitPacketReply();
         rep.setError(false);
+
+        boolean rc = controller.transmitDataPacket(req.dpid, req.outPort, req.payload);
+        if (!rc) {
+            rep.setErrorMessage("Could not send PACKET_OUT");
+            rep.setError(true);
+        }
         return rep;
     }
 

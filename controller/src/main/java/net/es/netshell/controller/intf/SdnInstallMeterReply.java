@@ -29,8 +29,6 @@ public class SdnInstallMeterReply extends SdnReply {
     @JsonIgnore
     public static String TYPE = "SdnInstallMeterReply";
 
-    public String id;
-
     public SdnInstallMeterReply() {
         setReplyType(TYPE);
     }
