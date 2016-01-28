@@ -33,4 +33,31 @@ public class SdnReceivePacketReply extends SdnReply {
     public String inPort;
     public byte [] payload;
 
+    public byte[] getDpid() {
+        return dpid;
+    }
+
+    public void setDpid(byte[] dpid) {
+        this.dpid = dpid;
+    }
+
+    public String getInPort() {
+        return inPort;
+    }
+
+    public void setInPort(String inPort) {
+        this.inPort = inPort;
+    }
+
+    public byte[] getPayload() {
+        return payload;
+    }
+
+    public void setPayload(byte[] payload) {
+        this.payload = payload;
+    }
+
+    public SdnReceivePacketReply() {
+        setReplyType(TYPE);
+    }
 }

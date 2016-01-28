@@ -42,6 +42,62 @@ public class SdnForwardToControllerRequest extends SdnRequest {
     public String srcMac1;
     public String dstMac1;
 
+    public byte[] getDpid() {
+        return dpid;
+    }
+
+    public void setDpid(byte[] dpid) {
+        this.dpid = dpid;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
+    public BigInteger getC() {
+        return c;
+    }
+
+    public void setC(BigInteger c) {
+        this.c = c;
+    }
+
+    public String getInPort() {
+        return inPort;
+    }
+
+    public void setInPort(String inPort) {
+        this.inPort = inPort;
+    }
+
+    public short getVlan1() {
+        return vlan1;
+    }
+
+    public void setVlan1(short vlan1) {
+        this.vlan1 = vlan1;
+    }
+
+    public String getSrcMac1() {
+        return srcMac1;
+    }
+
+    public void setSrcMac1(String srcMac1) {
+        this.srcMac1 = srcMac1;
+    }
+
+    public String getDstMac1() {
+        return dstMac1;
+    }
+
+    public void setDstMac1(String dstMac1) {
+        this.dstMac1 = dstMac1;
+    }
+
     public SdnForwardToControllerRequest() {
         setRequestType(TYPE);
     }

@@ -33,6 +33,30 @@ public class SdnDeleteForwardRequest extends SdnRequest {
     public short tableId;
     public String flowId;
 
+    public byte[] getDpid() {
+        return dpid;
+    }
+
+    public void setDpid(byte[] dpid) {
+        this.dpid = dpid;
+    }
+
+    public short getTableId() {
+        return tableId;
+    }
+
+    public void setTableId(short tableId) {
+        this.tableId = tableId;
+    }
+
+    public String getFlowId() {
+        return flowId;
+    }
+
+    public void setFlowId(String flowId) {
+        this.flowId = flowId;
+    }
+
     public SdnDeleteForwardRequest() {
         setRequestType(TYPE);
     }
