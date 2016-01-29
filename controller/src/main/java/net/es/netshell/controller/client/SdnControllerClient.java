@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.util.UUID;
 
 /**
- * Created by bmah on 1/8/16.
+ * Implementation of the client-side interface to the SDN controller
  */
 public class SdnControllerClient implements Runnable, AutoCloseable {
 
@@ -51,6 +51,8 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
 
     private ObjectMapper mapper;
     private Thread packetInThread;
+
+    private SdnControllerClientCallback callback;
 
     public SdnControllerClient() {
         try {
@@ -76,11 +78,21 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
     }
 
     public void close() throws Exception {
+        clearCallback();
         if (connection != null) {
             connection.close();
             connection = null;
         }
     }
+
+    void setCallback(SdnControllerClientCallback c) {
+        this.callback = c;
+    }
+
+    void clearCallback() {
+        this.callback = null;
+    }
+
 
     /**
      * Common code for doing a request-reply sequence with SDN Controller.
@@ -253,16 +265,17 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
                     // Parse the body.  Get the string containing the JSON data.
                     String message = new String(delivery.getBody(), "UTF-8");
 
-                    logger.info("Received: " + message);
-
                     // Figure out the message type as a string so we know how to parse it.
                     SdnReply rep = mapper.readValue(message, SdnReply.class);
 
                     if (rep.getReplyType().equals(SdnReceivePacketReply.TYPE)) {
-                        // XXX Do PACKET_IN processing here.  We should really have a callback
-                        // of some sort that the user application registers.
-                        System.out.println("Got PACKET_IN");
+                        // Do PACKET_IN processing here.  Log, and invoke callback if it's
+                        // been configured.
                         logger.info("Got PACKET_IN");
+                        SdnReceivePacketReply packetIn = mapper.readValue(message, SdnReceivePacketReply.class);
+                        if (callback != null) {
+                            callback.packetInCallback(packetIn.getDpid(), packetIn.getInPort(), packetIn.getPayload());
+                        }
                     }
                     else {
                         // Unknown message.
