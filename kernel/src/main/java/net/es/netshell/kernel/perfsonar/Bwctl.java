@@ -62,8 +62,8 @@ public class Bwctl {
     /**
      * Method to run a standard bwctl test with default tool=iperf3, test_duration=10s
      * */
-    public boolean runBwctlTest (String source, String destination) {
-        Method method = null;
+    public boolean runBwctlTest (String source, String destination, OutputStream out) {
+      Method method = null;
         try {
             method = KernelThread.getSysCallMethod(this.getClass(), "do_runbwctl");
 
@@ -78,21 +78,21 @@ public class Bwctl {
             UserAccess currentUserAccess = UserAccess.getUsers();
             if (currentUsers.isPrivileged(currentUserName)) {
                 logger.info("OK to run test");
-                System.out.println("OK to run bwctl test \n");
+                writeToOutputStream(out,"OK to run bwctl test \n");
 
                 KernelThread.doSysCall(this,
                         method,
-                        source, destination);
+                        source, destination, out);
                 return true;
             } else {
                 return false;
             }
         } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+            writeToOutputStream(out, e.getMessage());
             return false;
         }
         catch (Exception e) {
-            e.printStackTrace();
+            writeToOutputStream(out, e.getMessage());
             return false;
         }
     }
@@ -140,12 +140,12 @@ public class Bwctl {
     @SysCall(
             name="do_runbwctl"
     )
-    public void do_runbwctl(String source, String destination) throws IOException {
-
-        logger.info("Entered method do_runbwctl");
+    public void do_runbwctl(String source, String destination, OutputStream out) throws IOException {
+ logger.info("Entered method do_runbwctl");
 
         //TODO: Change default tool to iperf3.
         String cmd = "bwctl -s " + source + "  -c " + destination +" -T iperf -t 10 -a 1 --parsable --verbose ";
+        writeToOutputStream(out, "Running command:\n"+cmd);
         logger.info(cmd);
 
 
@@ -153,12 +153,12 @@ public class Bwctl {
         try {
             p = Runtime.getRuntime().exec(cmd);
         } catch (IOException e) {
-            e.printStackTrace();
+            writeToOutputStream(out, e.getMessage());
         }
         BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
         String s;
         while ((s = br.readLine()) != null) {
-            System.out.println(s);
+            writeToOutputStream(out, s);
         }
     }
 
@@ -187,6 +187,19 @@ public class Bwctl {
         while ((s = br.readLine()) != null) {
             System.out.println(s);
         }
+    }
+    
+
+    private void writeToOutputStream(OutputStream out, String message)  {
+
+        byte[] byteMessage = message.getBytes();
+        try {
+            out.write(byteMessage);
+        } catch (IOException e) {
+            logger.info("Error writing to outputstream"+e.getMessage());
+            e.printStackTrace(); //default to standard out
+        }
+
     }
 
 
