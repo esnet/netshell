@@ -412,7 +412,7 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
                         correlationId(props.getCorrelationId()).build();
 
                 // Placeholder for a reply, if we have one to send
-                String message2 = "";
+                String message2 = null;
 
                 try {
                     // Parse the body.  Get the string containing the JSON data.

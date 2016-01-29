@@ -249,42 +249,30 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
                 BasicProperties replyProps = new BasicProperties.Builder().
                         correlationId(props.getCorrelationId()).build();
 
-                // Placeholder for a reply, if we have one to send
-                String message2 = "";
-
                 try {
                     // Parse the body.  Get the string containing the JSON data.
                     String message = new String(delivery.getBody(), "UTF-8");
 
-                    // Figure out the message type as a string so we know how to parse it.
-                    SdnRequest req = mapper.readValue(message, SdnRequest.class);
-                    SdnReply rep = null;
+                    logger.info("Received: " + message);
 
-                    if (req.getRequestType().equals(SdnReceivePacketReply.TYPE)) {
+                    // Figure out the message type as a string so we know how to parse it.
+                    SdnReply rep = mapper.readValue(message, SdnReply.class);
+
+                    if (rep.getReplyType().equals(SdnReceivePacketReply.TYPE)) {
                         // XXX Do PACKET_IN processing here.  We should really have a callback
                         // of some sort that the user application registers.
                         System.out.println("Got PACKET_IN");
+                        logger.info("Got PACKET_IN");
                     }
                     else {
                         // Unknown message.
-                        rep = new SdnReply();
-                        rep.setError(true);
-                        rep.setErrorMessage("Unknown message type");
+                        logger.error("Unknown message when PACKET_IN expected");
                     }
-
-                    // If there's a response, then get it in JSON representation
-                    if (rep != null) {
-                        message2 = mapper.writeValueAsString(rep);
-                    }
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 finally {
-                    // If we have a reply to send, then great, send it and ACK the old message
-                    if (message2 != null) {
-                        packetInChannel.basicPublish("", props.getReplyTo(), replyProps, message2.getBytes("UTF-8"));
-                    }
+                    // ACK the old message
                     packetInChannel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                 }
 
