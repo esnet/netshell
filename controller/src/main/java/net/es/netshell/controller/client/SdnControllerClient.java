@@ -30,6 +30,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.UUID;
 
 /**
@@ -53,6 +54,18 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
     private Thread packetInThread;
 
     private SdnControllerClientCallback callback;
+    void setCallback(SdnControllerClientCallback c) {
+        this.callback = c;
+    }
+    void clearCallback() {
+        this.callback = null;
+    }
+
+    class SdnControllerClientFlowHandleImpl implements SdnControllerClientFlowHandle {
+        public byte[] dpid;
+        public short tableId;
+        public String flowId;
+    }
 
     public SdnControllerClient() {
         try {
@@ -84,15 +97,6 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
             connection = null;
         }
     }
-
-    void setCallback(SdnControllerClientCallback c) {
-        this.callback = c;
-    }
-
-    void clearCallback() {
-        this.callback = null;
-    }
-
 
     /**
      * Common code for doing a request-reply sequence with SDN Controller.
@@ -206,6 +210,107 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public SdnControllerClientFlowHandle SdnInstallForward(byte [] dpid, int priority, BigInteger cookie,
+                                     String inPort, int vlan1, String srcMac, String dstMac,
+                                     SdnControllerClientL2Forward [] outputs,
+                                     int pcp, int queue, int meter) {
+        SdnForwardRequest req = new SdnForwardRequest();
+        req.setDpid(dpid);
+        req.setPriority(priority);
+        req.setC(cookie);
+        req.setInPort(inPort);
+        req.setVlan1(vlan1);
+        req.setSrcMac1(srcMac);
+        req.setDstMac1(dstMac);
+
+        req.outputs = new SdnForwardRequest.L2TranslationOutput[outputs.length];
+        for (int i = 0; i < outputs.length; i++) {
+            req.outputs[i].outPort = outputs[i].outPort;
+            req.outputs[i].vlan =  outputs[i].vlan;
+            req.outputs[i].dstMac = outputs[i].dstMac;
+        }
+
+        req.setPcp(pcp);
+        req.setQueue(queue);
+        req.setMeter(meter);
+
+        try {
+            SdnForwardReply rep = SdnReqRep(req, SdnForwardReply.class);
+
+            if (rep.isError()) {
+                logger.error(rep.getErrorMessage());
+                return null;
+            }
+            else {
+                // Set dpid, table, flowid
+                SdnControllerClientFlowHandleImpl fhi = new SdnControllerClientFlowHandleImpl();
+                fhi.dpid = rep.getDpid();
+                fhi.tableId = rep.getTableId();
+                fhi.flowId = rep.getFlowId();
+                return fhi;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public SdnControllerClientFlowHandle SdnInstallForwardToController(byte [] dpid, int priority, BigInteger cookie,
+                                                           String inPort, int vlan1, String srcMac, String dstMac) {
+        SdnForwardToControllerRequest req = new SdnForwardToControllerRequest();
+        req.setDpid(dpid);
+        req.setPriority(priority);
+        req.setC(cookie);
+        req.setInPort(inPort);
+        req.setVlan1(vlan1);
+        req.setSrcMac1(srcMac);
+        req.setDstMac1(dstMac);
+
+        try {
+            SdnForwardReply rep = SdnReqRep(req, SdnForwardReply.class);
+
+            if (rep.isError()) {
+                logger.error(rep.getErrorMessage());
+                return null;
+            }
+            else {
+                // Set dpid, table, flowid
+                SdnControllerClientFlowHandleImpl fhi = new SdnControllerClientFlowHandleImpl();
+                fhi.dpid = rep.getDpid();
+                fhi.tableId = rep.getTableId();
+                fhi.flowId = rep.getFlowId();
+                return fhi;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean SdnDeleteForward(SdnControllerClientFlowHandle fh) {
+        SdnControllerClientFlowHandleImpl fhi = (SdnControllerClientFlowHandleImpl) fh;
+
+        SdnDeleteForwardRequest req = new SdnDeleteForwardRequest();
+        req.setDpid(fhi.dpid);
+        req.setTableId(fhi.tableId);
+        req.setFlowId(fhi.flowId);
+
+        try {
+            SdnDeleteForwardReply rep = SdnReqRep(req, SdnDeleteForwardReply.class);
+
+            if (rep.isError()) {
+                logger.error(rep.getErrorMessage());
+                return false;
+            } else {
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+
     }
 
     /**

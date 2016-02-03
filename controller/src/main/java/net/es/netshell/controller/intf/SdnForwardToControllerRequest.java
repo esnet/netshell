@@ -38,7 +38,7 @@ public class SdnForwardToControllerRequest extends SdnRequest {
     public BigInteger c;
 
     public String inPort;
-    public short vlan1;
+    public int vlan1;
     public String srcMac1;
     public String dstMac1;
 
@@ -74,11 +74,11 @@ public class SdnForwardToControllerRequest extends SdnRequest {
         this.inPort = inPort;
     }
 
-    public short getVlan1() {
+    public int getVlan1() {
         return vlan1;
     }
 
-    public void setVlan1(short vlan1) {
+    public void setVlan1(int vlan1) {
         this.vlan1 = vlan1;
     }
 
