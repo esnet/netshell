@@ -32,7 +32,7 @@ public class SdnForwardRequest extends SdnRequest {
     @JsonIgnore
     public static String TYPE = "SdnForwardRequest";
 
-    public class L2TranslationOutput {
+    public static class L2TranslationOutput {
         public String outPort;
         public int vlan;
         public String dstMac; // XXX type?

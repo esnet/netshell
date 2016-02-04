@@ -249,7 +249,9 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
         l2t.c = req.getC();
         l2t.inPort = req.getInPort();
         l2t.vlan1 = (short) req.getVlan1();
-        l2t.srcMac1 = new MacAddress(req.getSrcMac1());
+        if (req.getSrcMac1() != null) {
+            l2t.srcMac1 = new MacAddress(req.getSrcMac1());
+        }
         l2t.dstMac1 = new MacAddress(req.getDstMac1());
 
         int numOutputs = req.outputs.length;
@@ -270,11 +272,13 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
             rep.setErrorMessage("Unable to install forwarding flow");
             rep.setError(true);
         }
-        rep.setDpid(req.dpid);
-        TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
-        rep.setTableId(tk.getId().shortValue());
-        FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
-        rep.setFlowId(fk.getId().getValue());
+        else {
+            rep.setDpid(req.dpid);
+            TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
+            rep.setTableId(tk.getId().shortValue());
+            FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
+            rep.setFlowId(fk.getId().getValue());
+        }
 
         return rep;
     }
@@ -299,11 +303,13 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
             rep.setErrorMessage("Unable to install forwarding flow");
             rep.setError(true);
         }
-        rep.setDpid(req.dpid);
-        TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
-        rep.setTableId(tk.getId().shortValue());
-        FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
-        rep.setFlowId(fk.getId().getValue());
+        else {
+            rep.setDpid(req.dpid);
+            TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
+            rep.setTableId(tk.getId().shortValue());
+            FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
+            rep.setFlowId(fk.getId().getValue());
+        }
 
         return rep;
     }
@@ -418,6 +424,8 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
                     // Parse the body.  Get the string containing the JSON data.
                     String message = new String(delivery.getBody(), "UTF-8");
 
+                    logger.info("Received: " + message);
+
                     // Figure out the message type as a string so we know how to parse it.
                     SdnRequest req = mapper.readValue(message, SdnRequest.class);
                     SdnReply rep = null;
@@ -475,6 +483,7 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
                 } finally {
                     // If we have a reply to send, then great, send it and ACK the old message
                     if (message2 != null) {
+                        logger.info("Reply: " + message2);
                         channel.basicPublish("", props.getReplyTo(), replyProps, message2.getBytes("UTF-8"));
                     }
                     channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);

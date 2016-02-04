@@ -124,6 +124,8 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
         // Wait for reply.
         while (true) {
             QueueingConsumer.Delivery delivery = replyConsumer.nextDelivery(); // timeout?
+            replyChannel.basicAck(delivery.getEnvelope().getDeliveryTag(), false); // ack
+
             if (delivery.getProperties().getCorrelationId().equals(corrId)) {
                 response = new String(delivery.getBody(), "UTF-8");
                 break;
@@ -227,6 +229,7 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
 
         req.outputs = new SdnForwardRequest.L2TranslationOutput[outputs.length];
         for (int i = 0; i < outputs.length; i++) {
+            req.outputs[i] = new SdnForwardRequest.L2TranslationOutput();
             req.outputs[i].outPort = outputs[i].outPort;
             req.outputs[i].vlan =  outputs[i].vlan;
             req.outputs[i].dstMac = outputs[i].dstMac;
@@ -255,6 +258,21 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public SdnControllerClientFlowHandle SdnInstallForward1(byte [] dpid, int priority, BigInteger cookie,
+                                                            String inPort, int vlan1, String srcMac1, String dstMac1,
+                                                            String outPort, int vlan2, String dstMac2,
+                                                            int pcp, int queue, int meter) {
+
+        // Special case for Layer 2 forwarding to one output port only.
+        SdnControllerClientL2Forward [] output1 = new SdnControllerClientL2Forward[1];
+
+        output1[0].outPort = outPort;
+        output1[0].vlan = vlan2;
+        output1[0].dstMac = dstMac2;
+
+        return SdnInstallForward(dpid, priority, cookie, inPort, vlan1, srcMac1, dstMac1, output1, pcp, queue, meter);
     }
 
     public SdnControllerClientFlowHandle SdnInstallForwardToController(byte [] dpid, int priority, BigInteger cookie,
