@@ -124,7 +124,7 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
         // Wait for reply.
         while (true) {
             QueueingConsumer.Delivery delivery = replyConsumer.nextDelivery(); // timeout?
-            replyChannel.basicAck(delivery.getEnvelope().getDeliveryTag(), false); // ack
+            // No explicit acknowledgement, this is an auto-acknowledge channel
 
             if (delivery.getProperties().getCorrelationId().equals(corrId)) {
                 response = new String(delivery.getBody(), "UTF-8");
@@ -149,6 +149,10 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
             SdnPingReply rep = SdnReqRep(req, SdnPingReply.class);
 
             // Make sure the inbound payload equals the outbound payload
+            if (rep.isError()) {
+                logger.error("Error: " + rep.getErrorMessage());
+                return false;
+            }
             if (rep.getPayload().equals(payload)) {
                 return true;
             } else {
