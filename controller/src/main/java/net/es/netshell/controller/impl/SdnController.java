@@ -239,45 +239,52 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
     }
 
     private SdnForwardReply doSdnForward(SdnForwardRequest req) {
+
         SdnForwardReply rep = new SdnForwardReply();
         rep.setError(false);
 
-        // Translate SdnForwardRequest to L2Translation
-        Controller.L2Translation l2t = new Controller.L2Translation();
-        l2t.dpid = req.getDpid();
-        l2t.priority = req.getPriority();
-        l2t.c = req.getC();
-        l2t.inPort = req.getInPort();
-        l2t.vlan1 = (short) req.getVlan1();
-        if (req.getSrcMac1() != null) {
-            l2t.srcMac1 = new MacAddress(req.getSrcMac1());
+        try {
+            // Translate SdnForwardRequest to L2Translation
+            Controller.L2Translation l2t = new Controller.L2Translation();
+            l2t.dpid = req.getDpid();
+            l2t.priority = req.getPriority();
+            l2t.c = req.getC();
+            l2t.inPort = req.getInPort();
+            l2t.vlan1 = (short) req.getVlan1();
+            if (req.getSrcMac1() != null) {
+                l2t.srcMac1 = new MacAddress(req.getSrcMac1());
+            }
+            l2t.dstMac1 = new MacAddress(req.getDstMac1());
+
+            int numOutputs = req.outputs.length;
+            l2t.outputs = new Controller.L2Translation.L2TranslationOutput[numOutputs];
+            for (int i = 0; i < numOutputs; i++) {
+                l2t.outputs[i] = new Controller.L2Translation.L2TranslationOutput();
+                l2t.outputs[i].outPort = req.outputs[i].outPort;
+                l2t.outputs[i].vlan = (short) req.outputs[i].vlan;
+                l2t.outputs[i].dstMac = new MacAddress(req.outputs[i].dstMac);
+            }
+
+            l2t.pcp = (short) req.getPcp();
+            l2t.queue = (short) req.getQueue();
+            l2t.meter = req.getMeter();
+
+            FlowRef fr = controller.installL2ForwardingRule(l2t);
+            if (fr == null) {
+                rep.setErrorMessage("Unable to install forwarding flow");
+                rep.setError(true);
+            } else {
+                rep.setDpid(req.dpid);
+                TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
+                rep.setTableId(tk.getId().shortValue());
+                FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
+                rep.setFlowId(fk.getId().getValue());
+            }
         }
-        l2t.dstMac1 = new MacAddress(req.getDstMac1());
-
-        int numOutputs = req.outputs.length;
-        l2t.outputs = new Controller.L2Translation.L2TranslationOutput[numOutputs];
-        for (int i = 0; i < numOutputs; i++) {
-            l2t.outputs[i] = new Controller.L2Translation.L2TranslationOutput();
-            l2t.outputs[i].outPort = req.outputs[i].outPort;
-            l2t.outputs[i].vlan = (short) req.outputs[i].vlan;
-            l2t.outputs[i].dstMac = new MacAddress(req.outputs[i].dstMac);
-        }
-
-        l2t.pcp = (short) req.getPcp();
-        l2t.queue = (short) req.getQueue();
-        l2t.meter = req.getMeter();
-
-        FlowRef fr = controller.installL2ForwardingRule(l2t);
-        if (fr == null) {
-            rep.setErrorMessage("Unable to install forwarding flow");
+        catch (Exception e) {
+            e.printStackTrace();
+            rep.setErrorMessage("Exception: " + e.toString());
             rep.setError(true);
-        }
-        else {
-            rep.setDpid(req.dpid);
-            TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
-            rep.setTableId(tk.getId().shortValue());
-            FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
-            rep.setFlowId(fk.getId().getValue());
         }
 
         return rep;
@@ -287,28 +294,34 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
         SdnForwardReply rep = new SdnForwardReply();
         rep.setError(false);
 
-        // Translate SdnForwardToControllerRequest to L2Translation
-        // This code based on doSdnForward()
-        Controller.L2Translation l2t = new Controller.L2Translation();
-        l2t.dpid = req.getDpid();
-        l2t.priority = req.getPriority();
-        l2t.c = req.getC();
-        l2t.inPort = req.getInPort();
-        l2t.vlan1 = (short) req.getVlan1();
-        l2t.srcMac1 = new MacAddress(req.getSrcMac1());
-        l2t.dstMac1 = new MacAddress(req.getDstMac1());
+        try {
+            // Translate SdnForwardToControllerRequest to L2Translation
+            // This code based on doSdnForward()
+            Controller.L2Translation l2t = new Controller.L2Translation();
+            l2t.dpid = req.getDpid();
+            l2t.priority = req.getPriority();
+            l2t.c = req.getC();
+            l2t.inPort = req.getInPort();
+            l2t.vlan1 = (short) req.getVlan1();
+            l2t.srcMac1 = new MacAddress(req.getSrcMac1());
+            l2t.dstMac1 = new MacAddress(req.getDstMac1());
 
-        FlowRef fr = controller.installL2ControllerRule(l2t);
-        if (fr == null) {
-            rep.setErrorMessage("Unable to install forwarding flow");
-            rep.setError(true);
+            FlowRef fr = controller.installL2ControllerRule(l2t);
+            if (fr == null) {
+                rep.setErrorMessage("Unable to install forwarding flow");
+                rep.setError(true);
+            } else {
+                rep.setDpid(req.dpid);
+                TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
+                rep.setTableId(tk.getId().shortValue());
+                FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
+                rep.setFlowId(fk.getId().getValue());
+            }
         }
-        else {
-            rep.setDpid(req.dpid);
-            TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
-            rep.setTableId(tk.getId().shortValue());
-            FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
-            rep.setFlowId(fk.getId().getValue());
+        catch (Exception e) {
+            e.printStackTrace();
+            rep.setErrorMessage("Exception: " + e.toString());
+            rep.setError(true);
         }
 
         return rep;
