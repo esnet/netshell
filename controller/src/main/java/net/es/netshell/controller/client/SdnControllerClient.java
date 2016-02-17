@@ -272,6 +272,7 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
         // Special case for Layer 2 forwarding to one output port only.
         SdnControllerClientL2Forward [] output1 = new SdnControllerClientL2Forward[1];
 
+        output1[0] = new SdnControllerClientL2Forward();
         output1[0].outPort = outPort;
         output1[0].vlan = vlan2;
         output1[0].dstMac = dstMac2;
