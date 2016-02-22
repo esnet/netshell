@@ -1,5 +1,5 @@
 /*
- * ESnet Network Operating System (ENOS) Copyright (c) 2015, The Regents
+ * ESnet Network Operating System (ENOS) Copyright (c) 2016, The Regents
  * of the University of California, through Lawrence Berkeley National
  * Laboratory (subject to receipt of any required approvals from the
  * U.S. Dept. of Energy).  All rights reserved.
@@ -15,6 +15,7 @@
  * irrevocable, worldwide license in the Software to reproduce,
  * distribute copies to the public, prepare derivative works, and perform
  * publicly and display publicly, and to permit other to do so.
+ *
  */
 package net.es.netshell.python;
 
@@ -260,6 +261,11 @@ public class PythonShell {
         }
         PyDictionary sessionLocals = PythonShell.getSessionEnv(in, out, err);
         logger.debug("Starting Python");
+        // XXX There is a possibly-minor bug here.  isFirstSession will always be true at this point,
+        // so we'll always run the profile.py file despite the fact that it's inside a conditional.
+        // PythonShell.getSessionEnv also contains a local isFirstSession variable, and appears to set
+        // it correctly, but does not make that value available to its caller, specifically the invocation
+        // a few lines above this.
         if (isFirstSession) {
             // Run profile
             PythonShell.execProfile(sessionLocals,in,out,err);
