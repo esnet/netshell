@@ -23,16 +23,16 @@ import net.es.netshell.api.NetShellException;
 import net.es.netshell.configuration.NetShellConfiguration;
 import net.es.netshell.configuration.GlobalConfiguration;
 import net.es.netshell.kernel.exec.KernelThread;
+import net.es.netshell.api.DataBase;
+import net.es.netshell.mongodb.MongoDBProvider;
 
-import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.security.AllowedSysCalls;
 import net.es.netshell.kernel.security.KernelSecurityManager;
+import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.rabbitmq.RMQShellCommands;
 import net.es.netshell.shell.*;
 import net.es.netshell.sshd.SShd;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.lang.Thread;
@@ -52,6 +52,7 @@ public final class BootStrap implements Runnable {
     private SShd sshd = null;
     private static Thread thread;
     private BundleContext bundleContext;
+    private DataBase dbClient = null;
 
     // We need to be sure the global configuration gets instantiated before the security manager,
     // because the former controls the initialization actions of the latter.
@@ -98,6 +99,10 @@ public final class BootStrap implements Runnable {
 
     public BundleContext getBundleContext() {
         return bundleContext;
+    }
+
+    public DataBase getDataBase() {
+        return this.dbClient;
     }
 
     public void init() {
@@ -172,7 +177,15 @@ public final class BootStrap implements Runnable {
                 e.printStackTrace();
             }
         }
-
+        if (NetShellConfiguration.getInstance().getGlobal().useDB()) {
+            // Create the Mongo Database client.
+            String dbHost = NetShellConfiguration.getInstance().getGlobal().getDbHost();
+            int dbPort = NetShellConfiguration.getInstance().getGlobal().getDbPort();
+            String dbUser = NetShellConfiguration.getInstance().getGlobal().getDbUser();
+            String dbPassword = NetShellConfiguration.getInstance().getGlobal().getDbUserPassword();
+            String dbName = NetShellConfiguration.getInstance().getGlobal().getDbName();
+            this.dbClient = new MongoDBProvider(dbHost,dbPort,dbName,dbUser,dbPassword);
+        }
         // Add Shell Modules
         addShellModules();
         // Initialize SystemCalls

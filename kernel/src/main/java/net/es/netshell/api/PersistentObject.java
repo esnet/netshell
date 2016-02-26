@@ -19,6 +19,7 @@
 package net.es.netshell.api;
 
 import net.es.netshell.boot.BootStrap;
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -67,6 +68,22 @@ public class PersistentObject implements Serializable {
         }
         return f.exists();
     }
+
+    /**
+     * Returns the object in JSON format.
+     * @return
+     * @throws IOException
+     */
+    public String toJSON () throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        mapper.writeValue(output, this);
+        String res = output.toString();
+        output.flush();
+        output.close();
+        return res;
+    }
+
 
     /**
      * Save the resource in a file specified by the provided file name. NetShell root is added
