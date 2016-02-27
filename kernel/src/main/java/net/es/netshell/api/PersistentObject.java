@@ -28,7 +28,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by lomax on 6/24/14.
+ * This class implements the base class of any NetShell resources that need to be persistent. It originally
+ * was designe to use a local file system for storing the serialized objects, including a translation in the
+ * host file system name space.
+ *
+ * 3/2016 lomax@es.net There is an ongoing effort to add or replace the backend store with a database, MongoDB. It is expected that
+ * this class will change in the coming weeks.
  */
 public class PersistentObject implements Serializable {
 
@@ -37,6 +42,7 @@ public class PersistentObject implements Serializable {
     @JsonIgnore
     private File file;
     private String resourceClassName;
+    private ArrayList<PersistentKeyValue> properties;
 
     /**
      * Builds the correct pathname of a file, taking into account the NETSHELL_ROOT and the NetShell user
@@ -67,6 +73,14 @@ public class PersistentObject implements Serializable {
             return false;
         }
         return f.exists();
+    }
+
+    public ArrayList<PersistentKeyValue> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(ArrayList<PersistentKeyValue> properties) {
+        this.properties = properties;
     }
 
     /**
@@ -102,6 +116,9 @@ public class PersistentObject implements Serializable {
      * @throws IOException
      */
     private void save(File file) throws IOException {
+        if (this.properties == null) {
+            this.properties = new ArrayList<PersistentKeyValue>();
+        }
         this.file = file;
         // Set the classname.
         this.resourceClassName = this.getClass().getCanonicalName();

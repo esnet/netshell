@@ -1,5 +1,8 @@
 package net.es.netshell.api;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * This interface must be implemented by all ENOS Databases
  */
@@ -35,8 +38,8 @@ public interface DataBase {
      * Finds docunments within a collection. The query is expressed in JSON. If query is null, then all documents of the collection are returned.
      * The query language is identical to MongoDB queries.
      * @param collection
-     * @param query
+     * @param query a Map of key/value pairs.
      * @return
      */
-    public Iterable<PersistentObject> find (String collection, String query);
+    public List<PersistentObject> find (String collection, Map<String,Object> query);
 }

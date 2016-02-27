@@ -1,7 +1,10 @@
 package net.es.netshell.mongodb;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
+import com.mongodb.client.FindIterable;
 import net.es.netshell.api.DataBase;
 import net.es.netshell.api.PersistentObject;
 
@@ -9,7 +12,11 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.ServerAddress;
 import com.mongodb.MongoCredential;
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+import com.mongodb.Block;
 
+import javax.management.RuntimeErrorException;
 
 
 /**
@@ -43,27 +50,59 @@ public class MongoDBProvider implements DataBase {
     }
 
     @Override
-    public void store(String collection, PersistentObject obj) {
-
+    public void store(String collectionName, PersistentObject obj) {
+        MongoCollection collection = this.db.getCollection(collectionName);
+        if (collection == null) {
+            throw new RuntimeErrorException(new Error("Could not store into collection " + collectionName));
+        }
     }
 
     @Override
-    public PersistentObject load(String collection, String name) {
+    public PersistentObject load(String collectionName, String name) {
+        MongoCollection collection = this.db.getCollection(collectionName);
+        if (collection == null) {
+            throw new RuntimeErrorException(new Error("Could not load from collection " + name));
+        }
+
         return null;
     }
 
     @Override
     public void createCollection(String name) {
-
+        this.db.createCollection(name);
+        MongoCollection collection = this.db.getCollection(name);
+        if (collection == null) {
+            throw new RuntimeErrorException(new Error("Could not create collection " + name));
+        }
     }
 
     @Override
     public void deleteCollection(String name) {
-
+        MongoCollection collection = this.db.getCollection(name);
+        if (collection == null) {
+            throw new RuntimeErrorException(new Error("Could not delete collection " + name));
+        }
+        collection.drop();
     }
 
     @Override
-    public Iterable<PersistentObject> find(String collection, String query) {
+    public List<PersistentObject> find(String collectionName, Map<String,Object> query) {
+        MongoCollection collection = this.db.getCollection(collectionName);
+        if (collection == null) {
+            throw new RuntimeErrorException(new Error("Could not create collection " + collectionName));
+        }
+        FindIterable<Document> results = null;
+        if (query == null) {
+            results = collection.find();
+        } else {
+            Document queryDocument = new Document(query);
+            results = collection.find(queryDocument);
+        }
+
+
+
+
+
         return null;
     }
 }
