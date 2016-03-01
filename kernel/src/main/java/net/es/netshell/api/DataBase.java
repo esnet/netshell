@@ -1,5 +1,6 @@
 package net.es.netshell.api;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +13,7 @@ public interface DataBase {
      * @param collection is the name of the collection where to store the object
      * @param obj is the persistent object
      */
-    public void store (String collection, PersistentObject obj);
+    public void store (String collection, PersistentObject obj) throws IOException;
 
     /**
      * Load a PersistentObject from a collection

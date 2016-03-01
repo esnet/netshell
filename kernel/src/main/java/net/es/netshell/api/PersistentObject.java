@@ -26,6 +26,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * This class implements the base class of any NetShell resources that need to be persistent. It originally
@@ -42,7 +43,7 @@ public class PersistentObject implements Serializable {
     @JsonIgnore
     private File file;
     private String resourceClassName;
-    private ArrayList<PersistentKeyValue> properties;
+    private String _id;
 
     /**
      * Builds the correct pathname of a file, taking into account the NETSHELL_ROOT and the NetShell user
@@ -75,29 +76,24 @@ public class PersistentObject implements Serializable {
         return f.exists();
     }
 
-    public ArrayList<PersistentKeyValue> getProperties() {
-        return properties;
-    }
-
-    public void setProperties(ArrayList<PersistentKeyValue> properties) {
-        this.properties = properties;
-    }
-
     /**
      * Returns the object in JSON format.
      * @return
      * @throws IOException
      */
     public String toJSON () throws IOException {
+        if (this._id == null) {
+            this._id = UUID.randomUUID().toString();
+        }
         ObjectMapper mapper = new ObjectMapper();
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         mapper.writeValue(output, this);
         String res = output.toString();
         output.flush();
         output.close();
+
         return res;
     }
-
 
     /**
      * Save the resource in a file specified by the provided file name. NetShell root is added
@@ -116,10 +112,9 @@ public class PersistentObject implements Serializable {
      * @throws IOException
      */
     private void save(File file) throws IOException {
-        if (this.properties == null) {
-            this.properties = new ArrayList<PersistentKeyValue>();
+        if (this._id == null) {
+            this._id = UUID.randomUUID().toString();
         }
-        this.file = file;
         // Set the classname.
         this.resourceClassName = this.getClass().getCanonicalName();
         /* Make sure all directories exist */
@@ -236,6 +231,14 @@ public class PersistentObject implements Serializable {
 
     public String getResourceClassName() {
         return resourceClassName;
+    }
+
+    public String get_id() {
+        return _id;
+    }
+
+    public void set_id(String _id) {
+        this._id = _id;
     }
 
     public void setResourceClassName(String resourceClassName) {

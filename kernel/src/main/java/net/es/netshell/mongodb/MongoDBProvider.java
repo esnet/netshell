@@ -1,8 +1,11 @@
 package net.es.netshell.mongodb;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
 
 import com.mongodb.client.FindIterable;
 import net.es.netshell.api.DataBase;
@@ -50,11 +53,20 @@ public class MongoDBProvider implements DataBase {
     }
 
     @Override
-    public void store(String collectionName, PersistentObject obj) {
+    public void store (String collectionName, PersistentObject obj) throws IOException {
         MongoCollection collection = this.db.getCollection(collectionName);
         if (collection == null) {
             throw new RuntimeErrorException(new Error("Could not store into collection " + collectionName));
         }
+        Document doc = Document.parse(obj.toJSON());
+        Document query = new Document("_id",obj.get_id());
+        FindIterable<Document> res = collection.find(query);
+        for (Document item : res) {
+            // The object already exists. Replace it.
+            collection.findOneAndReplace(query, doc);
+            return;
+        }
+        collection.insertOne(doc);
     }
 
     @Override
