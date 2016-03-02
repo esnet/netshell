@@ -211,25 +211,25 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
         rep.setError(false);
 
         // Figure out what node
-        Node node = getNetworkDeviceByDpidArray(req.dpid);
+        Node node = getNetworkDeviceByDpidArray(req.getDpid());
         if (node == null) {
             rep.setErrorMessage("Cannot find switch with DPID");
             rep.setError(true);
         }
 
-        FlowId fid = new FlowId(req.flowId);
+        FlowId fid = new FlowId(req.getFlowId());
 
         // Construct a FlowRef for the flow to go away.  This derived by dpid and flowId.
         InstanceIdentifier<Flow> flowInstanceIdentifier =
                 InstanceIdentifier.builder(Nodes.class).
                         child(Node.class, node.getKey()).
                         augmentation(FlowCapableNode.class).
-                        child(Table.class, new TableKey(req.tableId)).
+                        child(Table.class, new TableKey(req.getTableId())).
                         child(Flow.class, new FlowKey(fid)).
                         build();
         FlowRef flowRef = new FlowRef(flowInstanceIdentifier);
 
-        boolean rc = controller.deleteFlow(req.dpid, flowRef);
+        boolean rc = controller.deleteFlow(req.getDpid(), flowRef);
         if (!rc) {
             rep.setErrorMessage("Could not delete flow");
             rep.setError(true);
@@ -239,42 +239,53 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
     }
 
     private SdnForwardReply doSdnForward(SdnForwardRequest req) {
+
         SdnForwardReply rep = new SdnForwardReply();
         rep.setError(false);
 
-        // Translate SdnForwardRequest to L2Translation
-        Controller.L2Translation l2t = new Controller.L2Translation();
-        l2t.dpid = req.dpid;
-        l2t.priority = req.priority;
-        l2t.c = req.c;
-        l2t.inPort = req.inPort;
-        l2t.vlan1 = (short) req.vlan1;
-        l2t.srcMac1 = new MacAddress(req.srcMac1);
-        l2t.dstMac1 = new MacAddress(req.dstMac1);
+        try {
+            // Translate SdnForwardRequest to L2Translation
+            Controller.L2Translation l2t = new Controller.L2Translation();
+            l2t.dpid = req.getDpid();
+            l2t.priority = req.getPriority();
+            l2t.c = req.getC();
+            l2t.inPort = req.getInPort();
+            l2t.vlan1 = (short) req.getVlan1();
+            if (req.getSrcMac1() != null) {
+                l2t.srcMac1 = new MacAddress(req.getSrcMac1());
+            }
+            l2t.dstMac1 = new MacAddress(req.getDstMac1());
 
-        int numOutputs = req.outputs.length;
-        l2t.outputs = new Controller.L2Translation.L2TranslationOutput[numOutputs];
-        for (int i = 0; i < numOutputs; i++) {
-            l2t.outputs[i] = new Controller.L2Translation.L2TranslationOutput();
-            l2t.outputs[i].outPort = req.outputs[i].outPort;
-            l2t.outputs[i].vlan = (short) req.outputs[i].vlan;
-            l2t.outputs[i].dstMac = new MacAddress(req.outputs[i].dstMac);
+            int numOutputs = req.outputs.length;
+            l2t.outputs = new Controller.L2Translation.L2TranslationOutput[numOutputs];
+            for (int i = 0; i < numOutputs; i++) {
+                l2t.outputs[i] = new Controller.L2Translation.L2TranslationOutput();
+                l2t.outputs[i].outPort = req.outputs[i].outPort;
+                l2t.outputs[i].vlan = (short) req.outputs[i].vlan;
+                l2t.outputs[i].dstMac = new MacAddress(req.outputs[i].dstMac);
+            }
+
+            l2t.pcp = (short) req.getPcp();
+            l2t.queue = (short) req.getQueue();
+            l2t.meter = req.getMeter();
+
+            FlowRef fr = controller.installL2ForwardingRule(l2t);
+            if (fr == null) {
+                rep.setErrorMessage("Unable to install forwarding flow");
+                rep.setError(true);
+            } else {
+                rep.setDpid(req.dpid);
+                TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
+                rep.setTableId(tk.getId().shortValue());
+                FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
+                rep.setFlowId(fk.getId().getValue());
+            }
         }
-
-        l2t.pcp = (short) req.pcp;
-        l2t.queue = (short) req.queue;
-        l2t.meter = req.meter;
-
-        FlowRef fr = controller.installL2ForwardingRule(l2t);
-        if (fr == null) {
-            rep.setErrorMessage("Unable to install forwarding flow");
+        catch (Exception e) {
+            e.printStackTrace();
+            rep.setErrorMessage("Exception: " + e.toString());
             rep.setError(true);
         }
-        rep.dpid = req.dpid;
-        TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
-        rep.tableId = tk.getId().shortValue();
-        FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
-        rep.flowId = fk.getId().getValue();
 
         return rep;
     }
@@ -283,27 +294,35 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
         SdnForwardReply rep = new SdnForwardReply();
         rep.setError(false);
 
-        // Translate SdnForwardToControllerRequest to L2Translation
-        // This code based on doSdnForward()
-        Controller.L2Translation l2t = new Controller.L2Translation();
-        l2t.dpid = req.dpid;
-        l2t.priority = req.priority;
-        l2t.c = req.c;
-        l2t.inPort = req.inPort;
-        l2t.vlan1 = (short) req.vlan1;
-        l2t.srcMac1 = new MacAddress(req.srcMac1);
-        l2t.dstMac1 = new MacAddress(req.dstMac1);
+        try {
+            // Translate SdnForwardToControllerRequest to L2Translation
+            // This code based on doSdnForward()
+            Controller.L2Translation l2t = new Controller.L2Translation();
+            l2t.dpid = req.getDpid();
+            l2t.priority = req.getPriority();
+            l2t.c = req.getC();
+            l2t.inPort = req.getInPort();
+            l2t.vlan1 = (short) req.getVlan1();
+            l2t.srcMac1 = new MacAddress(req.getSrcMac1());
+            l2t.dstMac1 = new MacAddress(req.getDstMac1());
 
-        FlowRef fr = controller.installL2ControllerRule(l2t);
-        if (fr == null) {
-            rep.setErrorMessage("Unable to install forwarding flow");
+            FlowRef fr = controller.installL2ControllerRule(l2t);
+            if (fr == null) {
+                rep.setErrorMessage("Unable to install forwarding flow");
+                rep.setError(true);
+            } else {
+                rep.setDpid(req.dpid);
+                TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
+                rep.setTableId(tk.getId().shortValue());
+                FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
+                rep.setFlowId(fk.getId().getValue());
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            rep.setErrorMessage("Exception: " + e.toString());
             rep.setError(true);
         }
-        rep.dpid = req.dpid;
-        TableKey tk = fr.getValue().firstIdentifierOf(Table.class).firstKeyOf(Table.class, TableKey.class);
-        rep.tableId = tk.getId().shortValue();
-        FlowKey fk = fr.getValue().firstIdentifierOf(Flow.class).firstKeyOf(Flow.class, FlowKey.class);
-        rep.flowId = fk.getId().getValue();
 
         return rep;
     }
@@ -335,7 +354,6 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
             if (req.getCr() == 0 && req.getEr() == 0) {
                 try {
                     MeterRef mr = odlc.createGreenMeter(node, req.getMeter());
-//                    rep.setId(mr.toString());
                 }
                 catch (Exception e) {
                     rep.setErrorMessage(e.toString());
@@ -346,7 +364,6 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
             else if (req.getCr() != 0 && req.getEr() == 0) {
                 try {
                     MeterRef mr = odlc.createGreenYellowMeter(node, req.getMeter(), req.getCr(), req.getCbs());
-//                    rep.setId(mr.toString());
                 }
                 catch (Exception e) {
                     rep.setErrorMessage(e.toString());
@@ -357,7 +374,6 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
             else if (req.getCr() == 0 && req.getEr() != 0) {
                 try {
                     MeterRef mr = odlc.createGreenRedMeter(node, req.getMeter(), req.getEr(), req.getEbs());
-//                    rep.setId(mr.toString());
                 }
                 catch (Exception e) {
                     rep.setErrorMessage(e.toString());
@@ -368,7 +384,6 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
             else if (req.getCr() != 0 && req.getEr() != 0) {
                 try {
                     MeterRef mr = odlc.createGreenYellowRedMeter(node, req.getMeter(), req.getCr(), req.getCbs(), req.getEr(), req.getEbs());
-//                    rep.setId(mr.toString());
                 }
                 catch (Exception e) {
                     rep.setErrorMessage(e.toString());
@@ -416,11 +431,13 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
                         correlationId(props.getCorrelationId()).build();
 
                 // Placeholder for a reply, if we have one to send
-                String message2 = "";
+                String message2 = null;
 
                 try {
                     // Parse the body.  Get the string containing the JSON data.
                     String message = new String(delivery.getBody(), "UTF-8");
+
+                    logger.info("Received: " + message);
 
                     // Figure out the message type as a string so we know how to parse it.
                     SdnRequest req = mapper.readValue(message, SdnRequest.class);
@@ -479,9 +496,10 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
                 } finally {
                     // If we have a reply to send, then great, send it and ACK the old message
                     if (message2 != null) {
+                        logger.info("Reply: " + message2);
                         channel.basicPublish("", props.getReplyTo(), replyProps, message2.getBytes("UTF-8"));
-                        channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                     }
+                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -498,9 +516,6 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
 
     /**
      * ODL callback for PacketReceived notification
-     * Note:  This is the only part of this module that knows anything about ODL.  It'd be nice to be able
-     * to get rid of it.  We could in theory push the ODL-specific bits into a method in core.Controller,
-     * and then use a more abstract callback interface.  It's not clear if this is worth the effort though.
      * @param notification PACKET_IN message
      */
     public void callback(PacketReceived notification) {

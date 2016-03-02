@@ -19,15 +19,22 @@
 package net.es.netshell.api;
 
 import net.es.netshell.boot.BootStrap;
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
- * Created by lomax on 6/24/14.
+ * This class implements the base class of any NetShell resources that need to be persistent. It originally
+ * was designe to use a local file system for storing the serialized objects, including a translation in the
+ * host file system name space.
+ *
+ * 3/2016 lomax@es.net There is an ongoing effort to add or replace the backend store with a database, MongoDB. It is expected that
+ * this class will change in the coming weeks.
  */
 public class PersistentObject implements Serializable {
 
@@ -36,6 +43,7 @@ public class PersistentObject implements Serializable {
     @JsonIgnore
     private File file;
     private String resourceClassName;
+    private String _id;
 
     /**
      * Builds the correct pathname of a file, taking into account the NETSHELL_ROOT and the NetShell user
@@ -69,6 +77,25 @@ public class PersistentObject implements Serializable {
     }
 
     /**
+     * Returns the object in JSON format.
+     * @return
+     * @throws IOException
+     */
+    public String toJSON () throws IOException {
+        if (this._id == null) {
+            this._id = UUID.randomUUID().toString();
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        mapper.writeValue(output, this);
+        String res = output.toString();
+        output.flush();
+        output.close();
+
+        return res;
+    }
+
+    /**
      * Save the resource in a file specified by the provided file name. NetShell root is added
      * to the file name if the filename is absolute.
      * @param filename
@@ -85,7 +112,9 @@ public class PersistentObject implements Serializable {
      * @throws IOException
      */
     private void save(File file) throws IOException {
-        this.file = file;
+        if (this._id == null) {
+            this._id = UUID.randomUUID().toString();
+        }
         // Set the classname.
         this.resourceClassName = this.getClass().getCanonicalName();
         /* Make sure all directories exist */
@@ -202,6 +231,14 @@ public class PersistentObject implements Serializable {
 
     public String getResourceClassName() {
         return resourceClassName;
+    }
+
+    public String get_id() {
+        return _id;
+    }
+
+    public void set_id(String _id) {
+        this._id = _id;
     }
 
     public void setResourceClassName(String resourceClassName) {

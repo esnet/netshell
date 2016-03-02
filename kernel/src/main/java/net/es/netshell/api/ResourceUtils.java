@@ -21,6 +21,7 @@ package net.es.netshell.api;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 /**
  * Helper methods to manipulate Resources.
  */

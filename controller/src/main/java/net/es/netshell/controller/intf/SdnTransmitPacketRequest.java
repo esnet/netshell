@@ -34,6 +34,30 @@ public class SdnTransmitPacketRequest extends SdnRequest {
     public String outPort;
     public byte [] payload;
 
+    public byte[] getDpid() {
+        return dpid;
+    }
+
+    public void setDpid(byte[] dpid) {
+        this.dpid = dpid;
+    }
+
+    public String getOutPort() {
+        return outPort;
+    }
+
+    public void setOutPort(String outPort) {
+        this.outPort = outPort;
+    }
+
+    public byte[] getPayload() {
+        return payload;
+    }
+
+    public void setPayload(byte[] payload) {
+        this.payload = payload;
+    }
+
     public SdnTransmitPacketRequest() {
         setRequestType(TYPE);
     }

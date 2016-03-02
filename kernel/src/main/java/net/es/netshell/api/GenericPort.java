@@ -26,7 +26,7 @@ import java.util.List;
 
  */
 public class GenericPort extends Port {
-    ArrayList<GenericLink> links;
+    private ArrayList<GenericLink> links;
 
     public GenericPort(String name) {
         super(name);

@@ -32,7 +32,7 @@ public class SdnForwardRequest extends SdnRequest {
     @JsonIgnore
     public static String TYPE = "SdnForwardRequest";
 
-    public class L2TranslationOutput {
+    public static class L2TranslationOutput {
         public String outPort;
         public int vlan;
         public String dstMac; // XXX type?
@@ -53,6 +53,94 @@ public class SdnForwardRequest extends SdnRequest {
     public int pcp;
     public int queue;
     public int meter;
+
+    public byte[] getDpid() {
+        return dpid;
+    }
+
+    public void setDpid(byte[] dpid) {
+        this.dpid = dpid;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
+    public BigInteger getC() {
+        return c;
+    }
+
+    public void setC(BigInteger c) {
+        this.c = c;
+    }
+
+    public String getInPort() {
+        return inPort;
+    }
+
+    public void setInPort(String inPort) {
+        this.inPort = inPort;
+    }
+
+    public int getVlan1() {
+        return vlan1;
+    }
+
+    public void setVlan1(int vlan1) {
+        this.vlan1 = vlan1;
+    }
+
+    public String getSrcMac1() {
+        return srcMac1;
+    }
+
+    public void setSrcMac1(String srcMac1) {
+        this.srcMac1 = srcMac1;
+    }
+
+    public String getDstMac1() {
+        return dstMac1;
+    }
+
+    public void setDstMac1(String dstMac1) {
+        this.dstMac1 = dstMac1;
+    }
+
+    public L2TranslationOutput[] getOutputs() {
+        return outputs;
+    }
+
+    public void setOutputs(L2TranslationOutput[] outputs) {
+        this.outputs = outputs;
+    }
+
+    public int getPcp() {
+        return pcp;
+    }
+
+    public void setPcp(int pcp) {
+        this.pcp = pcp;
+    }
+
+    public int getQueue() {
+        return queue;
+    }
+
+    public void setQueue(int queue) {
+        this.queue = queue;
+    }
+
+    public int getMeter() {
+        return meter;
+    }
+
+    public void setMeter(int meter) {
+        this.meter = meter;
+    }
 
     public SdnForwardRequest() {
         setRequestType(TYPE);

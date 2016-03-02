@@ -35,6 +35,12 @@ public class GlobalConfiguration {
     private int sshIdleTimeout = 3600000;
     private int sshNbWorkerThreads = SshdIoServiceFactory.DEFAULT_NB_WORKER_THREADS;
     private int securityManagerDisabled = 0;
+    private int useDB = 0;
+    private String dbHost = "localhost";
+    private int dbPort = 27017;
+    private String dbUser = "enos";
+    private String dbUserPassword =  "enos";
+    private String dbName = "enos";
     @JsonIgnore
     private boolean canSet = true;
 
@@ -62,6 +68,32 @@ public class GlobalConfiguration {
         return securityManagerDisabled;
     }
 
+    public int getUseDB() { return this.useDB;}
+
+    public boolean useDB () {
+        return this.useDB == 1;
+    }
+
+    public String getDbUserPassword() {
+        return dbUserPassword;
+    }
+
+    public String getDbUser() {
+        return dbUser;
+    }
+
+    public String getDbHost() {
+        return dbHost;
+    }
+
+    public int getDbPort() {
+        return dbPort;
+    }
+
+    public String getDbName() {
+        return dbName;
+    }
+
     public void setDefaultLogLevel(String defaultLogLevel) {
         if (!this.canSet) {
             // Silently fail
@@ -84,6 +116,54 @@ public class GlobalConfiguration {
             return;
         }
         this.sshDisabled = sshDisabled;
+    }
+
+    public void setUseDB(int useDB) {
+        if (!this.canSet) {
+            // Silently fail
+            return;
+        }
+        this.useDB = useDB;
+    }
+
+    public void setDbHost(String dbHost) {
+        if (!this.canSet) {
+            // Silently fail
+            return;
+        }
+        this.dbHost = dbHost;
+    }
+
+    public void setDbPort(int dbPort) {
+        if (!this.canSet) {
+            // Silently fail
+            return;
+        }
+        this.dbPort = dbPort;
+    }
+
+    public void setDbName(String dbName) {
+        if (!this.canSet) {
+            // Silently fail
+            return;
+        }
+        this.dbName = dbName;
+    }
+
+    public void setDbUser(String dbUser) {
+        if (!this.canSet) {
+            // Silently fail
+            return;
+        }
+        this.dbUser = dbUser;
+    }
+
+    public void setDbUserPassword(String dbUserPassword) {
+        if (!this.canSet) {
+            // Silently fail
+            return;
+        }
+        this.dbUserPassword = dbUserPassword;
     }
 
     public void setSshPort(int sshPort) {

@@ -18,46 +18,10 @@
  *
  */
 
-package net.es.netshell.controller.intf;
-
-import org.codehaus.jackson.annotate.JsonIgnore;
+package net.es.netshell.controller.client;
 
 /**
- * Created by bmah on 1/7/16.
+ * Opaque handle to a flow
  */
-public class SdnReceivePacketReply extends SdnReply {
-    @JsonIgnore
-    public static String TYPE = "SdnReceivePacketReply";
-
-    public byte [] dpid;
-    public String inPort;
-    public byte [] payload;
-
-    public byte[] getDpid() {
-        return dpid;
-    }
-
-    public void setDpid(byte[] dpid) {
-        this.dpid = dpid;
-    }
-
-    public String getInPort() {
-        return inPort;
-    }
-
-    public void setInPort(String inPort) {
-        this.inPort = inPort;
-    }
-
-    public byte[] getPayload() {
-        return payload;
-    }
-
-    public void setPayload(byte[] payload) {
-        this.payload = payload;
-    }
-
-    public SdnReceivePacketReply() {
-        setReplyType(TYPE);
-    }
+public interface SdnControllerClientFlowHandle {
 }
