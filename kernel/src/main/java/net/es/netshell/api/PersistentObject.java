@@ -25,10 +25,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * This class implements the base class of any NetShell resources that need to be persistent. It originally
@@ -42,6 +39,7 @@ public class PersistentObject implements Serializable {
 
     private String resourceClassName = this.getClass().getCanonicalName();
     private String eid = this.eid = UUID.randomUUID().toString();
+    private HashMap<String,Object> properties = new HashMap<String,Object>();
 
     public String getResourceClassName() {
         return resourceClassName;
@@ -57,6 +55,14 @@ public class PersistentObject implements Serializable {
 
     public void setResourceClassName(String resourceClassName) {
         this.resourceClassName = resourceClassName;
+    }
+
+    public HashMap<String, Object> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(HashMap<String, Object> properties) {
+        this.properties = properties;
     }
 
     /**
@@ -110,7 +116,7 @@ public class PersistentObject implements Serializable {
      * @param collection
      * @throws java.io.IOException
      */
-    public void saveToDatabase(String collection) throws IOException {
+    public void save(String collection) throws IOException {
         DataBase db = BootStrap.getBootStrap().getDataBase();
         db.store(collection, this);
     }
@@ -170,7 +176,7 @@ public class PersistentObject implements Serializable {
         }
     }
 
-    public static final List<PersistentObject> findFromDatabase (String collection, Map<String,Object> query) throws InstantiationException {
+    public static final List<PersistentObject> find (String collection, Map<String,Object> query) throws InstantiationException {
 
         try {
             DataBase db = BootStrap.getBootStrap().getDataBase();
@@ -203,7 +209,6 @@ public class PersistentObject implements Serializable {
         }
     }
     public static final PersistentObject newObjectFromFile (String fileName, Class c) throws InstantiationException {
-        System.out.println("E1 " + fileName);
         File file = PersistentObject.buildFile(fileName);
         if ( ! file.exists() ) {
             throw new InstantiationException(fileName + "file does not exist.");

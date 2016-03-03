@@ -170,7 +170,7 @@ public class Resource extends PersistentObject {
 
         HashMap<String, Object> query = new HashMap<String,Object>();
         query.put("resourceName",name);
-        List<PersistentObject> objs = PersistentObject.findFromDatabase(collectiopn,query);
+        List<PersistentObject> objs = PersistentObject.find(collectiopn,query);
         // Translates object types and prunes what is not a Resource.
         ArrayList<Resource> resources = new ArrayList<Resource>();
         for (PersistentObject obj : objs) {
