@@ -192,25 +192,32 @@ public class PersistentObject implements Serializable {
             throw new InstantiationException(e.toString());
         }
     }
-
     public static final PersistentObject newObjectFromFile (String fileName) throws InstantiationException {
+        try {
+            String className = PersistentObject.getClassName(fileName);
+            return PersistentObject.newObjectFromFile(fileName,Class.forName(className));
+        } catch (IOException e) {
+            throw new InstantiationException(e.toString());
+        }  catch (ClassNotFoundException e) {
+            throw new InstantiationException(e.toString());
+        }
+    }
+    public static final PersistentObject newObjectFromFile (String fileName, Class c) throws InstantiationException {
+        System.out.println("E1 " + fileName);
         File file = PersistentObject.buildFile(fileName);
         if ( ! file.exists() ) {
             throw new InstantiationException(fileName + "file does not exist.");
         }
         try {
-            String className = PersistentObject.getClassName(fileName);
-            if (className == null) {
-                // File does not exist.
-                return null;
-            }
+            System.out.println("E4");
             ObjectMapper mapper = new ObjectMapper();
+            System.out.println("E5");
             FileInputStream input = new FileInputStream(file);
             PersistentObject obj = null;
-            obj = (PersistentObject) mapper.readValue(input, Class.forName(className));
+            System.out.println("E6");
+            obj = (PersistentObject) mapper.readValue(input, c);
+            System.out.println("E7");
             return obj;
-        } catch (ClassNotFoundException e) {
-            throw new InstantiationException(e.toString());
         } catch (IOException e) {
             throw new InstantiationException(e.toString());
         }

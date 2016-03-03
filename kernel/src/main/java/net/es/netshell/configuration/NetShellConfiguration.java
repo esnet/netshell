@@ -94,7 +94,10 @@ public class NetShellConfiguration extends PersistentObject {
 
         // Read the configuration
         try {
-            netShellConfiguration = (NetShellConfiguration) PersistentObject.newObjectFromFile(configurationFilePath);
+            System.out.println("1");
+            netShellConfiguration = (NetShellConfiguration) PersistentObject.newObjectFromFile(configurationFilePath,
+                                                                                               NetShellConfiguration.class);
+            System.out.println("2");
         } catch (InstantiationException e) {
             // This is a new instance. Can set
             netShellConfiguration.canSet = true;
