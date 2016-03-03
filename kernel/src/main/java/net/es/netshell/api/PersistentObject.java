@@ -38,12 +38,8 @@ import java.util.UUID;
  */
 public class PersistentObject implements Serializable {
 
-    @JsonIgnore
-    private boolean isNewInstance = true;
-    @JsonIgnore
-    private File file;
-    private String resourceClassName;
-    private String _id;
+    private String resourceClassName = this.getClass().getCanonicalName();
+    private String _id = this._id = UUID.randomUUID().toString();
 
     /**
      * Builds the correct pathname of a file, taking into account the NETSHELL_ROOT and the NetShell user
@@ -61,37 +57,17 @@ public class PersistentObject implements Serializable {
         return file;
     }
 
-    public boolean exists() {
-        if (this.file == null) {
-            return false;
-        }
-        return this.file.exists();
-    }
-
-    public static boolean exists(String name) {
-        File f = buildFile(name);
-        if (f == null) {
-            return false;
-        }
-        return f.exists();
-    }
-
     /**
      * Returns the object in JSON format.
      * @return
      * @throws IOException
      */
-    public String toJSON () throws IOException {
-        if (this._id == null) {
-            this._id = UUID.randomUUID().toString();
-        }
+    public String toJSON (OutputStream output) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
         mapper.writeValue(output, this);
         String res = output.toString();
         output.flush();
         output.close();
-
         return res;
     }
 
@@ -101,63 +77,64 @@ public class PersistentObject implements Serializable {
      * @param filename
      * @throws java.io.IOException
      */
-    public final void save(String filename) throws IOException {
-        this.file = PersistentObject.buildFile(ResourceUtils.normalizeResourceName(filename));
-        this.save(file);
+    public void saveToFile(String filename) throws IOException {
+        File file = PersistentObject.buildFile(ResourceUtils.normalizeResourceName(filename));
+        /* Make sure all directories exist */
+        file.getParentFile().mkdirs();
+        FileOutputStream output = new FileOutputStream(file);
+        this.toJSON(output);
+        output.flush();
+        output.close();
     }
 
     /**
-     * Saves the resource into the provided File
-     * @param file
-     * @throws IOException
+     * Save the resource in a database collection.
+     * @param collection
+     * @throws java.io.IOException
      */
-    private void save(File file) throws IOException {
-        if (this._id == null) {
-            this._id = UUID.randomUUID().toString();
-        }
-        // Set the classname.
-        this.resourceClassName = this.getClass().getCanonicalName();
-        /* Make sure all directories exist */
-        file.getParentFile().mkdirs();
-        /* Write JSON */
-        ObjectMapper mapper = new ObjectMapper();
-        FileOutputStream output = new FileOutputStream(file);
-        mapper.writeValue(output, this);
+    public void saveToDatabase(String collection) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        this.toJSON(output);
         output.flush();
         output.close();
-        // No longer a new resource.
-        this.isNewInstance = false;
     }
 
-    public void delete() {
-        if (this.file != null) {
-            file.delete();
-        }
+    /**
+     * Save the resource to string containing the JSON representation of the object.
+     * @throws java.io.IOException
+     */
+    public String saveToJSON() throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        this.toJSON(output);
+        output.flush();
+        output.close();
+        return output.toString();
     }
+
     /**
      * Creates a resource from a file specified by the provided file name. NetShell root is added
      * to the file name if the filename is absolute.
      * @param c
-     * @param filename
+     * @param in
      * @return
      * @throws IOException
      * @throws InstantiationException
      */
-    public static final PersistentObject newObject (Class c, String filename) throws IOException, InstantiationException {
+    public static final PersistentObject newObject2 (Class c, InputStream in) throws IOException, InstantiationException {
+        /****
         File file = PersistentObject.buildFile(filename);
         if ( ! file.exists() ) {
             // This is a new resource.
             PersistentObject obj = PersistentObject.newObject(c);
-            obj.isNewInstance = true;
             return obj;
         } else {
             ObjectMapper mapper = new ObjectMapper();
             FileInputStream input = new FileInputStream(file);
             PersistentObject obj = (PersistentObject) mapper.readValue(input, c);
-            obj.isNewInstance = false;
-            obj.file = file;
             return obj;
         }
+         ****/
+        return null;
     }
 
     private static final String getClassName (String filename) throws IOException {
@@ -185,31 +162,32 @@ public class PersistentObject implements Serializable {
         return null;
     }
 
-    /**
-     * Returns true if the resource did not have persistent store file. False if the resource was loaded from
-     * an existing file.
-     * @return whether the resource was loaded or not from a file.
-     */
-    @JsonIgnore
-    public boolean isNewInstance() {
-        return isNewInstance;
-    }
 
-    public static final PersistentObject newObject (Class c) throws InstantiationException {
-        PersistentObject obj = null;
+    public static final PersistentObject newObjectFromFile (String fileName) throws InstantiationException {
+        File file = PersistentObject.buildFile(fileName);
+        if ( ! file.exists() ) {
+            throw new InstantiationException(fileName + "file does not exist.");
+        }
         try {
-            obj = (PersistentObject) Class.forName(c.getName()).newInstance();
-            obj.isNewInstance = true;
+            String className = PersistentObject.getClassName(fileName);
+            if (className == null) {
+                // File does not exist.
+                return null;
+            }
+            ObjectMapper mapper = new ObjectMapper();
+            FileInputStream input = new FileInputStream(file);
+            PersistentObject obj = null;
+            obj = (PersistentObject) mapper.readValue(input, Class.forName(className));
             return obj;
-        } catch (IllegalAccessException e) {
-            throw new InstantiationException(e.toString());
         } catch (ClassNotFoundException e) {
+            throw new InstantiationException(e.toString());
+        } catch (IOException e) {
             throw new InstantiationException(e.toString());
         }
     }
 
-    public static final PersistentObject newObject (String fileName) throws InstantiationException {
-        PersistentObject obj = null;
+    public static final PersistentObject newObject2 (Class c, String json) throws InstantiationException {
+        /***
         try {
             String className = PersistentObject.getClassName(fileName);
             if (className == null) {
@@ -222,12 +200,10 @@ public class PersistentObject implements Serializable {
             throw new InstantiationException(e.toString());
         } catch (IOException e) {
             throw new InstantiationException(e.toString());
-        }
+        }***/
+        return null;
     }
 
-    public void setNewInstance(boolean isNewInstance) {
-        this.isNewInstance = isNewInstance;
-    }
 
     public String getResourceClassName() {
         return resourceClassName;
@@ -246,21 +222,8 @@ public class PersistentObject implements Serializable {
     }
 
     @JsonIgnore
-    public File getFile() {
-        return this.file;
-    }
-
-    @JsonIgnore
-    public String getFileName() {
-        if (this.file != null) {
-            return this.file.getName();
-        } else {
-            return null;
-        }
-    }
-
-    @JsonIgnore
-    public  List<PersistentObject> getObjects(String directory, Class filteredClass) throws IOException {
+    public  List<PersistentObject> getObjects2(String directory, Class filteredClass) throws IOException {
+        /****
         File directoryFile = PersistentObject.buildFile(directory);
         if ( ! directoryFile.exists() || ! directoryFile.isDirectory()) {
             return null;
@@ -275,6 +238,7 @@ public class PersistentObject implements Serializable {
                 }
             }
         }
-        return objects;
+        return objects;***/
+        return null;
     }
 }

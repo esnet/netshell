@@ -94,14 +94,8 @@ public class NetShellConfiguration extends PersistentObject {
 
         // Read the configuration
         try {
-            netShellConfiguration = (NetShellConfiguration) PersistentObject.newObject(NetShellConfiguration.class,
-                                                                       configurationFilePath);
-        } catch (IOException e) {
-            e.printStackTrace();
+            netShellConfiguration = (NetShellConfiguration) PersistentObject.newObjectFromFile(configurationFilePath);
         } catch (InstantiationException e) {
-            e.printStackTrace();
-        }
-        if (netShellConfiguration.isNewInstance()) {
             // This is a new instance. Can set
             netShellConfiguration.canSet = true;
             // Allocate a default GlobalConfiguration
@@ -112,7 +106,7 @@ public class NetShellConfiguration extends PersistentObject {
     }
 
     public void save(File file) throws IOException {
-        super.save(file.getPath());
+        super.saveToFile(file.getPath());
         // Can no longer be modified within NetShell
         this.canSet = false;
         this.global.readOnly();

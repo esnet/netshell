@@ -21,7 +21,6 @@ package net.es.netshell.kernel.users;
 
 import net.es.netshell.boot.BootStrap;
 import net.es.netshell.kernel.container.Container;
-import net.es.netshell.kernel.container.Containers;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.lang.ref.WeakReference;
@@ -99,14 +98,4 @@ public class User {
 
 	// Set the homepath to simulate changing the working directory.
 	public void setHomePath(Path newPath) { this.homePath = newPath; }
-
-    @JsonIgnore
-    public Container getContainer() {
-        return new Container(this.getContainerName());
-    }
-
-    @JsonIgnore
-    public String getContainerName() {
-        return Containers.USER_DIR + "/" + this.name;
-    }
 }

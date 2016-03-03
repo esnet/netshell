@@ -43,16 +43,7 @@ public final class Container {
     }
 
     public Container (String name) {
-        this.name = Containers.canonicalName(name);
-        this.path = Containers.getPath(name);
-        // Verify that the directory can be accessed
-        if (this.path.toFile().exists()) {
-            if (!this.path.toFile().canRead()) {
-                throw new SecurityException("Cannot access this container");
-            }
-        } else {
-            throw new SecurityException("Container does not exist");
-        }
+
     }
 
     public Path getPath() {
@@ -71,16 +62,8 @@ public final class Container {
         }
     }
 
-    public void join() {
-        KernelThread.currentKernelThread().joinContainer(this.getName());
-    }
-
-    public void leave() {
-        KernelThread.currentKernelThread().leaveContainer();
-    }
-
     public ContainerACL getACL()  {
-        return Containers.getACL(this.getName());
+        throw new RuntimeException("not implemented");
     }
 
     public void setACL (ContainerACL acl) {

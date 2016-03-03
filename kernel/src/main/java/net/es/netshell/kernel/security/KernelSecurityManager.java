@@ -269,8 +269,6 @@ public class KernelSecurityManager extends SecurityManager {
 		c = NetShellException.class;
 		c = net.es.netshell.api.DefaultValues.class;
         c = java.security.Permission.class;
-        c = net.es.netshell.kernel.container.Containers.class;
-
 	}
 
 	private void initializePreAuthorized() {

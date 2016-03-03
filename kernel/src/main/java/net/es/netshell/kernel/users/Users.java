@@ -23,7 +23,6 @@ import net.es.netshell.api.*;
 import net.es.netshell.configuration.NetShellConfiguration;
 import net.es.netshell.kernel.container.Container;
 import net.es.netshell.kernel.container.ContainerACL;
-import net.es.netshell.kernel.container.Containers;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.security.FileACL;
@@ -151,28 +150,6 @@ public final class Users {
                                                                "Admin",
                                                                "admin@localhost");
                     this.do_createUser(adminProfile, false);
-                    User adminUser = new User(Users.ADMIN_USERNAME);
-                    // Containers.createContainer requires a defined user for the current thread.
-                    // Up until this point, the current thread has been running privileged, but
-                    // with no defined user.  Give the thread to the newly-created admin user.
-                    // This has the side effect of do_authUser changing the ownership of the
-                    // running thread.  This at least only happens on the first boot of netshell.
-                    KernelThread.currentKernelThread().setUser(adminUser);
-                    try {
-                        // This logic is somewhat simpler than the normal codepath for creating
-                        // a container in do_createUser because we're running as the admin user and we're
-                        // creating the default container for the same user.  So basically
-                        // all we need to do here is deny write access to the container.
-                        String containerName = Containers.USER_DIR + "/" + adminUser.getName();
-                        Containers.createContainer(containerName, false);
-                        ContainerACL acl = new Container(containerName).getACL();
-                        acl.denyUserWrite(adminUser.getName());
-                        acl.store();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-
 
                 } catch (UserAlreadyExistException e) {
                     // Since this code is executed only when the configuration file is empty, this should never happen.
@@ -385,30 +362,6 @@ public final class Users {
 
         // Update NetShell user file
         this.writeUserFile();
-
-        // Create the user's default container
-        if (createContainer) {
-            try {
-                String containerName = Containers.USER_DIR + "/" + username;
-                Containers.createContainer(containerName, false);
-                // Set ACL
-                ContainerACL acl = new Container(containerName).getACL();
-                // First empty the permissions
-                String currentUser = KernelThread.currentKernelThread().getUser().getName();
-                acl.denyUserRead(currentUser);
-                acl.denyUserAdmin(currentUser);
-                acl.denyUserExecute(currentUser);
-                acl.denyUserWrite(currentUser);
-                // Adds user ACL's
-                acl.allowUserRead(username);
-                acl.allowUserExecute(username);
-                acl.allowUserAdmin(username);
-                acl.store();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
     }
 
     public boolean removeuser (String userName) {
@@ -480,13 +433,6 @@ public final class Users {
 
         // Save User File with removed user
         this.writeUserFile();
-
-        // Remove User's default container
-        try {
-            Containers.removeContainer(user.getContainerName(),false);
-        } catch (Exception e) {
-            logger.warn("Could not delete container " + user.getContainerName());
-        }
     }
 
 

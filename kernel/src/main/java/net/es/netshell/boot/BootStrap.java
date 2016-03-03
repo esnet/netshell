@@ -196,7 +196,6 @@ public final class BootStrap implements Runnable {
     private void addShellModules() {
         ShellCommandsFactory.registerShellModule(ShellBuiltinCommands.class);
         ShellCommandsFactory.registerShellModule(UserShellCommands.class);
-        ShellCommandsFactory.registerShellModule(ContainerShellCommands.class);
 	    ShellCommandsFactory.registerShellModule(RMQShellCommands.class);
         ShellCommandsFactory.registerShellModule(NetworkingShellCommands.class);
 	    ShellCommandsFactory.registerShellModule(AccessShellCommands.class);

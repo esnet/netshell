@@ -40,7 +40,6 @@ public final class AllowedSysCalls {
         allowedSysCallClasses.add(net.es.netshell.kernel.users.Users.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.acl.UserAccess.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.container.Container.class);
-        allowedSysCallClasses.add(net.es.netshell.kernel.container.Containers.class);
         allowedSysCallClasses.add(net.es.netshell.boot.BootStrap.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.networking.NetworkInterfaces.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.perfsonar.Bwctl.class);

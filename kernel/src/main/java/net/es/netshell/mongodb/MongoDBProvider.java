@@ -58,7 +58,7 @@ public class MongoDBProvider implements DataBase {
         if (collection == null) {
             throw new RuntimeErrorException(new Error("Could not store into collection " + collectionName));
         }
-        Document doc = Document.parse(obj.toJSON());
+        Document doc = Document.parse(obj.saveToJSON());
         Document query = new Document("_id",obj.get_id());
         FindIterable<Document> res = collection.find(query);
         for (Document item : res) {
@@ -70,12 +70,17 @@ public class MongoDBProvider implements DataBase {
     }
 
     @Override
-    public PersistentObject load(String collectionName, String name) {
+    public PersistentObject load(String collectionName, String id) {
         MongoCollection collection = this.db.getCollection(collectionName);
         if (collection == null) {
-            throw new RuntimeErrorException(new Error("Could not load from collection " + name));
+            throw new RuntimeErrorException(new Error("Could not load from collection " + id));
         }
+        Document query = new Document("_id",id);
+        FindIterable<Document> res = collection.find(query);
+        for (Document item : res) {
+            // Can be only one result because _id are unique.
 
+        }
         return null;
     }
 

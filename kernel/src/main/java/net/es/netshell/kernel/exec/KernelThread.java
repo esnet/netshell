@@ -62,7 +62,6 @@ public final class  KernelThread {
 
     private boolean privileged = false;
     private User user = null;
-    private Container container = null;
     private String currentDirectory = null;
 
     /**
@@ -206,30 +205,8 @@ public final class  KernelThread {
         } else {
             throw new SecurityException("Attempt to change the user");
         }
-        // Retrieve default Container and join it.
-        try {
-            Container userContainer = user.getContainer();
-            this.container = userContainer;
-        } catch (SecurityException e) {
-            // Container does not exist. The User does not have a default container.
-            logger.warn(user.getName() + " does not have its default container");
-        }
     }
 
-    /**
-     * Set the current thread execution container. Only privileged thread can do this.
-     * @param container
-     * @return
-     */
-    public Container setContainer (Container container) {
-        if ( ! this.isPrivileged()) {
-            // Only privileged threads can set the current container
-            throw new SecurityException("Cannot set container");
-        }
-        Container old = this.container;
-        this.container = container;
-        return old;
-    }
 
     /**
      * doSysCall is the only manner for a Thread to gain privileged status. Only classes that are defined
@@ -302,56 +279,6 @@ public final class  KernelThread {
         return null;
     }
 
-
-    /**
-     * Joins a container. Upon success, the current container of the KernelThread is set to the joined Container.
-     * Until the thread leaves this container or joins another, all resources access controls will use this
-     * container.
-     * @param containerName
-     */
-    public final synchronized void joinContainer(String containerName) {
-
-        if (containerName == null) {
-            // this means that the Thread needs to be in no container at all
-            this.container = null;
-            return;
-        }
-        Container newContainer = new Container(containerName,this.container);
-        // Checks if the user has execution access
-        ContainerACL acl = newContainer.getACL();
-        if (acl.canExecute(KernelThread.currentKernelThread().getUser().getName())) {
-            this.container = newContainer;
-        }
-    }
-
-    /**
-     * Leaves the current container and return to the previous one.
-     */
-    public final synchronized void leaveContainer() {
-        if (this.container != null) {
-            this.joinContainer(this.container.getParentContainer());
-        }
-    }
-
-    /**
-     * Returns the current Container.
-     * @return
-     */
-    public final Container getCurrentContainer () {
-        if (this.container != null) {
-            return new Container(this.container.getName());
-        } else {
-            return null;
-        }
-    }
-
-    static final public String currentContainer() {
-        if (KernelThread.currentKernelThread().container != null) {
-            return KernelThread.currentKernelThread().container.getName();
-        } else {
-            return null;
-        }
-    }
 
     public final synchronized String getCurrentDirectory() {
         if (this.currentDirectory == null) {

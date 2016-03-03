@@ -74,13 +74,9 @@ public class NetworkFactory extends Resource {
         synchronized (NetworkFactory.instanceLock) {
             if (NetworkFactory.instance == null) {
                 try {
-                    NetworkFactory.instance = (NetworkFactory) Resource.newObject(
-                            NetworkFactory.class,
+                    NetworkFactory.instance = (NetworkFactory) Resource.newObjectFromFile(
                             Paths.get(FACTORY_DIR,FACTORY_CONFIGFILE).toString());
                     NetworkFactory.instance().startProviders();
-                } catch (IOException e) {
-
-                    throw new RuntimeException (e);
                 } catch (InstantiationException e) {
                     throw new RuntimeException (e);
                 }
@@ -119,7 +115,7 @@ public class NetworkFactory extends Resource {
         }
         NetworkProviderDescriptor provider = new NetworkProviderDescriptor(className,type);
         this.providers.add(provider);
-        this.save(Paths.get(FACTORY_DIR,FACTORY_CONFIGFILE).toString());
+        this.saveToFile(Paths.get(FACTORY_DIR,FACTORY_CONFIGFILE).toString());
         this.startProvider(provider);
     }
 }

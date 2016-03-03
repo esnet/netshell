@@ -97,12 +97,8 @@ public class TopologyFactory extends PersistentObject {
             if (TopologyFactory.instance == null) {
                 try {
                     TopologyFactory.instance =
-                            (TopologyFactory) PersistentObject.newObject(TopologyFactory.class,
-                                                                         Paths.get(FACTORY_DIR, FACTORY_CONFIGFILE).toString());
+                            (TopologyFactory) PersistentObject.newObjectFromFile(Paths.get(FACTORY_DIR, FACTORY_CONFIGFILE).toString());
                     TopologyFactory.instance().startProviders();
-                } catch (IOException e) {
-
-                    throw new RuntimeException (e);
                 } catch (InstantiationException e) {
                     throw new RuntimeException (e);
                 }
@@ -142,7 +138,7 @@ public class TopologyFactory extends PersistentObject {
         }
         TopologyProviderDescriptor provider = new TopologyProviderDescriptor(className,type);
         this.providers.add(provider);
-        this.save(Paths.get(FACTORY_DIR, FACTORY_CONFIGFILE).toString());
+        this.saveToFile(Paths.get(FACTORY_DIR, FACTORY_CONFIGFILE).toString());
         this.startProvider(provider);
     }
 }
