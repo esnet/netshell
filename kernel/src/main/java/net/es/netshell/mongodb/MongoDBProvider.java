@@ -1,10 +1,7 @@
 package net.es.netshell.mongodb;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 
 import com.mongodb.client.FindIterable;
@@ -17,7 +14,6 @@ import com.mongodb.ServerAddress;
 import com.mongodb.MongoCredential;
 import com.mongodb.client.MongoCollection;
 import org.bson.Document;
-import com.mongodb.Block;
 
 import javax.management.RuntimeErrorException;
 
@@ -59,7 +55,7 @@ public class MongoDBProvider implements DataBase {
             throw new RuntimeErrorException(new Error("Could not store into collection " + collectionName));
         }
         Document doc = Document.parse(obj.saveToJSON());
-        Document query = new Document("_id",obj.get_id());
+        Document query = new Document("eid",obj.getEid());
         FindIterable<Document> res = collection.find(query);
         for (Document item : res) {
             // The object already exists. Replace it.
@@ -67,21 +63,6 @@ public class MongoDBProvider implements DataBase {
             return;
         }
         collection.insertOne(doc);
-    }
-
-    @Override
-    public PersistentObject load(String collectionName, String id) {
-        MongoCollection collection = this.db.getCollection(collectionName);
-        if (collection == null) {
-            throw new RuntimeErrorException(new Error("Could not load from collection " + id));
-        }
-        Document query = new Document("_id",id);
-        FindIterable<Document> res = collection.find(query);
-        for (Document item : res) {
-            // Can be only one result because _id are unique.
-
-        }
-        return null;
     }
 
     @Override
@@ -103,23 +84,22 @@ public class MongoDBProvider implements DataBase {
     }
 
     @Override
-    public List<PersistentObject> find(String collectionName, Map<String,Object> query) {
+    public List<String> find(String collectionName, Map<String, Object> query) throws InstantiationException {
         MongoCollection collection = this.db.getCollection(collectionName);
         if (collection == null) {
             throw new RuntimeErrorException(new Error("Could not create collection " + collectionName));
         }
+        ArrayList<String> res = new ArrayList<String>();
         FindIterable<Document> results = null;
         if (query == null) {
             results = collection.find();
         } else {
             Document queryDocument = new Document(query);
             results = collection.find(queryDocument);
+            for (Document doc : results) {
+                res.add(doc.toJson());
+            }
         }
-
-
-
-
-
-        return null;
+        return res;
     }
 }

@@ -16,14 +16,6 @@ public interface DataBase {
     public void store (String collection, PersistentObject obj) throws IOException;
 
     /**
-     * Load a PersistentObject from a collection
-     * @param collection is the name of the collection from where to load the object
-     * @param name is the name of the object
-     * @return the persistent object
-     */
-    public PersistentObject load (String collection, String name);
-
-    /**
      * Create a collection into the database. Implementation of this method must be idempotent.
      * @param name of the collection to create.
      */
@@ -42,5 +34,5 @@ public interface DataBase {
      * @param query a Map of key/value pairs.
      * @return
      */
-    public List<PersistentObject> find (String collection, Map<String,Object> query);
+    public List<String> find(String collection, Map<String, Object> query) throws InstantiationException;
 }

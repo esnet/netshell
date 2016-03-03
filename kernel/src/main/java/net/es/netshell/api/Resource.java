@@ -22,7 +22,9 @@ import net.es.netshell.kernel.exec.KernelThread;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by lomax on 5/21/14.
@@ -162,6 +164,21 @@ public class Resource extends PersistentObject {
             return;
         }
         throw new RuntimeException(name + " is invalid");
+    }
+
+    static public List<Resource> getResourceByName(String collectiopn, String name) throws InstantiationException {
+
+        HashMap<String, Object> query = new HashMap<String,Object>();
+        query.put("resourceName",name);
+        List<PersistentObject> objs = PersistentObject.findFromDatabase(collectiopn,query);
+        // Translates object types and prunes what is not a Resource.
+        ArrayList<Resource> resources = new ArrayList<Resource>();
+        for (PersistentObject obj : objs) {
+            if (obj instanceof Resource) {
+                resources.add((Resource) obj);
+            }
+        }
+        return resources;
     }
 
 
