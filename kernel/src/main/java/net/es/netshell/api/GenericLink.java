@@ -27,6 +27,10 @@ public class GenericLink extends Link {
     private GenericPort srcPort, dstPort;
     private GenericNode dstNode;
 
+    public GenericLink() {
+        super();
+    }
+
     public GenericLink(GenericNode srcNode, GenericPort srcPort,
                        GenericNode dstNode, GenericPort dstPort) {
         this.srcNode = srcNode;

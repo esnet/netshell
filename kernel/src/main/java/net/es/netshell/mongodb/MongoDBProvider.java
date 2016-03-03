@@ -97,6 +97,7 @@ public class MongoDBProvider implements DataBase {
             Document queryDocument = new Document(query);
             results = collection.find(queryDocument);
             for (Document doc : results) {
+                doc.remove("_id");
                 res.add(doc.toJson());
             }
         }

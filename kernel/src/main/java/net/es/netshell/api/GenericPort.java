@@ -28,6 +28,10 @@ import java.util.List;
 public class GenericPort extends Port {
     private ArrayList<GenericLink> links;
 
+    public GenericPort() {
+        super();
+    }
+
     public GenericPort(String name) {
         super(name);
         this.links = new ArrayList<GenericLink>();

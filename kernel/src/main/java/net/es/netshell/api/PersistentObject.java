@@ -208,15 +208,11 @@ public class PersistentObject implements Serializable {
         if ( ! file.exists() ) {
             throw new InstantiationException(fileName + "file does not exist.");
         }
-        try {
-            System.out.println("E4");
+        try {;
             ObjectMapper mapper = new ObjectMapper();
-            System.out.println("E5");
             FileInputStream input = new FileInputStream(file);
             PersistentObject obj = null;
-            System.out.println("E6");
             obj = (PersistentObject) mapper.readValue(input, c);
-            System.out.println("E7");
             return obj;
         } catch (IOException e) {
             throw new InstantiationException(e.toString());

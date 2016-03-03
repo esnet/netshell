@@ -166,7 +166,7 @@ public class Resource extends PersistentObject {
         throw new RuntimeException(name + " is invalid");
     }
 
-    static public List<Resource> getResourceByName(String collectiopn, String name) throws InstantiationException {
+    static public List<Resource> findByName(String collectiopn, String name) throws InstantiationException {
 
         HashMap<String, Object> query = new HashMap<String,Object>();
         query.put("resourceName",name);

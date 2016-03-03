@@ -31,6 +31,11 @@ public class GenericNode extends Node {
         super(name);
         this.ports = new ArrayList<GenericPort>();
     }
+
+    public GenericNode() {
+        super();
+    }
+
     public List<GenericPort> getPorts() {
         return ports;
     }
