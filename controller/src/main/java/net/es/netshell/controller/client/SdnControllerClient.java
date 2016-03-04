@@ -62,9 +62,23 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
     }
 
     class SdnControllerClientFlowHandleImpl implements SdnControllerClientFlowHandle {
+        public boolean valid;
+
         public byte[] dpid;
         public short tableId;
         public String flowId;
+
+        SdnControllerClientFlowHandleImpl() {
+            this.valid = true;
+        }
+
+        public boolean isValid() {
+            return this.valid;
+        }
+
+        public void invalidate() {
+            this.valid = false;
+        }
     }
 
     public SdnControllerClient() {

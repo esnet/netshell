@@ -21,7 +21,25 @@
 package net.es.netshell.controller.client;
 
 /**
- * Opaque handle to a flow
+ * Opaque handle to a flow entry.
+ * Objects implementing this interface have a portable (controller-neutral)
+ * reference to a live flow on a NetFlow controller.
+ *
+ * The flow handle can be either "valid" or not.  The validity bit allows us
+ * to keep references to the flow handle in multiple data structures (for
+ * example lists corresponding to end hosts affected by the flow entry) but
+ * not have to explicitly purge all those references if the flow is deleted.
  */
 public interface SdnControllerClientFlowHandle {
+    /**
+     * Check the validity flag of this flow handle.
+     * @return boolean true if the flow handle is validf
+     */
+    public boolean isValid();
+
+    /**
+     * Invalidate the flow handle, presumably because the corresponding flow
+     * has been deleted.
+     */
+    public void invalidate();
 }
