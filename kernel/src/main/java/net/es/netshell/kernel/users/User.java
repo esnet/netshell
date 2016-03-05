@@ -20,8 +20,6 @@
 package net.es.netshell.kernel.users;
 
 import net.es.netshell.boot.BootStrap;
-import net.es.netshell.kernel.container.Container;
-import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.lang.ref.WeakReference;
 import java.nio.file.Path;

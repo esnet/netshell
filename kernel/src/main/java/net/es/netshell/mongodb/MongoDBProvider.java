@@ -1,3 +1,21 @@
+/*
+ * ESnet Network Operating System (ENOS) Copyright (c) 2015, The Regents
+ * of the University of California, through Lawrence Berkeley National
+ * Laboratory (subject to receipt of any required approvals from the
+ * U.S. Dept. of Energy).  All rights reserved.
+ *
+ * If you have questions about your rights to use or distribute this
+ * software, please contact Berkeley Lab's Innovation & Partnerships
+ * Office at IPO@lbl.gov.
+ *
+ * NOTICE.  This Software was developed under funding from the
+ * U.S. Department of Energy and the U.S. Government consequently retains
+ * certain rights. As such, the U.S. Government has been granted for
+ * itself and others acting on its behalf a paid-up, nonexclusive,
+ * irrevocable, worldwide license in the Software to reproduce,
+ * distribute copies to the public, prepare derivative works, and perform
+ * publicly and display publicly, and to permit other to do so.
+ */
 package net.es.netshell.mongodb;
 
 import java.io.IOException;
@@ -5,6 +23,7 @@ import java.util.*;
 
 
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoIterable;
 import net.es.netshell.api.DataBase;
 import net.es.netshell.api.PersistentObject;
 
@@ -13,6 +32,8 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.ServerAddress;
 import com.mongodb.MongoCredential;
 import com.mongodb.client.MongoCollection;
+import net.es.netshell.kernel.exec.KernelThread;
+import net.es.netshell.kernel.users.User;
 import org.bson.Document;
 
 import javax.management.RuntimeErrorException;
@@ -21,7 +42,7 @@ import javax.management.RuntimeErrorException;
 /**
  * This class implement support for MongoDB.
  */
-public class MongoDBProvider implements DataBase {
+public final class MongoDBProvider implements DataBase {
     private MongoDatabase db;
     private MongoClient client;
     private String user;
@@ -40,16 +61,27 @@ public class MongoDBProvider implements DataBase {
         System.out.println("Connected to MongoDB.");
     }
 
-    public MongoClient getClient() {
+    public final MongoClient getClient()
+    {
+        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+            throw new SecurityException("not authorized");
+        }
         return this.client;
     }
 
-    public MongoDatabase getDatabase() {
+    public final MongoDatabase getDatabase() {
+        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+            throw new SecurityException("not authorized");
+        }
         return this.db;
     }
 
     @Override
-    public void store (String collectionName, PersistentObject obj) throws IOException {
+    public final void store (User user, String name, PersistentObject obj) throws IOException {
+        String collectionName = user.getName() + "_" + name;
+        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+            throw new SecurityException("not authorized");
+        }
         MongoCollection collection = this.db.getCollection(collectionName);
         if (collection == null) {
             throw new RuntimeErrorException(new Error("Could not store into collection " + collectionName));
@@ -66,17 +98,25 @@ public class MongoDBProvider implements DataBase {
     }
 
     @Override
-    public void createCollection(String name) {
-        this.db.createCollection(name);
-        MongoCollection collection = this.db.getCollection(name);
+    public final void createCollection(User user, String name) {
+        String collectionName = user.getName() + "_" + name;
+        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+            throw new SecurityException("not authorized");
+        }
+        this.db.createCollection(collectionName);
+        MongoCollection collection = this.db.getCollection(collectionName);
         if (collection == null) {
             throw new RuntimeErrorException(new Error("Could not create collection " + name));
         }
     }
 
     @Override
-    public void deleteCollection(String name) {
-        MongoCollection collection = this.db.getCollection(name);
+    public final void deleteCollection(User user,String name) {
+        String collectionName = user.getName() + "_" + name;
+        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+            throw new SecurityException("not authorized");
+        }
+        MongoCollection collection = this.db.getCollection(collectionName);
         if (collection == null) {
             throw new RuntimeErrorException(new Error("Could not delete collection " + name));
         }
@@ -84,7 +124,10 @@ public class MongoDBProvider implements DataBase {
     }
 
     @Override
-    public List<String> find(String collectionName, Map<String, Object> query) throws InstantiationException {
+    public final List<String> find(User user,
+                                   String name,
+                                   Map<String, Object> query) throws InstantiationException {
+        String collectionName = user.getName() + "_" + name;
         MongoCollection collection = this.db.getCollection(collectionName);
         if (collection == null) {
             throw new RuntimeErrorException(new Error("Could not create collection " + collectionName));
@@ -103,4 +146,17 @@ public class MongoDBProvider implements DataBase {
         }
         return res;
     }
+
+    @Override
+    public final boolean collectionExists(User user, String name) {
+        String collectionName = user.getName() + "_" + name;
+        MongoIterable<String> names = db.listCollectionNames();
+        for (String n : names) {
+            if (n.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

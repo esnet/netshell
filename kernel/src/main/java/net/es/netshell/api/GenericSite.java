@@ -27,7 +27,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import java.util.ArrayList;
 
 public class GenericSite extends Resource {
-    private String owner;
+    private String siteOwner;
     private ArrayList<GenericLink> links;
     private ArrayList<GenericHost> hosts;
     public GenericSite (String name) {
@@ -93,11 +93,11 @@ public class GenericSite extends Resource {
         this.links = links;
     }
 
-    public String getOwner() {
-        return owner;
+    public String getSiteOwner() {
+        return this.siteOwner;
     }
 
-    public void setOwner(String owner) {
-        this.owner = owner;
+    public void setOwner(String siteOwner) {
+        this.siteOwner = siteOwner;
     }
 }

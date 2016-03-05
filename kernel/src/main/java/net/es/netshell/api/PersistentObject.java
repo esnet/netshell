@@ -19,6 +19,8 @@
 package net.es.netshell.api;
 
 import net.es.netshell.boot.BootStrap;
+import net.es.netshell.kernel.exec.KernelThread;
+import net.es.netshell.kernel.users.User;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -38,30 +40,53 @@ import java.util.*;
 public class PersistentObject implements Serializable {
 
     private String resourceClassName = this.getClass().getCanonicalName();
-    private String eid = this.eid = UUID.randomUUID().toString();
+    private String eid = this.eid = null;
     private HashMap<String,Object> properties = new HashMap<String,Object>();
 
-    public String getResourceClassName() {
+    public final String getResourceClassName() {
         return resourceClassName;
     }
 
-    public String getEid() {
+    public synchronized final String getEid() {
+        if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
+            throw new SecurityException("not authorized");
+        }
+        if (this.eid == null) {
+            // This happens the first time the resource is stored. This is when
+            // the ENOS ID is created and assigned.
+            this.eid = UUID.randomUUID().toString();
+        }
         return this.eid;
     }
 
-    public void setEid(String eid) {
+    public synchronized final void setEid(String eid) {
+        if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
+            throw new SecurityException("not authorized");
+        }
+        if (this.eid != null) {
+            throw new SecurityException("not authorized");
+        }
         this.eid = eid;
     }
 
-    public void setResourceClassName(String resourceClassName) {
+    public final void setResourceClassName(String resourceClassName) {
+        if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
+            throw new SecurityException("not authorized");
+        }
         this.resourceClassName = resourceClassName;
     }
 
-    public HashMap<String, Object> getProperties() {
+    public final HashMap<String, Object> getProperties() {
+        if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
+            throw new SecurityException("not authorized");
+        }
         return properties;
     }
 
-    public void setProperties(HashMap<String, Object> properties) {
+    public final void setProperties(HashMap<String, Object> properties) {
+        if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
+            throw new SecurityException("not authorized");
+        }
         this.properties = properties;
     }
 
@@ -69,7 +94,7 @@ public class PersistentObject implements Serializable {
      * Builds the correct pathname of a file, taking into account the NETSHELL_ROOT and the NetShell user
      * current directory
      */
-    public static File buildFile(String filename) {
+    public final static File buildFile(String filename) {
         File file = null;
         filename = ResourceUtils.normalizeResourceName(filename);
         if (BootStrap.rootPath == null) {
@@ -101,7 +126,7 @@ public class PersistentObject implements Serializable {
      * @param filename
      * @throws java.io.IOException
      */
-    public void saveToFile(String filename) throws IOException {
+    public final void saveToFile(String filename) throws IOException {
         File file = PersistentObject.buildFile(ResourceUtils.normalizeResourceName(filename));
         /* Make sure all directories exist */
         file.getParentFile().mkdirs();
@@ -116,9 +141,12 @@ public class PersistentObject implements Serializable {
      * @param collection
      * @throws java.io.IOException
      */
-    public void save(String collection) throws IOException {
+    public final void save(User user,String collection) throws IOException {
+        if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
+            throw new SecurityException("not authorized");
+        }
         DataBase db = BootStrap.getBootStrap().getDataBase();
-        db.store(collection, this);
+        db.store(user,collection, this);
     }
 
     /**
@@ -159,7 +187,9 @@ public class PersistentObject implements Serializable {
     }
 
     public static final PersistentObject newObjectFromJSON (String json) throws InstantiationException {
-
+        if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
+            throw new SecurityException("not authorized");
+        }
         try {
 
             ObjectMapper mapper = new ObjectMapper();
@@ -176,11 +206,17 @@ public class PersistentObject implements Serializable {
         }
     }
 
-    public static final List<PersistentObject> find (String collection, Map<String,Object> query) throws InstantiationException {
+    public static final List<PersistentObject> find (User user,
+                                                     String name,
+                                                     Map<String,Object> query) throws InstantiationException {
+        String collectionName = user.getName() + "_" + name;
+        if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
+            throw new SecurityException("not authorized");
+        }
 
         try {
             DataBase db = BootStrap.getBootStrap().getDataBase();
-            List<String> res = db.find(collection, query);
+            List<String> res = db.find(user,collectionName, query);
             ArrayList<PersistentObject> objects = new ArrayList<PersistentObject>();
             for (String json : res) {
                 ObjectMapper mapper = new ObjectMapper();
@@ -199,6 +235,9 @@ public class PersistentObject implements Serializable {
         }
     }
     public static final PersistentObject newObjectFromFile (String fileName) throws InstantiationException {
+        if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
+            throw new SecurityException("not authorized");
+        }
         try {
             String className = PersistentObject.getClassName(fileName);
             return PersistentObject.newObjectFromFile(fileName,Class.forName(className));
@@ -209,6 +248,10 @@ public class PersistentObject implements Serializable {
         }
     }
     public static final PersistentObject newObjectFromFile (String fileName, Class c) throws InstantiationException {
+        User currentUser =  KernelThread.currentKernelThread().getUser();
+        if (currentUser != null && ! currentUser.isPrivileged())  {
+            throw new SecurityException("not authorized");
+        }
         File file = PersistentObject.buildFile(fileName);
         if ( ! file.exists() ) {
             throw new InstantiationException(fileName + "file does not exist.");

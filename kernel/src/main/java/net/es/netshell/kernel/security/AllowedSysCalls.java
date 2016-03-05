@@ -22,6 +22,7 @@ package net.es.netshell.kernel.security;
  * Created by lomax on 2/28/14.
  */
 
+import net.es.netshell.api.Container;
 import net.es.netshell.kernel.exec.KernelThread;
 
 import java.util.LinkedList;
@@ -39,11 +40,12 @@ public final class AllowedSysCalls {
         allowedSysCallClasses.add(net.es.netshell.kernel.security.FileACL.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.users.Users.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.acl.UserAccess.class);
-        allowedSysCallClasses.add(net.es.netshell.kernel.container.Container.class);
+        allowedSysCallClasses.add(Container.class);
         allowedSysCallClasses.add(net.es.netshell.boot.BootStrap.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.networking.NetworkInterfaces.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.perfsonar.Bwctl.class);
         allowedSysCallClasses.add(net.es.netshell.kernel.ovs.Openvswitch.class);
+        allowedSysCallClasses.add(net.es.netshell.api.Resource.class);
     }
 
     public static List<Class> getAllowedClasses() {

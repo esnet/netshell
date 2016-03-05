@@ -19,12 +19,14 @@
 package net.es.netshell.api;
 
 import net.es.netshell.kernel.exec.KernelThread;
+import net.es.netshell.kernel.exec.annotations.SysCall;
+import net.es.netshell.kernel.users.User;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /**
  * Created by lomax on 5/21/14.
@@ -34,10 +36,14 @@ public class Resource extends PersistentObject {
     private String description;
     private List<String> parentResources;
     private List<String> childrenResources;
+    private User owner;
+    private HashMap<User,HashMap<Class,ACL>> acls = new HashMap<User,HashMap<Class,ACL>>();
+
     @JsonIgnore
     private String creationStackTrace;
 
     public Resource() {
+        super();
         this.setCreationStackTrace();
     }
 
@@ -92,7 +98,7 @@ public class Resource extends PersistentObject {
     }
 
     @JsonIgnore
-    public String getCreationStackTrace() {
+    public final String getCreationStackTrace() {
         return this.creationStackTrace;
     }
 
@@ -166,11 +172,11 @@ public class Resource extends PersistentObject {
         throw new RuntimeException(name + " is invalid");
     }
 
-    static public List<Resource> findByName(String collectiopn, String name) throws InstantiationException {
+    static public List<Resource> findByName(User user,String collectiopn, String name) throws InstantiationException {
 
         HashMap<String, Object> query = new HashMap<String,Object>();
         query.put("resourceName",name);
-        List<PersistentObject> objs = PersistentObject.find(collectiopn,query);
+        List<PersistentObject> objs = PersistentObject.find(user,collectiopn, query);
         // Translates object types and prunes what is not a Resource.
         ArrayList<Resource> resources = new ArrayList<Resource>();
         for (PersistentObject obj : objs) {
@@ -181,6 +187,108 @@ public class Resource extends PersistentObject {
         return resources;
     }
 
+    public final HashMap<User,HashMap<Class,ACL>> getAcls() {
+        User user =  KernelThread.currentKernelThread().getUser();
+        if (user.isPrivileged() || (user == this.owner)) {
+            // Can get acls
+            return this.acls;
+        } else {
+            throw new SecurityException("not authorized to set acls");
+        }
+    }
+
+    public final void setAcls(HashMap<User,HashMap<Class,ACL>>acls) {
+        User user =  KernelThread.currentKernelThread().getUser();
+        if (user.isPrivileged() || (user == this.owner)) {
+            // Can set acls
+            this.acls = acls;
+        } else {
+            throw new SecurityException("not authorized to set acls");
+        }
+    }
+
+    public final void checkAccess(Class aclClass, HashMap<String, Object> accessQuery) {
+        User currentUser = KernelThread.currentKernelThread().getUser();
+        if (this.owner == currentUser || currentUser.isPrivileged()) {
+            // Owner has all access rights
+            return;
+        }
+        if ( ! this.acls.containsKey(currentUser)) {
+            throw new SecurityException("not authorized");
+        }
+        if (this.acls.get(currentUser).containsKey(aclClass)) {
+            ACL acl = this.acls.get(currentUser).get(aclClass);
+            acl.checkAcces(currentUser, this, accessQuery);
+            return;
+        }
+        throw new SecurityException("not authorized");
+    }
+
+    public final User getOwner() {
+        return owner;
+    }
+
+    public final void setOwner(User owner) {
+        if (KernelThread.currentKernelThread().getUser().isPrivileged()) {
+            // setting the owner of a resource is restricted to privileged threads.
+            this.owner = owner;
+            return;
+        }
+        throw new SecurityException("not wuthorized");
+    }
+
+    @JsonIgnore
+    public synchronized final ResourceACL getResourceACL(User user) {
+        User currentUser = KernelThread.currentKernelThread().getUser();
+        if (this.owner == null || this.owner == currentUser || currentUser.isPrivileged()) {
+            // Only the owner can manipulate the ACLs. When the object is being created and not
+            // assigned to an owner yet, this operation is allowed.
+            if ( ! this.acls.containsKey(user)) {
+                return null;
+            }
+            if (this.acls.get(user).containsKey(ResourceACL.class)) {
+                return (ResourceACL) this.acls.get(currentUser).get(ResourceACL.class);
+            }
+            return null;
+        }
+        throw new SecurityException("not allowed");
+    }
+
+    @JsonIgnore
+    public synchronized final void setResourceACL(User user, ResourceACL acl) {
+        User currentUser = KernelThread.currentKernelThread().getUser();
+        if (this.owner == null || this.owner == currentUser || currentUser.isPrivileged()) {
+            // Only the owner can manipulate the ACLs. When the object is being created and not
+            // assigned to an owner yet, this operation is allowed.
+            HashMap <Class,ACL> userAcls;
+            if (this.acls.containsKey(user)) {
+                userAcls = this.acls.get(user);
+            } else {
+                userAcls = new HashMap<Class,ACL>();
+                this.acls.put(user, userAcls);
+            }
+            userAcls.put(ResourceACL.class,acl);
+            return;
+        }
+        throw new SecurityException("not allowed");
+    }
+
+    @JsonIgnore
+    public synchronized final void removeResourceACL(User user) {
+        User currentUser = KernelThread.currentKernelThread().getUser();
+        if (this.owner == null || this.owner == currentUser || currentUser.isPrivileged()) {
+            // Only the owner can manipulate the ACLs. When the object is being created and not
+            // assigned to an owner yet, this operation is allowed.
+            HashMap<Class, ACL> userAcls;
+            if (this.acls.containsKey(user) &&
+                    this.acls.get(user).containsKey(ResourceACL.class)) {
+                this.acls.get(user).remove(ResourceACL.class);
+                return;
+            }
+            return;
+        }
+        throw new SecurityException("not allowed");
+    }
 
 
 }

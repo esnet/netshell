@@ -21,8 +21,6 @@ package net.es.netshell.kernel.users;
 
 import net.es.netshell.api.*;
 import net.es.netshell.configuration.NetShellConfiguration;
-import net.es.netshell.kernel.container.Container;
-import net.es.netshell.kernel.container.ContainerACL;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.security.FileACL;
