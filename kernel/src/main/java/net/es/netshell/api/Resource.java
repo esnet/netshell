@@ -37,7 +37,7 @@ public class Resource extends PersistentObject {
     private List<String> parentResources;
     private List<String> childrenResources;
     private User owner;
-    private HashMap<User,HashMap<Class,ACL>> acls = new HashMap<User,HashMap<Class,ACL>>();
+    private HashMap<User,HashMap<String,ACL>> acls = new HashMap<User,HashMap<String,ACL>>();
 
     @JsonIgnore
     private String creationStackTrace;
@@ -187,7 +187,7 @@ public class Resource extends PersistentObject {
         return resources;
     }
 
-    public final HashMap<User,HashMap<Class,ACL>> getAcls() {
+    public final HashMap<User,HashMap<String,ACL>> getAcls() {
         User user =  KernelThread.currentKernelThread().getUser();
         if (user.isPrivileged() || (user == this.owner)) {
             // Can get acls
@@ -197,7 +197,7 @@ public class Resource extends PersistentObject {
         }
     }
 
-    public final void setAcls(HashMap<User,HashMap<Class,ACL>>acls) {
+    public final void setAcls(HashMap<User,HashMap<String,ACL>>acls) {
         User user =  KernelThread.currentKernelThread().getUser();
         if (user.isPrivileged() || (user == this.owner)) {
             // Can set acls
@@ -260,14 +260,14 @@ public class Resource extends PersistentObject {
         if (this.owner == null || this.owner == currentUser || currentUser.isPrivileged()) {
             // Only the owner can manipulate the ACLs. When the object is being created and not
             // assigned to an owner yet, this operation is allowed.
-            HashMap <Class,ACL> userAcls;
+            HashMap <String,ACL> userAcls;
             if (this.acls.containsKey(user)) {
                 userAcls = this.acls.get(user);
             } else {
-                userAcls = new HashMap<Class,ACL>();
+                userAcls = new HashMap<String,ACL>();
                 this.acls.put(user, userAcls);
             }
-            userAcls.put(ResourceACL.class,acl);
+            userAcls.put(ResourceACL.class.getCanonicalName(),acl);
             return;
         }
         throw new SecurityException("not allowed");

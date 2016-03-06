@@ -209,14 +209,12 @@ public class PersistentObject implements Serializable {
     public static final List<PersistentObject> find (User user,
                                                      String name,
                                                      Map<String,Object> query) throws InstantiationException {
-        String collectionName = user.getName() + "_" + name;
         if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
             throw new SecurityException("not authorized");
         }
-
         try {
             DataBase db = BootStrap.getBootStrap().getDataBase();
-            List<String> res = db.find(user,collectionName, query);
+            List<String> res = db.find(user,name, query);
             ArrayList<PersistentObject> objects = new ArrayList<PersistentObject>();
             for (String json : res) {
                 ObjectMapper mapper = new ObjectMapper();

@@ -23,6 +23,7 @@ import net.es.netshell.boot.BootStrap;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.users.User;
+import net.es.netshell.kernel.users.Users;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.io.IOException;
@@ -37,6 +38,8 @@ public class Container extends Resource {
 
     @JsonIgnore
     public final static String CONTAINER_RESOURCE = "container.resource";
+    private String containerName;
+    private String user;
 
     public Container() {
         super();
@@ -46,15 +49,15 @@ public class Container extends Resource {
         super(name);
     }
 
-    private HashMap<User,List<String>> resourceACLs = null;
+    private HashMap<String,List<String>> resourceACLs = null;
 
 
 
-    public HashMap<User, List<String>> getResourceACL() {
+    public HashMap<String, List<String>> getResourceACL() {
         return resourceACLs;
     }
 
-    public void setResourceACL(HashMap<User, List<String>> resourceACL) {
+    public void setResourceACL(HashMap<String, List<String>> resourceACL) {
         this.resourceACLs = resourceACL;
     }
 
@@ -72,14 +75,30 @@ public class Container extends Resource {
         }
         throw new SecurityException("not authorized");
     }
-    final public void save(Resource resource) {
 
+    public String getUser() {
+        return user;
     }
 
-    final Resource load() {
-        Resource resource = null;
+    public void setUser(String user) {
+        this.user = user;
+    }
 
-        return resource;
+    public String getContainerName() {
+        return containerName;
+    }
+
+    public void setContainerName(String containerName) {
+        this.containerName = containerName;
+    }
+
+    final public void saveResource(Resource resource) throws IOException {
+        resource.save(User.getUser(this.user),this.getContainerName());
+    }
+
+    final public List<Resource> loadResource(String resourceName) throws InstantiationException {
+        List<Resource> resources = Resource.findByName(User.getUser(this.user), this.getContainerName(), resourceName);
+        return resources;
     }
 
     public static final void createContainer (User user,String name) throws IOException {
@@ -88,6 +107,8 @@ public class Container extends Resource {
         }
         BootStrap.getBootStrap().getDataBase().createCollection(user, name);
         Container container = new Container(CONTAINER_RESOURCE);
+        container.user = user.getName();
+        container.containerName = name;
         container.save(user,name);
     }
 
@@ -97,23 +118,26 @@ public class Container extends Resource {
         return;
     }
 
+    @JsonIgnore
+    public static final Container getContainer(String name) {
+        User user = KernelThread.currentKernelThread().getUser();
+        return Container.getContainer(user,name);
+    }
 
     @JsonIgnore
     public static final Container getContainer(User user,String name) {
-        String collectionName = user.getName() + "_" + name;
         Container container = null;
-        if (BootStrap.getBootStrap().getDataBase().collectionExists(user,name)) {
+        if (! BootStrap.getBootStrap().getDataBase().collectionExists(user,name)) {
             return null;
         }
-
         HashMap<String,Object> query = new HashMap<String,Object>();
-        query.put("resourceName", name);;
+        query.put("resourceName", Container.CONTAINER_RESOURCE);;
         try {
-            List<PersistentObject> containers = PersistentObject.find(user,collectionName, query);
+            List<PersistentObject> containers = PersistentObject.find(user,name, query);
             for (PersistentObject obj : containers) {
                 if (obj instanceof Container) {
                     container = (Container)obj;
-                    if (container.getResourceName().equals(name)) {
+                    if (container.getResourceName().equals(Container.CONTAINER_RESOURCE)) {
                         return container;
                     }
                 }

@@ -50,8 +50,6 @@ public final class MongoDBProvider implements DataBase {
     private ServerAddress serverAddress;
 
     public MongoDBProvider(String host, int port, String dbName, String user, String password) {
-
-        System.out.println("host= " + host + " port=" + port + "user= " + user + " password= " + password + "db= " + dbName);
         this.serverAddress = new ServerAddress(host,port);
         ArrayList<MongoCredential> creds = new ArrayList<MongoCredential>();
         MongoCredential enosCred = MongoCredential.createCredential(user,dbName,password.toCharArray());
@@ -77,24 +75,25 @@ public final class MongoDBProvider implements DataBase {
     }
 
     @Override
-    public final void store (User user, String name, PersistentObject obj) throws IOException {
-        String collectionName = user.getName() + "_" + name;
+    public final void store(User user, String collection, PersistentObject obj) throws IOException {
+        String collectionName = user.getName() + "_" + collection;
         if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
-        MongoCollection collection = this.db.getCollection(collectionName);
-        if (collection == null) {
+        MongoCollection mongoCollection = this.db.getCollection(collectionName);
+        if (mongoCollection == null) {
             throw new RuntimeErrorException(new Error("Could not store into collection " + collectionName));
         }
         Document doc = Document.parse(obj.saveToJSON());
         Document query = new Document("eid",obj.getEid());
-        FindIterable<Document> res = collection.find(query);
+        FindIterable<Document> res = mongoCollection.find(query);
+
         for (Document item : res) {
             // The object already exists. Replace it.
-            collection.findOneAndReplace(query, doc);
+            mongoCollection.findOneAndReplace(query, doc);
             return;
         }
-        collection.insertOne(doc);
+        mongoCollection.insertOne(doc);
     }
 
     @Override
@@ -152,7 +151,7 @@ public final class MongoDBProvider implements DataBase {
         String collectionName = user.getName() + "_" + name;
         MongoIterable<String> names = db.listCollectionNames();
         for (String n : names) {
-            if (n.equals(name)) {
+            if (n.equals(collectionName)) {
                 return true;
             }
         }
