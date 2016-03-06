@@ -75,8 +75,8 @@ public final class MongoDBProvider implements DataBase {
     }
 
     @Override
-    public final void store(User user, String collection, PersistentObject obj) throws IOException {
-        String collectionName = user.getName() + "_" + collection;
+    public final void store(String user, String collection, PersistentObject obj) throws IOException {
+        String collectionName = user + "_" + collection;
         if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
@@ -97,8 +97,8 @@ public final class MongoDBProvider implements DataBase {
     }
 
     @Override
-    public final void createCollection(User user, String name) {
-        String collectionName = user.getName() + "_" + name;
+    public final void createCollection(String user, String name) {
+        String collectionName = user + "_" + name;
         if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
@@ -110,8 +110,8 @@ public final class MongoDBProvider implements DataBase {
     }
 
     @Override
-    public final void deleteCollection(User user,String name) {
-        String collectionName = user.getName() + "_" + name;
+    public final void deleteCollection(String user,String name) {
+        String collectionName = user + "_" + name;
         if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
@@ -123,10 +123,10 @@ public final class MongoDBProvider implements DataBase {
     }
 
     @Override
-    public final List<String> find(User user,
+    public final List<String> find(String user,
                                    String name,
                                    Map<String, Object> query) throws InstantiationException {
-        String collectionName = user.getName() + "_" + name;
+        String collectionName = user + "_" + name;
         MongoCollection collection = this.db.getCollection(collectionName);
         if (collection == null) {
             throw new RuntimeErrorException(new Error("Could not create collection " + collectionName));
@@ -147,8 +147,8 @@ public final class MongoDBProvider implements DataBase {
     }
 
     @Override
-    public final boolean collectionExists(User user, String name) {
-        String collectionName = user.getName() + "_" + name;
+    public final boolean collectionExists(String user, String name) {
+        String collectionName = user + "_" + name;
         MongoIterable<String> names = db.listCollectionNames();
         for (String n : names) {
             if (n.equals(collectionName)) {

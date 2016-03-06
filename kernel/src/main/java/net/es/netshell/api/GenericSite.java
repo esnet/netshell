@@ -97,7 +97,7 @@ public class GenericSite extends Resource {
         return this.siteOwner;
     }
 
-    public void setOwner(String siteOwner) {
+    public void setSiteOwner(String siteOwner) {
         this.siteOwner = siteOwner;
     }
 }

@@ -94,7 +94,7 @@ public class PersistentObject implements Serializable {
      * Builds the correct pathname of a file, taking into account the NETSHELL_ROOT and the NetShell user
      * current directory
      */
-    public final static File buildFile(String filename) {
+    public static File buildFile(String filename) {
         File file = null;
         filename = ResourceUtils.normalizeResourceName(filename);
         if (BootStrap.rootPath == null) {
@@ -126,7 +126,7 @@ public class PersistentObject implements Serializable {
      * @param filename
      * @throws java.io.IOException
      */
-    public final void saveToFile(String filename) throws IOException {
+    public void saveToFile(String filename) throws IOException {
         File file = PersistentObject.buildFile(ResourceUtils.normalizeResourceName(filename));
         /* Make sure all directories exist */
         file.getParentFile().mkdirs();
@@ -141,7 +141,7 @@ public class PersistentObject implements Serializable {
      * @param collection
      * @throws java.io.IOException
      */
-    public final void save(User user,String collection) throws IOException {
+    public void save(String user,String collection) throws IOException {
         if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
             throw new SecurityException("not authorized");
         }
@@ -206,7 +206,7 @@ public class PersistentObject implements Serializable {
         }
     }
 
-    public static final List<PersistentObject> find (User user,
+    public static final List<PersistentObject> find (String user,
                                                      String name,
                                                      Map<String,Object> query) throws InstantiationException {
         if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {

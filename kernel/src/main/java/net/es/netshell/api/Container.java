@@ -36,11 +36,6 @@ import java.util.Objects;
  */
 public class Container extends Resource {
 
-    @JsonIgnore
-    public final static String CONTAINER_RESOURCE = "container.resource";
-    private String containerName;
-    private String user;
-
     public Container() {
         super();
     }
@@ -76,68 +71,51 @@ public class Container extends Resource {
         throw new SecurityException("not authorized");
     }
 
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getContainerName() {
-        return containerName;
-    }
-
-    public void setContainerName(String containerName) {
-        this.containerName = containerName;
-    }
-
     final public void saveResource(Resource resource) throws IOException {
-        resource.save(User.getUser(this.user),this.getContainerName());
+        resource.save(this);
     }
 
-    final public List<Resource> loadResource(String resourceName) throws InstantiationException {
-        List<Resource> resources = Resource.findByName(User.getUser(this.user), this.getContainerName(), resourceName);
+    final public List<Resource> loadResource(String name) throws InstantiationException {
+        List<Resource> resources = Resource.findByName(this, name);
         return resources;
     }
 
-    public static final void createContainer (User user,String name) throws IOException {
+    public static final void createContainer (String user,String name) throws IOException {
         if (BootStrap.getBootStrap().getDataBase().collectionExists(user,name)) {
             return;
         }
         BootStrap.getBootStrap().getDataBase().createCollection(user, name);
-        Container container = new Container(CONTAINER_RESOURCE);
-        container.user = user.getName();
-        container.containerName = name;
-        container.save(user,name);
+        Container container = new Container(name);
+        container.setOwner(user);
+        container.saveResource(container);
     }
 
     public static final void createContainer (String name) throws IOException {
         User user = KernelThread.currentKernelThread().getUser();
-        Container.createContainer(user,name);
+        Container.createContainer(user.getName(),name);
         return;
     }
 
     @JsonIgnore
     public static final Container getContainer(String name) {
         User user = KernelThread.currentKernelThread().getUser();
-        return Container.getContainer(user,name);
+        return Container.getContainer(user.getName(),name);
     }
 
     @JsonIgnore
-    public static final Container getContainer(User user,String name) {
+    public static final Container getContainer(String user,String name) {
         Container container = null;
         if (! BootStrap.getBootStrap().getDataBase().collectionExists(user,name)) {
             return null;
         }
         HashMap<String,Object> query = new HashMap<String,Object>();
-        query.put("resourceName", Container.CONTAINER_RESOURCE);;
+        query.put("resourceName", name);;
         try {
             List<PersistentObject> containers = PersistentObject.find(user,name, query);
             for (PersistentObject obj : containers) {
                 if (obj instanceof Container) {
                     container = (Container)obj;
-                    if (container.getResourceName().equals(Container.CONTAINER_RESOURCE)) {
+                    if (container.getResourceName().equals(name)) {
                         return container;
                     }
                 }

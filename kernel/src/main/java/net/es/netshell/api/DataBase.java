@@ -33,13 +33,13 @@ public interface DataBase {
      * Create a collection into the database. Implementation of this method must be idempotent.
      * @param name of the collection to create.
      */
-    void store(User user, String name, PersistentObject obj) throws IOException;
+    void store(String user, String name, PersistentObject obj) throws IOException;
 
     /**
      * Delete a collection.
      * @param name name of the collection to delete
      */
-    void deleteCollection(User user, String name);
+    void deleteCollection(String user, String name);
 
     /**
      * Finds docunments within a collection. The query is expressed in JSON. If query is null, then all documents of the collection are returned.
@@ -48,16 +48,16 @@ public interface DataBase {
      * @param query a Map of key/value pairs.
      * @return
      */
-    List<String> find(User user,
+    List<String> find(String user,
                       String name,
                       Map<String, Object> query) throws InstantiationException;
 
 
 
 
-    void createCollection(User user, String name);
+    void createCollection(String user, String name);
 
 
 
-    boolean collectionExists(User user, String name);
+    boolean collectionExists(String user, String name);
 }
