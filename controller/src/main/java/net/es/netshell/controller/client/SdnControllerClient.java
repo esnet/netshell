@@ -54,10 +54,10 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
     private Thread packetInThread;
 
     private SdnControllerClientCallback callback;
-    void setCallback(SdnControllerClientCallback c) {
+    public void setCallback(SdnControllerClientCallback c) {
         this.callback = c;
     }
-    void clearCallback() {
+    public void clearCallback() {
         this.callback = null;
     }
 
