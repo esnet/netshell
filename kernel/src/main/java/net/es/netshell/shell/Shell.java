@@ -1,5 +1,5 @@
 /*
- * ESnet Network Operating System (ENOS) Copyright (c) 2015, The Regents
+ * ESnet Network Operating System (ENOS) Copyright (c) 2016, The Regents
  * of the University of California, through Lawrence Berkeley National
  * Laboratory (subject to receipt of any required approvals from the
  * U.S. Dept. of Energy).  All rights reserved.
@@ -15,6 +15,7 @@
  * irrevocable, worldwide license in the Software to reproduce,
  * distribute copies to the public, prepare derivative works, and perform
  * publicly and display publicly, and to permit other to do so.
+ *
  */
 
 package net.es.netshell.shell;
@@ -31,10 +32,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Paths;
@@ -280,8 +278,13 @@ public class Shell {
                     this.print(e.toString());
                     continue;
                 } catch (InvocationTargetException e) {
-                   this.print( e.toString());
-                   continue;
+                    this.print(e.toString() + "\n");
+
+                    // Print the stack trace from the invoked function.
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    PrintStream ps = new PrintStream(baos);
+                    e.getTargetException().printStackTrace(ps);
+                    this.print(baos.toString());
                 } catch (Exception e) {
                     // This is a catch all. Make sure that the thread recovers in a correct state
                     this.print( e.getMessage());
