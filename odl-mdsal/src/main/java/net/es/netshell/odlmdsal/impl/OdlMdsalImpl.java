@@ -1,5 +1,5 @@
 /*
- * ESnet Network Operating System (ENOS) Copyright (c) 2015, The Regents
+ * ESnet Network Operating System (ENOS) Copyright (c) 2016, The Regents
  * of the University of California, through Lawrence Berkeley National
  * Laboratory (subject to receipt of any required approvals from the
  * U.S. Dept. of Energy).  All rights reserved.
@@ -15,6 +15,7 @@
  * irrevocable, worldwide license in the Software to reproduce,
  * distribute copies to the public, prepare derivative works, and perform
  * publicly and display publicly, and to permit other to do so.
+ *
  */
 
 package net.es.netshell.odlmdsal.impl;
@@ -371,6 +372,45 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
             }
         }
         return null;
+    }
+
+    /**
+     * Get the node connector for a node given its instance ID
+     * @param ncid
+     * @return NodeConnector if it exists
+     */
+    public NodeConnector getNodeConnectorByInstanceId(InstanceIdentifier<?> ncid) {
+        NodeConnector conn = null;
+
+        try {
+            // Optional<NodeConnector> maybeNodeConnector = null;
+            Optional<?> maybeNodeConnector = null;
+
+            ReadOnlyTransaction readTransaction = dataBroker.newReadOnlyTransaction();
+            maybeNodeConnector = readTransaction.read(LogicalDatastoreType.OPERATIONAL, ncid).get();
+            if (maybeNodeConnector.isPresent()) {
+                conn = (NodeConnector) maybeNodeConnector.get();
+            }
+        }
+        catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return conn;
+    }
+
+    /**
+     * Get the name of an OpenFlow NodeConnector.
+     * @param nc
+     * @return name as a string
+     */
+    static public String getNodeConnectorName(NodeConnector nc) {
+        String ncn = null;
+
+        FlowCapableNodeConnector fcnc = nc.getAugmentation(FlowCapableNodeConnector.class);
+        if (fcnc != null) {
+            ncn = fcnc.getName();
+        }
+        return ncn;
     }
 
     static public InstanceIdentifier<Node> getNodeInstanceId(Node node) {

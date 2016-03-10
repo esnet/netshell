@@ -44,7 +44,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnectorKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.meter.types.rev130918.MeterRef;
@@ -526,7 +525,6 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
             // callback code.
             NodeConnectorRef nodeConnectorRef = notification.getIngress();
             String nodeId = nodeConnectorRef.getValue().firstIdentifierOf(Node.class).firstKeyOf(Node.class, NodeKey.class).getId().getValue();
-            String nodeConnectorId = nodeConnectorRef.getValue().firstIdentifierOf(NodeConnector.class).firstKeyOf(NodeConnector.class, NodeConnectorKey.class).getId().getValue();
 
             // The NodeId in ODL is the literal string "openflow:" followed by a decimal representation
             // of the DPID.  We want just the DPID portion as an array of bytes.
@@ -536,7 +534,15 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
             String dpidString = nodeIdComponents[1];
             dpidNumeric = Long.parseLong(dpidString);
             rep.dpid = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(dpidNumeric).array();
+
+            String nodeConnectorId = null;
+            NodeConnector nc = controller.getOdlMdsalImpl().getNodeConnectorByInstanceId(nodeConnectorRef.getValue());
+
+            if (nc != null) {
+                nodeConnectorId = controller.getOdlMdsalImpl().getNodeConnectorName(nc);
+            }
             rep.inPort = nodeConnectorId;
+
             rep.payload = notification.getPayload();
 
             String dpidHexString = String.format("[%02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x]",
