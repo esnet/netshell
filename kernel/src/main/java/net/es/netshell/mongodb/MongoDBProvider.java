@@ -77,6 +77,39 @@ public final class MongoDBProvider implements DataBase {
     @Override
     public final void store(String user, String collection, PersistentObject obj) throws IOException {
         String collectionName = user + "_" + collection;
+        System.out.println("#### 100");
+        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+            throw new SecurityException("not authorized");
+        }
+        System.out.println("#### 101");
+        MongoCollection mongoCollection = this.db.getCollection(collectionName);
+        if (mongoCollection == null) {
+            System.out.println("#### 102");
+            throw new RuntimeErrorException(new Error("Could not store into collection " + collectionName));
+        }
+        System.out.println("#### 103");
+        Document doc = Document.parse(obj.saveToJSON());
+        System.out.println("#### 104");
+        Document query = new Document("eid",obj.getEid());
+        System.out.println("#### 105");
+        FindIterable<Document> res = mongoCollection.find(query);
+        System.out.println("#### 106");
+
+        for (Document item : res) {
+            // The object already exists. Replace it.
+            System.out.println("#### 107");
+            mongoCollection.findOneAndReplace(query, doc);
+            System.out.println("#### 108");
+            return;
+        }
+        System.out.println("#### 109");
+        mongoCollection.insertOne(doc);
+        System.out.println("#### 110");
+    }
+
+    @Override
+    public void delete(String user, String name, PersistentObject obj) throws InstantiationException {
+        String collectionName = user + "_" + name;
         if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
@@ -84,16 +117,8 @@ public final class MongoDBProvider implements DataBase {
         if (mongoCollection == null) {
             throw new RuntimeErrorException(new Error("Could not store into collection " + collectionName));
         }
-        Document doc = Document.parse(obj.saveToJSON());
-        Document query = new Document("eid",obj.getEid());
-        FindIterable<Document> res = mongoCollection.find(query);
-
-        for (Document item : res) {
-            // The object already exists. Replace it.
-            mongoCollection.findOneAndReplace(query, doc);
-            return;
-        }
-        mongoCollection.insertOne(doc);
+        Document query = new Document("resourceName",obj.getResourceClassName());
+        mongoCollection.deleteMany(query);
     }
 
     @Override

@@ -31,33 +31,51 @@ public interface DataBase {
 
     /**
      * Create a collection into the database. Implementation of this method must be idempotent.
-     * @param name of the collection to create.
+     * @param user user owning the collection to create
+     * @param collectionName of the collection to create.
      */
-    void store(String user, String name, PersistentObject obj) throws IOException;
+    void createCollection(String user, String collectionName);
 
     /**
      * Delete a collection.
-     * @param name name of the collection to delete
+     * @param user user owning the collection to delete
+     * @param collectionName name of the collection to delete
      */
-    void deleteCollection(String user, String name);
+    void deleteCollection(String user, String collectionName);
+
+    boolean collectionExists(String user, String collectionName);
+
+    /**
+     * Stores a PersistentObject into a collection
+     * @param user user owning the collection to create
+     * @param collectionName of the collection to create.
+     * @throws IOException
+     */
+    void store(String user, String collectionName, PersistentObject obj) throws IOException;
+
 
     /**
      * Finds docunments within a collection. The query is expressed in JSON. If query is null, then all documents of the collection are returned.
      * The query language is identical to MongoDB queries.
-     * @param collection
+     * @param user user owning the collection
+     * @param collectionName name of the collection where to perform the search
      * @param query a Map of key/value pairs.
+     * @throws InstantiationException
      * @return
      */
     List<String> find(String user,
-                      String name,
+                      String collectionName,
                       Map<String, Object> query) throws InstantiationException;
 
 
+    /**
+     * Delete a PersistentObject from a collection.
+     * Attemting to delete a non-existant object will silently fail
+     * @param user user owning the collection
+     * @param name
+     * @throws InstantiationException
+     */
+    void delete(String user, String name,PersistentObject obj) throws InstantiationException;
 
 
-    void createCollection(String user, String name);
-
-
-
-    boolean collectionExists(String user, String name);
 }

@@ -172,10 +172,23 @@ public class Resource extends PersistentObject {
         throw new RuntimeException(name + " is invalid");
     }
 
-    static public List<Resource> findByName(Container container, String name) throws InstantiationException {
+    static public Resource findByName(Container container, String name) throws InstantiationException {
 
         HashMap<String, Object> query = new HashMap<String,Object>();
         query.put("resourceName",name);
+        List<PersistentObject> objs = PersistentObject.find(container.getOwner(),container.getResourceName(), query);
+        // Translates object types and prunes what is not a Resource.
+        ArrayList<Resource> resources = new ArrayList<Resource>();
+        if (objs.size() > 0) {
+            if (objs.get(0) instanceof Resource) {
+                return (Resource) objs.get(0);
+            }
+        }
+        return null;
+    }
+
+    static public List<Resource> findResources(Container container, HashMap<String,Object> query)
+            throws InstantiationException {
         List<PersistentObject> objs = PersistentObject.find(container.getOwner(),container.getResourceName(), query);
         // Translates object types and prunes what is not a Resource.
         ArrayList<Resource> resources = new ArrayList<Resource>();
@@ -184,11 +197,33 @@ public class Resource extends PersistentObject {
                 resources.add((Resource) obj);
             }
         }
-        return resources;
+        return null;
     }
 
     public void save(Container container) throws IOException {
+        // If a different resource with the same name already exists, overwrites it
+        try {
+            System.out.println("#### 10");
+            Resource resource = Resource.findByName(container,this.getResourceName());
+            System.out.println("#### 11");
+            if (resource != null) {
+                System.out.println("#### 12");
+                resource.delete(container);
+            }
+        } catch (InstantiationException e) {
+            System.out.println("#### 13");
+            throw new IOException(e.getMessage());
+        }
+
         this.save(container.getOwner(),container.getResourceName());
+    }
+
+    public void delete(Container container) throws IOException {
+        try {
+            super.delete(container.getOwner(),container.getResourceName());
+        } catch (InstantiationException e) {
+            throw new IOException(e.getMessage());
+        }
     }
 
     public final HashMap<User,HashMap<String,ACL>> getAcls() {

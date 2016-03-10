@@ -21,9 +21,7 @@ package net.es.netshell.api;
 import net.es.netshell.boot.BootStrap;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.users.User;
-import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.*;
@@ -80,7 +78,7 @@ public class PersistentObject implements Serializable {
         if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
             throw new SecurityException("not authorized");
         }
-        return properties;
+        return this.properties;
     }
 
     public final void setProperties(HashMap<String, Object> properties) {
@@ -146,7 +144,9 @@ public class PersistentObject implements Serializable {
             throw new SecurityException("not authorized");
         }
         DataBase db = BootStrap.getBootStrap().getDataBase();
-        db.store(user,collection, this);
+        System.out.println("#### 1");
+        db.store(user, collection, this);
+        System.out.println("#### 2");
     }
 
     /**
@@ -159,6 +159,14 @@ public class PersistentObject implements Serializable {
         output.flush();
         output.close();
         return output.toString();
+    }
+
+    public void delete(String user,String collection) throws InstantiationException {
+        if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
+            throw new SecurityException("not authorized");
+        }
+        DataBase db = BootStrap.getBootStrap().getDataBase();
+        db.delete(user, collection, this);
     }
 
     private static final String getClassName (String filename) throws IOException {

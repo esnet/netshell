@@ -72,12 +72,14 @@ public class Container extends Resource {
     }
 
     final public void saveResource(Resource resource) throws IOException {
+        System.out.println("##XX " + resource.getResourceName());
         resource.save(this);
+        System.out.println("##XX 1001");
     }
 
-    final public List<Resource> loadResource(String name) throws InstantiationException {
-        List<Resource> resources = Resource.findByName(this, name);
-        return resources;
+    final public Resource loadResource(String name) throws InstantiationException {
+        Resource resource = Resource.findByName(this, name);
+        return resource;
     }
 
     public static final void createContainer (String user,String name) throws IOException {
