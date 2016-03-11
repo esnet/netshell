@@ -239,22 +239,8 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
     @Override
     public void onPacketReceived(PacketReceived notification) {
         logger.info("Received data packet " + notification.getIngress().getValue().toString());
-        EthernetFrame frame = EthernetFrame.packetToFrame(notification.getPayload());
-
-        if (frame != null) {
-
-            logger.info(" Dst " + EthernetFrame.byteString(frame.getDstMac()) +
-                    " Src " + EthernetFrame.byteString(frame.getSrcMac()) +
-                    " EtherType " + String.format("%04x", frame.getEtherType()) +
-                    " VID " + String.format("%d", frame.getVid()) +
-                    " payload " + frame.getPayload().length);
-
-            if (packetInCallback != null) {
-                packetInCallback.callback(notification);
-            }
-        }
-        else {
-            logger.info("Unable to parse inbound packet");
+        if (packetInCallback != null) {
+            packetInCallback.callback(notification);
         }
     }
 
