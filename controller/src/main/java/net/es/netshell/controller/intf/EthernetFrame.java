@@ -1,5 +1,5 @@
 /*
- * ESnet Network Operating System (ENOS) Copyright (c) 2015, The Regents
+ * ESnet Network Operating System (ENOS) Copyright (c) 2016, The Regents
  * of the University of California, through Lawrence Berkeley National
  * Laboratory (subject to receipt of any required approvals from the
  * U.S. Dept. of Energy).  All rights reserved.
@@ -15,12 +15,10 @@
  * irrevocable, worldwide license in the Software to reproduce,
  * distribute copies to the public, prepare derivative works, and perform
  * publicly and display publicly, and to permit other to do so.
+ *
  */
 
-package net.es.netshell.odlmdsal.impl;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package net.es.netshell.controller.intf;
 
 import java.util.Arrays;
 
@@ -35,7 +33,6 @@ import java.util.Arrays;
  */
 public class EthernetFrame {
 
-    private final Logger logger = LoggerFactory.getLogger(EthernetFrame.class);
     // Sizes of things
     public static final int MIN_ETHERNET_HEADER_SIZE = 14;
     public static final int MAC_ADDRESS_SIZE = 6;
@@ -205,7 +202,7 @@ public class EthernetFrame {
 
     /**
      * Utility function to get a human-readable version of a MAC address
-     * @param bytes
+     * @param bytes array of bytes
      * @return string representation
      */
     public static String byteString(final byte[] bytes) {
