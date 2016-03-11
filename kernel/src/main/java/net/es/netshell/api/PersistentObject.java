@@ -61,9 +61,6 @@ public class PersistentObject implements Serializable {
         if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
             throw new SecurityException("not authorized");
         }
-        if (this.eid != null) {
-            throw new SecurityException("not authorized");
-        }
         this.eid = eid;
     }
 
@@ -144,9 +141,7 @@ public class PersistentObject implements Serializable {
             throw new SecurityException("not authorized");
         }
         DataBase db = BootStrap.getBootStrap().getDataBase();
-        System.out.println("#### 1");
         db.store(user, collection, this);
-        System.out.println("#### 2");
     }
 
     /**

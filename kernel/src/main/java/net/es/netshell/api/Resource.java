@@ -53,6 +53,13 @@ public class Resource extends PersistentObject {
         this.resourceName = resourceName;
     }
 
+    public Resource(String resourceName,String resourceClassName) {
+        this.checkValidResourceName(resourceName);
+        this.setCreationStackTrace();
+        this.resourceName = resourceName;
+        this.setResourceClassName(resourceClassName);
+    }
+
     public String getResourceName() {
         return resourceName;
     }
@@ -203,15 +210,11 @@ public class Resource extends PersistentObject {
     public void save(Container container) throws IOException {
         // If a different resource with the same name already exists, overwrites it
         try {
-            System.out.println("#### 10");
             Resource resource = Resource.findByName(container,this.getResourceName());
-            System.out.println("#### 11");
             if (resource != null) {
-                System.out.println("#### 12");
                 resource.delete(container);
             }
         } catch (InstantiationException e) {
-            System.out.println("#### 13");
             throw new IOException(e.getMessage());
         }
 

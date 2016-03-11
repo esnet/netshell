@@ -72,9 +72,7 @@ public class Container extends Resource {
     }
 
     final public void saveResource(Resource resource) throws IOException {
-        System.out.println("##XX " + resource.getResourceName());
         resource.save(this);
-        System.out.println("##XX 1001");
     }
 
     final public Resource loadResource(String name) throws InstantiationException {
