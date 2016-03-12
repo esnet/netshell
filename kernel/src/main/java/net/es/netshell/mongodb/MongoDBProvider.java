@@ -106,7 +106,7 @@ public final class MongoDBProvider implements DataBase {
         if (mongoCollection == null) {
             throw new RuntimeErrorException(new Error("Could not store into collection " + collectionName));
         }
-        Document query = new Document("resourceName",obj.getResourceClassName());
+        Document query = new Document("eid",obj.getEid());
         mongoCollection.deleteMany(query);
     }
 

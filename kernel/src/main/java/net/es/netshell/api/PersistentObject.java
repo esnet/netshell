@@ -161,7 +161,7 @@ public class PersistentObject implements Serializable {
             throw new SecurityException("not authorized");
         }
         DataBase db = BootStrap.getBootStrap().getDataBase();
-        db.delete(user, collection, this);
+        db.delete(user, collection,this);
     }
 
     private static final String getClassName (String filename) throws IOException {

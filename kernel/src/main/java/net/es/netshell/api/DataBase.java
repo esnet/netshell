@@ -72,10 +72,11 @@ public interface DataBase {
      * Delete a PersistentObject from a collection.
      * Attemting to delete a non-existant object will silently fail
      * @param user user owning the collection
-     * @param name
+     * @param collectionName name of the collection where the object to delete is.
+     * @param obj name of the object to delete
      * @throws InstantiationException
      */
-    void delete(String user, String name,PersistentObject obj) throws InstantiationException;
+    void delete(String user, String collectionName, PersistentObject obj) throws InstantiationException;
 
 
 }

@@ -80,6 +80,16 @@ public class Container extends Resource {
         return resource;
     }
 
+    final public void deleteResource(Resource resource) throws InstantiationException, IOException {
+        resource.delete(this);
+    }
+
+    public void deleteContainer() {
+        DataBase db = BootStrap.getBootStrap().getDataBase();
+        db.deleteCollection(this.getOwner(),this.getResourceName());
+    }
+
+
     public static final void createContainer (String user,String name) throws IOException {
         if (BootStrap.getBootStrap().getDataBase().collectionExists(user,name)) {
             return;
