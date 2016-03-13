@@ -39,6 +39,10 @@ public class Link extends  Resource {
         super(link);
     }
 
+    public Link(String linkName) {
+        super(linkName);
+    }
+
     public Link() {
         super();
     }
