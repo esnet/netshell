@@ -31,7 +31,6 @@ public class GenericPort extends Port {
     public GenericPort() {
         super();
     }
-
     public GenericPort(String name) {
         super(name);
         this.links = new ArrayList<GenericLink>();

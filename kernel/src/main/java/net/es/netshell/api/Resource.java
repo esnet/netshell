@@ -19,13 +19,10 @@
 package net.es.netshell.api;
 
 import net.es.netshell.kernel.exec.KernelThread;
-import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.users.User;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -34,8 +31,8 @@ import java.util.*;
 public class Resource extends PersistentObject {
     private String resourceName;
     private String description;
-    private List<String> parentResources;
-    private List<String> childrenResources;
+    private ResourceAnchor parentResourceAnchor;
+    private HashMap<String, ResourceAnchor> childrenResourceAnchors;
     private String owner;
     private HashMap<User,HashMap<String,ACL>> acls = new HashMap<User,HashMap<String,ACL>>();
 
@@ -44,7 +41,7 @@ public class Resource extends PersistentObject {
 
     public Resource() {
         super();
-        this.setCreationStackTrace();
+        // this.setCreationStackTrace();
     }
 
     public Resource(String resourceName) {
@@ -75,15 +72,10 @@ public class Resource extends PersistentObject {
     public Resource (Resource object) {
         this.setCreationStackTrace();
 
-        if (object instanceof SecuredResource) {
-            // Cannot clone SecuredResource
-            throw new SecurityException("operation is not permitted");
-        }
         this.resourceName = object.getResourceName();
 
-        if (object.getParentResources() != null) {
-            this.setParentResources(new ArrayList<String>());
-            this.getParentResources().addAll(object.getParentResources());
+        if (object.getParentResourceAnchor() != null) {
+            this.setParentResourceAnchor(object.getParentResourceAnchor());
         }
     }
 
@@ -121,55 +113,23 @@ public class Resource extends PersistentObject {
 
     public final synchronized void setResourceName (String resourceName) {
         this.checkValidResourceName(resourceName);
-        if (! (this instanceof SecuredResource) ||
-                (this.resourceName == null) ||
-                (KernelThread.currentKernelThread().isPrivileged())) {
-            this.resourceName = resourceName;
-        } else {
-            throw new SecurityException("Operation not permitted");
-        }
+        this.resourceName = resourceName;
     }
 
-    public final synchronized void setChildrenResources(List<String> childrenResources) {
-        if (!(this instanceof SecuredResource) ||
-              (this.childrenResources == null) ||
-              (KernelThread.currentKernelThread().isPrivileged())) {
-            this.childrenResources = childrenResources;
-        } else {
-            throw new SecurityException("Operation not permitted");
-        }
+    public final synchronized void setChildrenResourceAnchors(HashMap<String, ResourceAnchor> childrenResourceAnchors) {
+        this.childrenResourceAnchors = childrenResourceAnchors;
     }
 
-    public final synchronized void setParentResources(List<String> parentResources) {
-        if (! (this instanceof SecuredResource) ||
-              (this.parentResources == null) ||
-              (KernelThread.currentKernelThread().isPrivileged())) {
-            this.parentResources = parentResources;
-        } else {
-            throw new SecurityException("Operation not permitted");
-        }
+    public final synchronized void setParentResourceAnchor(ResourceAnchor parentResourceAnchor) {
+        this.parentResourceAnchor = parentResourceAnchor;
     }
 
-    public final synchronized List<String> getParentResources() {
-        if (this.parentResources == null) {
-            return null;
-        }
-        if (!(this instanceof SecuredResource)) {
-            return this.parentResources;
-        }
-        // This is a secured Resource. Clone the list first.
-        return new ArrayList<String>(this.parentResources);
+    public final synchronized ResourceAnchor getParentResourceAnchor() {
+        return this.parentResourceAnchor;
     }
 
-    public final synchronized List<String> getChildrenResources() {
-        if (this.childrenResources == null) {
-            return null;
-        }
-        if (!(this instanceof SecuredResource)) {
-            return this.childrenResources;
-        }
-        // This is a secured Resource. Clone the list first.
-        return new ArrayList<String>(this.childrenResources);
+    public final synchronized HashMap<String, ResourceAnchor> getChildrenResourceAnchors() {
+        return this.childrenResourceAnchors;
     }
 
     private void checkValidResourceName(String name) {
