@@ -552,8 +552,10 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
             // JSON encode
             String callbackMessage = mapper.writeValueAsString(rep);
 
-            // What message properties to set here?
-            BasicProperties props = new BasicProperties.Builder().build();
+            // Set message properties for the notification.
+            // We make notifications expire after 30 seconds to avoid building up huge queues
+            // of messages if for example there is no ENOS running.
+            BasicProperties props = new BasicProperties.Builder().expiration("30000").build();
 
             // Send it.
             channel.basicPublish("", Common.receivePacketReplyQueueName, props, callbackMessage.getBytes("UTF-8"));
