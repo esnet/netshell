@@ -46,8 +46,6 @@ public class Container extends Resource {
 
     private HashMap<String,List<String>> resourceACLs = null;
 
-
-
     public HashMap<String, List<String>> getResourceACL() {
         return resourceACLs;
     }
@@ -69,6 +67,25 @@ public class Container extends Resource {
             }
         }
         throw new SecurityException("not authorized");
+    }
+
+    /**
+     * Creates a ResourceAnchor for the given resource.
+     * @param resource
+     * @return
+     */
+
+    @JsonIgnore
+    public ResourceAnchor getResourceAnchor(Resource resource) throws InstantiationException {
+        Resource stored = Resource.findByName(this,resource.getResourceName());
+        if (! stored.getEid().equals(resource.getEid())) {
+            throw new SecurityException("incorrect eid");
+        }
+        ResourceAnchor anchor = new ResourceAnchor(this.getOwner(),
+                                                   this.getResourceName(),
+                                                   resource.getResourceName(),
+                                                   resource.getEid());
+        return anchor;
     }
 
     final public void saveResource(Resource resource) throws IOException {

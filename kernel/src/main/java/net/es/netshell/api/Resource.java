@@ -168,16 +168,21 @@ public class Resource extends PersistentObject {
     }
 
     public void save(Container container) throws IOException {
-        // If a different resource with the same name already exists, overwrites it
+        // Check if there already is a resource of the same name
         try {
             Resource resource = Resource.findByName(container,this.getResourceName());
             if (resource != null) {
-                resource.delete(container);
+                if (this.getEid().equals(resource.getEid())) {
+                    // Same resource, can replace
+                    resource.delete(container);
+                } else {
+                    throw new IOException("cannot overwrite existing resource with different eid. conflict name: " +
+                            this.getResourceName());
+                }
             }
         } catch (InstantiationException e) {
             throw new IOException(e.getMessage());
         }
-
         this.save(container.getOwner(),container.getResourceName());
     }
 
