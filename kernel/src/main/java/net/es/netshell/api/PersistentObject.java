@@ -235,6 +235,7 @@ public class PersistentObject implements Serializable {
             throw new InstantiationException(e.toString());
         }
     }
+
     public static final PersistentObject newObjectFromFile (String fileName) throws InstantiationException {
         if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
             throw new SecurityException("not authorized");
@@ -248,6 +249,7 @@ public class PersistentObject implements Serializable {
             throw new InstantiationException(e.toString());
         }
     }
+
     public static final PersistentObject newObjectFromFile (String fileName, Class c) throws InstantiationException {
         User currentUser =  KernelThread.currentKernelThread().getUser();
         if (currentUser != null && ! currentUser.isPrivileged())  {
