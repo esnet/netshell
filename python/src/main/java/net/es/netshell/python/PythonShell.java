@@ -33,7 +33,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Dictionary;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import org.osgi.framework.Bundle;
@@ -113,24 +112,7 @@ public class PythonShell {
                 // Don't try to import site.py.  The move from Jython 2.5.2 to 2.7beta4 seems to
                 // require this, because it appears that we can't find site.py and blow up.
                 org.python.core.Options.importSite = false;
-                // Sets the default search path
-                PySystemState systemState = new PySystemState();
-                String mode = Options.unbuffered ? "b" : "";
-                int buffering = Options.unbuffered ? 0 : 1;
-                systemState.stdin = systemState.__stdin__ = new PyFile(System.in, "<stdin>", "r" + mode, buffering, false);
-                systemState.stdout = systemState.__stdout__ = new PyFile(System.out, "<stdout>", "w" + mode, buffering, false);
-                systemState.stderr = systemState.__stderr__ = new PyFile(System.err, "<stderr>", "w" + mode, 0, false);
 
-                PythonInterpreter python = new PythonInterpreter(sessionLocals,systemState);
-
-                logger.debug("Created new PythonInterpreter for setting up locals and search path");
-
-                python.setIn(in);
-                python.setOut(out);
-                python.setErr(err);
-                osgiSetup(python);
-                python.exec("import sys");
-                python.exec("sys.path = sys.path + ['" + BootStrap.rootPath.resolve("bin/") + "']");
                 if (KernelThread.currentKernelThread().getUser() != null) {
                     User user =KernelThread.currentKernelThread().getUser();
                     if (!PythonShell.userLocals.containsKey(user.getName())) {
@@ -144,11 +126,9 @@ public class PythonShell {
                     if (user.isPrivileged()) {
                         sessionLocals.put("_current_locals",PythonShell.userCurrentLocals);
                         sessionLocals.put("_ssh_locals",PythonShell.locals);
-                        sessionLocals.put("_all_user_locals",PythonShell.userLocals);
                     }
-                    python.exec("sys.path = sys.path + ['" + user.getHomePath()
-                            + "']");
                 }
+                sessionLocals.put("_all_user_locals",PythonShell.userLocals);
                 try {
                     err.flush();
                 } catch (IOException e) {
@@ -165,6 +145,7 @@ public class PythonShell {
                     }
                 } else {
                     try {
+                        PythonInterpreter python = PythonShell.getPythonInterpreter(in,out,err,sessionLocals);
                         python.execfile(filePath);
                     } catch (Exception e) {
                         try {
@@ -178,6 +159,29 @@ public class PythonShell {
             }
         }
         return sessionLocals;
+    }
+
+    private static PythonInterpreter getPythonInterpreter(InputStream in, OutputStream out, OutputStream err, PyDictionary sessionLocals) {
+
+        PySystemState systemState = null;
+        PythonInterpreter python;
+
+        systemState = (PySystemState) sessionLocals.get("_sessionsys");
+        if (systemState == null) {
+            systemState = new PySystemState();
+            sessionLocals.put("_sessionsys",systemState);
+        }
+        String mode = Options.unbuffered ? "b" : "";
+        int buffering = Options.unbuffered ? 0 : 1;
+        systemState.stdin = new PyFile(in, "<stdin>", "r" + mode, buffering, false);
+        systemState.stdout = new PyFile(out, "<stdout>", "w" + mode, buffering, false);
+        systemState.stderr = new PyFile(err, "<stderr>", "w" + mode, 0, false);
+        python = new PythonInterpreter(sessionLocals,systemState);
+        //python.setIn(in);
+        //python.setOut(out);
+        //python.setErr(err);
+        osgiSetup(python.getSystemState());
+        return python;
     }
 
     @ShellCommand(
@@ -236,7 +240,6 @@ public class PythonShell {
                 }
             }
         }
-
     }
     @ShellCommand(
             name="python",
@@ -273,11 +276,11 @@ public class PythonShell {
         try {
             if ((args != null) && (args.length > 1)) {
                 // A program is provided. Add the arguments into the python environment as command_args variable
-                PythonInterpreter python = new PythonInterpreter(sessionLocals);
-                python.setIn(in);
-                python.setOut(out);
-                python.setErr(err);
-                osgiSetup(python);
+                PythonInterpreter python = PythonShell.getPythonInterpreter(in,out,err,sessionLocals);
+                if (KernelThread.currentKernelThread().getUser() != null) {
+                    User user = KernelThread.currentKernelThread().getUser();
+                    python.exec("sys.path = sys.path + ['" + user.getHomePath() + "']");
+                }
                 if (KernelThread.currentKernelThread().getUser() != null) {
                     logger.info("Executes file " + args[1] + " for user " + KernelThread.currentKernelThread().getUser().getName());
                 } else {
@@ -315,17 +318,19 @@ public class PythonShell {
                     // Make sure that the variable exists
                     sessionLocals.put("command_args", new String[] {"python"});
                 }
+                PySystemState systemState = (PySystemState) sessionLocals.get("_sessionsys");
                 InteractiveConsole console = new InteractiveConsole(sessionLocals);
                 console.setOut(out);
                 console.setErr(err);
                 console.setIn(in);
+                console.getSystemState().path = systemState.path;
                 if (System.getProperty("python.home") == null) {
                     System.setProperty("python.home", "");
                 }
                 InteractiveConsole.initialize(System.getProperties(),
                         null, new String[0]);
 
-                osgiSetup(console);
+                osgiSetup(console.getSystemState());
                 // Start the interactive session
                 if (in instanceof ShellInputStream) {
                     ((ShellInputStream) in).setEofHack(true);
@@ -370,7 +375,7 @@ public class PythonShell {
                 return;
             }
             // Execute the profile
-            PythonInterpreter python = new PythonInterpreter(locals);
+            PythonInterpreter python = PythonShell.getPythonInterpreter(in,out,err,locals);
             python.setIn(in);
             python.setOut(out);
             python.setErr(err);
@@ -418,14 +423,17 @@ public class PythonShell {
      * This includes setting up the ClassLoader for the interpreter
      * and telling the Jython package manager that it can use the Java
      * classes made available by the OSGi framework.
-     * @param py
+     * @param sys SystemState
      */
-    static void osgiSetup(PythonInterpreter py) {
-        PySystemState sys = py.getSystemState();
+    static void osgiSetup(PySystemState sys) {
 
         // Set the class loader to know it has a parent class loader.
         BundleContext bc = BootStrap.getBootStrap().getBundleContext();
         Bundle [] bundles = bc.getBundles();
+
+        if (sys == null) {
+            System.out.println("SYS IS NULL");
+        }
 
         sys.setClassLoader(new OsgiBundlesClassLoader(bundles, PythonShell.class.getClassLoader()));
         logger.debug("Jython class loader now: " + sys.getClassLoader().getClass().getName());
@@ -439,10 +447,9 @@ public class PythonShell {
         // (saveImportedPackageNames).
         String [] packages = saveExportedPackageNames(bundles);
         for(String p : packages) {
-             sys.add_package(p);
+            sys.add_package(p);
             logger.debug("Add package {}", p);
         }
-
     }
 
     /**
