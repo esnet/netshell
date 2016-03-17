@@ -177,9 +177,6 @@ public class PythonShell {
         systemState.stdout = new PyFile(out, "<stdout>", "w" + mode, buffering, false);
         systemState.stderr = new PyFile(err, "<stderr>", "w" + mode, 0, false);
         python = new PythonInterpreter(sessionLocals,systemState);
-        //python.setIn(in);
-        //python.setOut(out);
-        //python.setErr(err);
         osgiSetup(python.getSystemState());
         return python;
     }
