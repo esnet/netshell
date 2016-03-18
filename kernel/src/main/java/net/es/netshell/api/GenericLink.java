@@ -18,6 +18,8 @@
  */
 package net.es.netshell.api;
 
+import java.util.List;
+
 /**
  * Created by lomax on 3/6/15.
  */
@@ -37,8 +39,8 @@ public class GenericLink extends Link {
         this.srcPort = srcPort;
         this.dstNode = dstNode;
         this.dstPort = dstPort;
-        String name = srcNode.getResourceName() + ":" + srcPort.getResourceName() + ":" +
-                      dstNode.getResourceName() + ":" + dstPort.getResourceName();
+        String name = Link.buildName(srcNode.getResourceName(),srcPort.getResourceName(),
+                                     dstNode.getResourceName(),dstPort.getResourceName());
         this.setResourceName(name);
         this.srcPort.addLink(this);
         this.dstPort.addLink(this);

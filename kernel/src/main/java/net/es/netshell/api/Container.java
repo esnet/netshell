@@ -74,10 +74,9 @@ public class Container extends Resource {
      * @param resource
      * @return
      */
-
     @JsonIgnore
     public ResourceAnchor getResourceAnchor(Resource resource) throws InstantiationException {
-        Resource stored = Resource.findByName(this,resource.getResourceName());
+        Resource stored = Resource.findByName(this, resource.getResourceName());
         if (! stored.getEid().equals(resource.getEid())) {
             throw new SecurityException("incorrect eid");
         }
@@ -86,6 +85,20 @@ public class Container extends Resource {
                                                    resource.getResourceName(),
                                                    resource.getEid());
         return anchor;
+    }
+
+    /**
+     * Creates a ResourceAnchor for the given resource.
+     * @param resourceName
+     * @return
+     */
+    @JsonIgnore
+    public ResourceAnchor getResourceAnchor(String resourceName) throws InstantiationException {
+        Resource resource = this.loadResource(resourceName);
+        if (resource == null) {
+            throw new InstantiationException(resourceName + "does not exist.");
+        }
+        return this.getResourceAnchor(resource);
     }
 
     final public void saveResource(Resource resource) throws IOException {
@@ -103,7 +116,7 @@ public class Container extends Resource {
 
     public void deleteContainer() {
         DataBase db = BootStrap.getBootStrap().getDataBase();
-        db.deleteCollection(this.getOwner(),this.getResourceName());
+        db.deleteCollection(this.getOwner(), this.getResourceName());
     }
 
 
@@ -119,7 +132,7 @@ public class Container extends Resource {
 
     public static final void createContainer (String name) throws IOException {
         User user = KernelThread.currentKernelThread().getUser();
-        Container.createContainer(user.getName(),name);
+        Container.createContainer(user.getName(), name);
         return;
     }
 
@@ -151,6 +164,13 @@ public class Container extends Resource {
             return null;
         }
         return container;
+    }
+
+    /**
+     * Save the state of the container.
+     */
+    public void save() throws IOException {
+        this.saveResource(this);
     }
 
 

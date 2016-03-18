@@ -47,5 +47,30 @@ public class Link extends  Resource {
         super();
     }
 
+    public static String buildName(String srcNodeName, String srcPortName,
+                                   String dstNodeName, String dstPortName) {
+        return srcNodeName + "--" + srcPortName + "--" + dstNodeName + "--" + dstPortName;
+    }
+
+    public static String nameToSrcNode(String name) {
+        String[] v = name.split("--");
+        return v[0];
+    }
+
+    public static String nameToSrcPort(String name) {
+        String[] v = name.split("--");
+        return v[1];
+    }
+
+    public static String nameToDstNode(String name) {
+        String[] v = name.split("--");
+        return v[2];
+    }
+
+    public static String nameToDstPort(String name) {
+        String[] v = name.split("--");
+        return v[3];
+    }
+
 }
 

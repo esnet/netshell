@@ -298,4 +298,24 @@ public class Resource extends PersistentObject {
     }
 
 
+    /**
+     * Returns the resource, if any, associated with the ResourceAnchor.
+     * @param anchor
+     * @return
+     */
+    public final static Resource toResource(ResourceAnchor anchor) {
+        Container container = Container.getContainer(anchor.getContainerOwner(),anchor.getContainerName());
+        if (container == null) {
+            return null;
+        }
+        try {
+            Resource resource = container.loadResource(anchor.getResourceName());
+            if ((resource != null) && resource.getEid().equals(anchor.getEid())) {
+                return resource;
+            }
+        } catch (InstantiationException e) {
+            return null;
+        }
+        return null;
+    }
 }
