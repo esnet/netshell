@@ -29,6 +29,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -96,7 +97,7 @@ public class Container extends Resource {
     public ResourceAnchor getResourceAnchor(String resourceName) throws InstantiationException {
         Resource resource = this.loadResource(resourceName);
         if (resource == null) {
-            throw new InstantiationException(resourceName + "does not exist.");
+            throw new InstantiationException(resourceName + " does not exist.");
         }
         return this.getResourceAnchor(resource);
     }
@@ -164,6 +165,47 @@ public class Container extends Resource {
             return null;
         }
         return container;
+    }
+
+    /**
+     * Returns the resource referred by the resource anchor.
+     * @param anchor
+     * @return the Resource referred by the resource anchor.
+     * @throws InstantiationException if the resource cannot be loaded from the database.
+     * @throws SecurityException if the anchor is invalid
+     */
+    @JsonIgnore
+    public static final Resource fromAnchor(ResourceAnchor anchor) throws InstantiationException {
+        Container container = Container.getContainer(anchor.getContainerOwner(),anchor.getContainerName());
+        Resource resource = container.loadResource(anchor.getResourceName());
+        if (resource != null) {
+            if (resource.getEid().equals(anchor.getEid()))  {
+                return resource;
+            }
+            throw new SecurityException("invalid eid");
+        }
+        return null;
+    }
+    /**
+     * Returns the resource referred by the resource anchor. The anchor is provided as a Map containing the
+     * values of the keys containerOwner, containerName, resourceName, eid.
+     * @param anchorMap
+     * @return the Resource referred by the resource anchor.
+     * @throws InstantiationException if the resource cannot be loaded from the database.
+     * @throws SecurityException if the anchor is invalid
+     */
+    @JsonIgnore
+    public static final Resource fromAnchor(Map<String,String> anchorMap) throws InstantiationException {
+        try {
+            String containerOwner = anchorMap.get("containerOwner");
+            String containerName = anchorMap.get("containerName");
+            String resourceName = anchorMap.get("resourceName");
+            String eid = anchorMap.get("eid");
+            ResourceAnchor anchor = new ResourceAnchor(containerOwner,containerName,resourceName,eid);
+            return Container.fromAnchor(anchor);
+        } catch (Exception e) {
+            throw new InstantiationException(e.getMessage());
+        }
     }
 
     /**
