@@ -17,6 +17,7 @@
  * publicly and display publicly, and to permit other to do so.
  *
  */
+
 package net.es.netshell.python;
 
 import net.es.netshell.boot.BootStrap;
@@ -274,10 +275,6 @@ public class PythonShell {
             if ((args != null) && (args.length > 1)) {
                 // A program is provided. Add the arguments into the python environment as command_args variable
                 PythonInterpreter python = PythonShell.getPythonInterpreter(in,out,err,sessionLocals);
-                if (KernelThread.currentKernelThread().getUser() != null) {
-                    User user = KernelThread.currentKernelThread().getUser();
-                    python.exec("sys.path = sys.path + ['" + user.getHomePath() + "']");
-                }
                 if (KernelThread.currentKernelThread().getUser() != null) {
                     logger.info("Executes file " + args[1] + " for user " + KernelThread.currentKernelThread().getUser().getName());
                 } else {
