@@ -22,9 +22,11 @@ import net.es.netshell.boot.BootStrap;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.users.User;
 import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.*;
+import java.lang.ref.WeakReference;
 import java.util.*;
 
 /**
@@ -145,6 +147,19 @@ public class PersistentObject implements Serializable {
     }
 
     /**
+     * Save a list of ResourceAnchor's in bulk.
+     * @param resourceAnchors list of Resource Anchors to save
+     * @throws IOException
+     */
+    public static void save(List<ResourceAnchor> resourceAnchors) throws IOException {
+        if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
+            throw new SecurityException("not authorized");
+        }
+        DataBase db = BootStrap.getBootStrap().getDataBase();
+        db.store(resourceAnchors);
+    }
+
+    /**
      * Save the resource to string containing the JSON representation of the object.
      * @throws java.io.IOException
      */
@@ -154,6 +169,14 @@ public class PersistentObject implements Serializable {
         output.flush();
         output.close();
         return output.toString();
+    }
+
+    public static void delete(List<ResourceAnchor> resourceAnchors) throws InstantiationException, IOException {
+        if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
+            throw new SecurityException("not authorized");
+        }
+        DataBase db = BootStrap.getBootStrap().getDataBase();
+        db.delete(resourceAnchors);
     }
 
     public void delete(String user,String collection) throws InstantiationException {

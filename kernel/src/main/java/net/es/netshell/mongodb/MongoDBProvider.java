@@ -24,6 +24,7 @@ import java.util.*;
 
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoIterable;
+import com.mongodb.client.model.*;
 import net.es.netshell.api.DataBase;
 import net.es.netshell.api.PersistentObject;
 
@@ -32,6 +33,8 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.ServerAddress;
 import com.mongodb.MongoCredential;
 import com.mongodb.client.MongoCollection;
+import net.es.netshell.api.Resource;
+import net.es.netshell.api.ResourceAnchor;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.users.User;
 import org.bson.Document;
@@ -45,14 +48,15 @@ import javax.management.RuntimeErrorException;
 public final class MongoDBProvider implements DataBase {
     private MongoDatabase db;
     private MongoClient client;
-    private String user;
+    private String mongoUser;
     private String password;
     private ServerAddress serverAddress;
+    private HashMap<String,MongoCollection>  collections = new HashMap<String,MongoCollection>();
 
-    public MongoDBProvider(String host, int port, String dbName, String user, String password) {
+    public MongoDBProvider(String host, int port, String dbName, String mongoUser, String password) {
         this.serverAddress = new ServerAddress(host,port);
         ArrayList<MongoCredential> creds = new ArrayList<MongoCredential>();
-        MongoCredential enosCred = MongoCredential.createCredential(user,dbName,password.toCharArray());
+        MongoCredential enosCred = MongoCredential.createCredential(mongoUser,dbName,password.toCharArray());
         creds.add(enosCred);
         this.client = new MongoClient(this.serverAddress,creds);
         this.db = client.getDatabase(dbName);
@@ -67,11 +71,68 @@ public final class MongoDBProvider implements DataBase {
         return this.client;
     }
 
+    private synchronized MongoCollection getCollection(String user, String collection) {
+        String collectionName = user + "_" + collection;
+        if (this.collections.containsKey(collectionName)) {
+            return this.collections.get(collectionName);
+        }
+        MongoCollection mongoCollection = this.db.getCollection(collectionName);
+        if (mongoCollection != null) {
+            this.collections.put(collectionName,mongoCollection);
+        }
+        return mongoCollection;
+    }
+
     public final MongoDatabase getDatabase() {
         if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
         return this.db;
+    }
+
+    @Override
+    public final void store(List<ResourceAnchor> anchors) throws IOException {
+        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+            throw new SecurityException("not authorized");
+        }
+        HashMap<String,ArrayList<WriteModel>>  collectionRequests = new HashMap<String,ArrayList<WriteModel>>();
+        // Build the bulk requests per collection
+        for (ResourceAnchor anchor : anchors) {
+            String user = anchor.getContainerOwner();
+            String collection = anchor.getContainerName();
+            String collectionName = user + "_" + collection;
+            ArrayList<WriteModel> requests;
+            if (!collectionRequests.containsKey(collectionName)) {
+                requests = new ArrayList<WriteModel>();
+                collectionRequests.put(collectionName,requests);
+            } else {
+                requests = collectionRequests.get(collectionName);
+            }
+            try {
+                // Likely to be in the Resource cache. Otherwise replace by itself.
+                Resource resource = Resource.findByName(user, collection, anchor.getResourceName());
+                Document doc = Document.parse(resource.saveToJSON());
+                Document query = new Document("eid",resource.getEid());
+;
+                ReplaceOneModel<Document> request = new ReplaceOneModel<Document>(query,doc);
+                request.getOptions().upsert(true);
+                requests.add(request);
+            } catch (InstantiationException e) {
+                throw new IOException(e);
+            }
+        }
+        // Bulk write the collection's request
+        for (Map.Entry<String,ArrayList<WriteModel>> entry : collectionRequests.entrySet()) {
+            String[] name = entry.getKey().split("_");
+            ArrayList<WriteModel> requests = entry.getValue();
+            MongoCollection mongoCollection = this.getCollection(name[0], name[1]);
+            if (mongoCollection == null) {
+                throw new RuntimeErrorException(new Error("Could not store into collection " + entry.getKey()));
+            }
+            BulkWriteOptions options = new BulkWriteOptions();
+            options.ordered(false);
+            mongoCollection.bulkWrite(requests,options);
+        }
     }
 
     @Override
@@ -86,14 +147,9 @@ public final class MongoDBProvider implements DataBase {
         }
         Document doc = Document.parse(obj.saveToJSON());
         Document query = new Document("eid",obj.getEid());
-        FindIterable<Document> res = mongoCollection.find(query);
-
-        for (Document item : res) {
-            // The object already exists. Replace it.
-            mongoCollection.findOneAndReplace(query, doc);
-            return;
-        }
-        mongoCollection.insertOne(doc);
+        UpdateOptions options = new UpdateOptions();
+        options.upsert(true);
+        mongoCollection.replaceOne(query, doc, options);
     }
 
     @Override
@@ -109,6 +165,43 @@ public final class MongoDBProvider implements DataBase {
         Document query = new Document("eid",obj.getEid());
         mongoCollection.deleteMany(query);
     }
+
+    @Override
+    public final void delete(List<ResourceAnchor> anchors) throws IOException {
+        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+            throw new SecurityException("not authorized");
+        }
+        HashMap<String,ArrayList<WriteModel>>  collectionRequests = new HashMap<String,ArrayList<WriteModel>>();
+        // Build the bulk requests per collection
+        for (ResourceAnchor anchor : anchors) {
+            String user = anchor.getContainerOwner();
+            String collection = anchor.getContainerName();
+            String collectionName = user + "_" + collection;
+            ArrayList<WriteModel> requests;
+            if (!collectionRequests.containsKey(collectionName)) {
+                requests = new ArrayList<WriteModel>();
+                collectionRequests.put(collectionName,requests);
+            } else {
+                requests = collectionRequests.get(collectionName);
+            }
+            Document query = new Document("eid",anchor.getEid());
+            DeleteOneModel request = new DeleteOneModel(query);;
+            requests.add(request);
+        }
+        // Bulk delete the collection's request
+        for (Map.Entry<String,ArrayList<WriteModel>> entry : collectionRequests.entrySet()) {
+            String[] name = entry.getKey().split("_");
+            ArrayList<WriteModel> requests = entry.getValue();
+            MongoCollection mongoCollection = this.getCollection(name[0], name[1]);
+            if (mongoCollection == null) {
+                throw new RuntimeErrorException(new Error("Could not delete into collection " + entry.getKey()));
+            }
+            BulkWriteOptions options = new BulkWriteOptions();
+            options.ordered(false);
+            mongoCollection.bulkWrite(requests,options);
+        }
+    }
+
 
     @Override
     public final void createCollection(String user, String name) {
@@ -147,6 +240,7 @@ public final class MongoDBProvider implements DataBase {
         }
         ArrayList<String> res = new ArrayList<String>();
         FindIterable<Document> results = null;
+
         if (query == null) {
             results = collection.find();
         } else {

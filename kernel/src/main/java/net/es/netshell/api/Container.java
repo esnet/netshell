@@ -45,29 +45,15 @@ public class Container extends Resource {
         super(name);
     }
 
-    private HashMap<String,List<String>> resourceACLs = null;
+    private HashMap<String,String> resources = new HashMap<String,String>();
 
-    public HashMap<String, List<String>> getResourceACL() {
-        return resourceACLs;
+
+    public HashMap<String, String> getResources() {
+        return resources;
     }
 
-    public void setResourceACL(HashMap<String, List<String>> resourceACL) {
-        this.resourceACLs = resourceACL;
-    }
-
-    public void checkAccess(User currentUser, Resource resource, HashMap<String, Object> accessQuery) {
-
-        if ( this.resourceACLs.containsKey(currentUser)) {
-            List<String> acl = this.resourceACLs.get(currentUser);
-            if (accessQuery.containsKey(ResourceACL.ACCESS)) {
-                String access = (String) accessQuery.get(ResourceACL.ACCESS);
-                if (acl.contains(access)) {
-                    // Access is granted by ACL
-                    return;
-                }
-            }
-        }
-        throw new SecurityException("not authorized");
+    public void setResources(HashMap<String, String> resources) {
+        this.resources = resources;
     }
 
     /**
@@ -103,12 +89,17 @@ public class Container extends Resource {
     }
 
     final public void saveResource(Resource resource) throws IOException {
+        this.resources.put(resource.getResourceName(),resource.getResourceClassName());
         resource.save(this);
+        this.save(this);
     }
 
     final public Resource loadResource(String name) throws InstantiationException {
-        Resource resource = Resource.findByName(this, name);
-        return resource;
+        if (this.resources.containsKey(name)) {
+            Resource resource = Resource.findByName(this, name);
+            return resource;
+        }
+        return null;
     }
 
     final public void deleteResource(Resource resource) throws InstantiationException, IOException {
@@ -145,22 +136,10 @@ public class Container extends Resource {
 
     @JsonIgnore
     public static final Container getContainer(String user,String name) {
+        // First check the Resource cach
         Container container = null;
-        if (! BootStrap.getBootStrap().getDataBase().collectionExists(user,name)) {
-            return null;
-        }
-        HashMap<String,Object> query = new HashMap<String,Object>();
-        query.put("resourceName", name);;
         try {
-            List<PersistentObject> containers = PersistentObject.find(user,name, query);
-            for (PersistentObject obj : containers) {
-                if (obj instanceof Container) {
-                    container = (Container)obj;
-                    if (container.getResourceName().equals(name)) {
-                        return container;
-                    }
-                }
-            }
+            container = (Container) Resource.findByName(user, name, name);
         } catch (InstantiationException e) {
             return null;
         }
@@ -214,8 +193,6 @@ public class Container extends Resource {
     public void save() throws IOException {
         this.saveResource(this);
     }
-
-
 }
 
 

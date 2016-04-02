@@ -29,6 +29,8 @@ import java.util.Map;
  */
 public interface DataBase {
 
+    void delete(List<ResourceAnchor> anchors) throws IOException;
+
     /**
      * Create a collection into the database. Implementation of this method must be idempotent.
      * @param user user owning the collection to create
@@ -44,6 +46,8 @@ public interface DataBase {
     void deleteCollection(String user, String collectionName);
 
     boolean collectionExists(String user, String collectionName);
+
+    void store(List<ResourceAnchor> anchors) throws IOException;
 
     /**
      * Stores a PersistentObject into a collection

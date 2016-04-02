@@ -23,6 +23,7 @@ import net.es.netshell.kernel.users.User;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.*;
 
 /**
@@ -34,10 +35,12 @@ public class Resource extends PersistentObject {
     private ResourceAnchor parentResourceAnchor;
     private HashMap<String, ResourceAnchor> childrenResourceAnchors;
     private String owner;
-    private HashMap<User,HashMap<String,ACL>> acls = new HashMap<User,HashMap<String,ACL>>();
+    private  HashMap<User,HashMap<String,ACL>> acls = new HashMap<User,HashMap<String,ACL>>();
 
     @JsonIgnore
-    private String creationStackTrace;
+    public String creationStackTrace;
+    @JsonIgnore
+    private static ResourceCache cache = new ResourceCache();
 
     public Resource() {
         super();
@@ -71,9 +74,7 @@ public class Resource extends PersistentObject {
 
     public Resource (Resource object) {
         this.setCreationStackTrace();
-
         this.resourceName = object.getResourceName();
-
         if (object.getParentResourceAnchor() != null) {
             this.setParentResourceAnchor(object.getParentResourceAnchor());
         }
@@ -99,6 +100,14 @@ public class Resource extends PersistentObject {
     @JsonIgnore
     public final String getCreationStackTrace() {
         return this.creationStackTrace;
+    }
+
+    @JsonIgnore
+    public static ResourceCache getCache() {
+        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+            throw new SecurityException("not authorized to get Resource cache");
+        }
+        return Resource.cache;
     }
 
     @JsonIgnore
@@ -138,25 +147,39 @@ public class Resource extends PersistentObject {
         }
         throw new RuntimeException(name + " is invalid");
     }
-
     static public Resource findByName(Container container, String name) throws InstantiationException {
-
+        if (! container.getResources().containsKey(name)) {
+            return null;
+        }
+        return Resource.findByName(container.getOwner(), container.getResourceName(), name);
+    }
+    static public Resource findByName(String containerOwner, String containerName, String name) throws InstantiationException {
+        Resource obj = Resource.cache.getCachedObject(containerOwner,containerName, name);
+        if (obj != null) {
+            return obj;
+        }
+        // Not in the cache. Must load it from the database
         HashMap<String, Object> query = new HashMap<String,Object>();
         query.put("resourceName",name);
-        List<PersistentObject> objs = PersistentObject.find(container.getOwner(),container.getResourceName(), query);
+        List<PersistentObject> objs = PersistentObject.find(containerOwner,containerName, query);
         // Translates object types and prunes what is not a Resource.
         ArrayList<Resource> resources = new ArrayList<Resource>();
         if (objs.size() > 0) {
+            Resource resource = (Resource) objs.get(0);
             if (objs.get(0) instanceof Resource) {
-                return (Resource) objs.get(0);
+                Resource.cache.cacheObject(containerOwner,containerName,resource);
+                return resource;
             }
         }
         return null;
     }
 
     static public List<Resource> findResources(Container container, HashMap<String,Object> query)
-            throws InstantiationException {
-        List<PersistentObject> objs = PersistentObject.find(container.getOwner(),container.getResourceName(), query);
+            throws InstantiationException, IOException {
+        // Since the query is complex, it needs to be done by the database. This means that the cache
+        // must first be sync'ed.
+        Resource.cache.sync();
+        List<PersistentObject> objs = PersistentObject.find(container.getOwner(), container.getResourceName(), query);
         // Translates object types and prunes what is not a Resource.
         ArrayList<Resource> resources = new ArrayList<Resource>();
         for (PersistentObject obj : objs) {
@@ -168,22 +191,7 @@ public class Resource extends PersistentObject {
     }
 
     public void save(Container container) throws IOException {
-        // Check if there already is a resource of the same name
-        try {
-            Resource resource = Resource.findByName(container,this.getResourceName());
-            if (resource != null) {
-                if (this.getEid().equals(resource.getEid())) {
-                    // Same resource, can replace
-                    resource.delete(container);
-                } else {
-                    throw new IOException("cannot overwrite existing resource with different eid. conflict name: " +
-                            this.getResourceName());
-                }
-            }
-        } catch (InstantiationException e) {
-            throw new IOException(e.getMessage());
-        }
-        this.save(container.getOwner(),container.getResourceName());
+        Resource.cache.cacheObject(container,this);
     }
 
     public void delete(Container container) throws IOException {
