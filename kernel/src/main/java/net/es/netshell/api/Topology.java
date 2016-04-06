@@ -20,6 +20,7 @@ package net.es.netshell.api;
 
 import net.es.netshell.kernel.exec.KernelThread;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import org.jgrapht.alg.DijkstraShortestPath;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,10 +36,6 @@ public class Topology extends Container {
     @JsonIgnore
     public synchronized List<Resource> getNodes() throws IOException, InstantiationException {
         HashMap<String, Object> query = new HashMap<String,Object>();
-        /**
-         * new Document("$or", asList(new Document("cuisine", "Italian"),
-         new Document("address.zipcode", "10075"))));
-         */
         ArrayList<HashMap<String,Object>> q = new ArrayList<HashMap<String,Object>>();
         HashMap<String, Object> q1 = new HashMap<String,Object>();
         q1.put("resourceType",ResourceTypes.NODE);
@@ -55,7 +52,7 @@ public class Topology extends Container {
     public synchronized List<Resource> getLinks() throws IOException, InstantiationException {
         HashMap<String, Object> query = new HashMap<String,Object>();
         query.put("resourceType",ResourceTypes.LINK);
-        List<Resource> links = this.findResources(this,query);
+        List<Resource> links = this.findResources(this, query);
         return links;
     }
 
@@ -85,21 +82,43 @@ public class Topology extends Container {
         return (Topology) container;
     }
 
+    @JsonIgnore
     public static Topology getTopology(String name) throws InstantiationException {
         return Topology.getTopology(KernelThread.currentKernelThread().getUser().getName(), name);
     }
 
+    @JsonIgnore
     public static Topology getTopology(String name, Class topologyClass) throws InstantiationException {
         return Topology.getTopology(KernelThread.currentKernelThread().getUser().getName(), name, topologyClass);
     }
 
+    @JsonIgnore
     public static Topology getTopology(String owner, String name) throws InstantiationException {
         return Topology.getTopology(owner, name, Topology.class);
     }
 
+    @JsonIgnore
     public static Topology getTopology(String owner, String name, Class topologyClass)
             throws InstantiationException {
         return (Topology) Container.findByName(owner,name,name,topologyClass);
+    }
+
+    @JsonIgnore
+    public GenericGraph getGraph() throws IOException, InstantiationException {
+        return new GenericGraph(this);
+    }
+
+
+    public List<Link> computePath(String srcNodeName, String dstNodeName) throws InstantiationException, IOException {
+        Node srcNode = (Node) this.loadResource(srcNodeName);
+        Node dstNode = (Node) this.loadResource(dstNodeName);
+        return this.computePath(srcNode,dstNode);
+    }
+
+    public List<Link> computePath(Node srcNode, Node dstNode) throws IOException, InstantiationException {
+        GenericGraph graph = this.getGraph();
+        List<Link> links = DijkstraShortestPath.findPathBetween(graph, srcNode, dstNode);
+        return links;
     }
 
 }
