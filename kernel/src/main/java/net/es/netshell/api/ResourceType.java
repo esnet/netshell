@@ -18,47 +18,13 @@
  */
 package net.es.netshell.api;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
+import java.lang.annotation.*;
 
 /**
- * Created by lomax on 5/30/14.
+ * Resource Type Annotation.
  */
-@ResourceType(
-        type=ResourceTypes.PORT
-)
-public class Port extends Resource {
-
-    public static final String PORTS_DIR = "ports";
-
-    @JsonIgnore
-    private Node node;
-
-    public Port(String name) {
-        super(name);
-    }
-
-    /**
-     * Returns the Node from where the port belongs to
-     * @return
-     */
-    public Node getNode() {
-        return node;
-    }
-
-    /**
-     * Set the Node where the port belongs to
-     * @param node
-     */
-    public void setNode(Node node) {
-        this.node = node;
-    }
-
-    public Port(Port port) {
-        super(port);
-        node = port.getNode();
-    }
-
-    public Port() {
-        super();
-    }
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@interface ResourceType {
+    String type() default ResourceTypes.RESOURCE;
 }

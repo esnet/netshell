@@ -21,6 +21,9 @@ package net.es.netshell.api;
 /**
  * Mostly a stub for now. Perhaps this class is not useful
  */
+@ResourceType(
+        type=ResourceTypes.HOST
+)
 public class Host extends Node {
 
     private String name;

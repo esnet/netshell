@@ -22,6 +22,9 @@ package net.es.netshell.api;
  * Generic Link class
  */
 
+@ResourceType(
+        type=ResourceTypes.LINK
+)
 public class Link extends  Resource {
     public enum Types {SITE,PEERING,INTERNAL}
     public static final String LINKS_DIR = "links";

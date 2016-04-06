@@ -236,7 +236,7 @@ public final class Users {
 
         UserProfile userProfile = Users.getUsers().passwords.get(userName);
 
-//      Encrypt new password and write out the users file
+        // Encrypt new password and write out the users file
         userProfile.setPassword(crypt(newPassword));
         this.writeUserFile();
     }
@@ -256,11 +256,9 @@ public final class Users {
             String currentUserName = kt.getUser().getName();
 
             // Check if user is authorized to create users
-            if (KernelThread.currentKernelThread().isPrivileged() || currentUserAccess.isAccessPrivileged(currentUserName, "user:create")) {
-                KernelThread.doSysCall(this,
-                        method,
-                        newUser,
-                        true);
+            if (KernelThread.currentKernelThread().isPrivileged()
+                    || currentUserAccess.isAccessPrivileged(currentUserName, "user:create")) {
+                KernelThread.doSysCall(this, method, newUser, true);
                 resCode = true;
                 resMessage = "User added";
             } else {

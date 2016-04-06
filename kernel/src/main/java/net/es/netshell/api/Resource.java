@@ -27,15 +27,20 @@ import java.lang.ref.WeakReference;
 import java.util.*;
 
 /**
- * Created by lomax on 5/21/14.
+ * Base Resource Class that all NetShell resources must extend. I
  */
+@ResourceType(
+        type=ResourceTypes.RESOURCE
+)
 public class Resource extends PersistentObject {
+
     private String resourceName;
     private String description;
     private ResourceAnchor parentResourceAnchor;
     private HashMap<String, ResourceAnchor> childrenResourceAnchors;
     private String owner;
     private  HashMap<User,HashMap<String,ACL>> acls = new HashMap<User,HashMap<String,ACL>>();
+    private String resourceType;
 
     @JsonIgnore
     public String creationStackTrace;
@@ -44,6 +49,7 @@ public class Resource extends PersistentObject {
 
     public Resource() {
         super();
+        //this.resourceType=ResourceTypes.RESOURCE;
         // this.setCreationStackTrace();
     }
 
@@ -70,6 +76,21 @@ public class Resource extends PersistentObject {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getResourceType() {
+        if (this.resourceType == null) {
+            // Retrieve resource type from annotation.
+            ResourceType type = this.getClass().getAnnotation(ResourceType.class);
+            if (type != null) {
+                this.resourceType = type.type();
+            }
+        }
+        return resourceType;
+    }
+
+    public void setResourceType(String resourceType) {
+        this.resourceType = resourceType;
     }
 
     public Resource (Resource object) {
@@ -147,17 +168,44 @@ public class Resource extends PersistentObject {
         }
         throw new RuntimeException(name + " is invalid");
     }
+
     static public Resource findByName(Container container, String name) throws InstantiationException {
         if (! container.getResources().containsKey(name)) {
             return null;
         }
-        return Resource.findByName(container.getOwner(), container.getResourceName(), name);
+        return Resource.findByName(container.getOwner(), container.getResourceName(), name, null);
     }
-    static public Resource findByName(String containerOwner, String containerName, String name) throws InstantiationException {
+
+    static public Resource findByName(Container container, String name, Class resourceClass) throws InstantiationException {
+        if (! container.getResources().containsKey(name)) {
+            return null;
+        }
+        return Resource.findByName(container.getOwner(), container.getResourceName(), name, resourceClass);
+    }
+
+    static public Resource findByName(String containerOwner,
+                                      String containerName,
+                                      String name) throws InstantiationException {
+        return Resource.findByName(containerOwner,containerName,name,null);
+
+    }
+    static public Resource findByName(String containerOwner,
+                                      String containerName,
+                                      String name,
+                                      Class resourceClass) throws InstantiationException {
+
         Resource obj = Resource.cache.getCachedObject(containerOwner,containerName, name);
         if (obj != null) {
-            return obj;
+
+            if (resourceClass != null) {
+                if (obj.getClass().equals(resourceClass)) {
+                    return obj;
+                }
+            } else {
+                return obj;
+            }
         }
+
         // Not in the cache. Must load it from the database
         HashMap<String, Object> query = new HashMap<String,Object>();
         query.put("resourceName",name);

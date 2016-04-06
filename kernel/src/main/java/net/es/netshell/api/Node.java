@@ -19,8 +19,11 @@
 package net.es.netshell.api;
 
 /**
- * Generic Node Class
+ * Base Node Class
  */
+@ResourceType(
+        type=ResourceTypes.NODE
+)
 public class Node extends Resource {
 
     public Node (String name) {

@@ -33,9 +33,6 @@ import java.util.*;
  * This class implements the base class of any NetShell resources that need to be persistent. It originally
  * was designe to use a local file system for storing the serialized objects, including a translation in the
  * host file system name space.
- *
- * 3/2016 lomax@es.net There is an ongoing effort to add or replace the backend store with a database, MongoDB. It is expected that
- * this class will change in the coming weeks.
  */
 public class PersistentObject implements Serializable {
 
@@ -184,7 +181,7 @@ public class PersistentObject implements Serializable {
             throw new SecurityException("not authorized");
         }
         DataBase db = BootStrap.getBootStrap().getDataBase();
-        db.delete(user, collection,this);
+        db.delete(user, collection, this);
     }
 
     private static final String getClassName (String filename) throws IOException {
@@ -235,6 +232,13 @@ public class PersistentObject implements Serializable {
     public static final List<PersistentObject> find (String user,
                                                      String name,
                                                      Map<String,Object> query) throws InstantiationException {
+        return PersistentObject.find(user,name,query,null);
+    }
+
+    public static final List<PersistentObject> find (String user,
+                                                     String name,
+                                                     Map<String,Object> query,
+                                                     Class objectClass) throws InstantiationException {
         if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
             throw new SecurityException("not authorized");
         }
@@ -245,10 +249,13 @@ public class PersistentObject implements Serializable {
             for (String json : res) {
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode node = mapper.readValue(json, JsonNode.class);
-                String className = node.get("resourceClassName").asText();
+                if (objectClass == null) {
+                    String className = node.get("resourceClassName").asText();
+                    objectClass = Class.forName(className);
+                }
                 PersistentObject obj = null;
                 mapper = new ObjectMapper();
-                obj = (PersistentObject) mapper.readValue(json, Class.forName(className));
+                obj = (PersistentObject) mapper.readValue(json, objectClass);
                 objects.add(obj);
             }
             return objects;

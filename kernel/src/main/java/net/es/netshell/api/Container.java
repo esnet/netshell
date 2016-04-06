@@ -35,6 +35,9 @@ import java.util.Objects;
 /**
  * Created by lomax on 5/27/14.
  */
+@ResourceType(
+        type=ResourceTypes.CONTAINER
+)
 public class Container extends Resource {
 
     public Container() {
@@ -102,6 +105,15 @@ public class Container extends Resource {
         return null;
     }
 
+    final public List<Resource> loadResources(String name, HashMap<String,Object> query)
+            throws InstantiationException, IOException {
+        if (this.resources.containsKey(name)) {
+            List<Resource> resources = Resource.findResources(this, query);
+            return resources;
+        }
+        return null;
+    }
+
     final public void deleteResource(Resource resource) throws InstantiationException, IOException {
         resource.delete(this);
     }
@@ -112,20 +124,38 @@ public class Container extends Resource {
     }
 
 
-    public static final void createContainer (String user,String name) throws IOException {
+    public static final Container createContainer (String user,
+                                                   String name,
+                                                   Class containerClass)
+            throws IOException,IllegalAccessException, InstantiationException {
+
         if (BootStrap.getBootStrap().getDataBase().collectionExists(user,name)) {
-            return;
+            return null;
+        }
+        BootStrap.getBootStrap().getDataBase().createCollection(user, name);
+        if (containerClass == null) {
+            containerClass = Container.class;
+        }
+        Container container = (Container) containerClass.newInstance();
+        container.setResourceName(name);
+        container.setOwner(user);
+        container.saveResource(container);
+        return container;
+    }
+    public static final Container createContainer (String user,String name) throws IOException {
+        if (BootStrap.getBootStrap().getDataBase().collectionExists(user,name)) {
+            return null;
         }
         BootStrap.getBootStrap().getDataBase().createCollection(user, name);
         Container container = new Container(name);
         container.setOwner(user);
         container.saveResource(container);
+        return container;
     }
 
-    public static final void createContainer (String name) throws IOException {
+    public static final Container createContainer (String name) throws IOException {
         User user = KernelThread.currentKernelThread().getUser();
-        Container.createContainer(user.getName(), name);
-        return;
+        return Container.createContainer(user.getName(), name);
     }
 
     @JsonIgnore

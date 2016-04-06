@@ -18,47 +18,24 @@
  */
 package net.es.netshell.api;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-
 /**
- * Created by lomax on 5/30/14.
+ * This class defines the name of the NetShell resources types.
  */
-@ResourceType(
-        type=ResourceTypes.PORT
-)
-public class Port extends Resource {
-
-    public static final String PORTS_DIR = "ports";
-
-    @JsonIgnore
-    private Node node;
-
-    public Port(String name) {
-        super(name);
-    }
+public class ResourceTypes {
 
     /**
-     * Returns the Node from where the port belongs to
-     * @return
+     * Type names
      */
-    public Node getNode() {
-        return node;
-    }
+    final public static String RESOURCE_TYPE = "resourceType";
+    final public static String RESOURCE = "Resource" ;
+    final public static String CONTAINER = "Container" ;
+    final public static String DOMAIN = "Domain" ;
+    final public static String NODE = "Node" ;
+    final public static String HOST = "Host" ;
+    final public static String PORT = "Port" ;
+    final public static String LINK = "Link" ;
+    final public static String USER = "User" ;
+    final public static String TOPOLOGY = "Topology" ;
 
-    /**
-     * Set the Node where the port belongs to
-     * @param node
-     */
-    public void setNode(Node node) {
-        this.node = node;
-    }
 
-    public Port(Port port) {
-        super(port);
-        node = port.getNode();
-    }
-
-    public Port() {
-        super();
-    }
 }

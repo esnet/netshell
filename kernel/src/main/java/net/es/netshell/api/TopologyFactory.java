@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * Created by lomax on 5/21/14.
  */
-public class TopologyFactory extends PersistentObject {
+public class TopologyFactory extends Resource {
     public final static String FACTORY_DIR = "/topologies";
     public final static String FACTORY_CONFIGFILE = "factory";
     public final static String LOCAL_LAYER1 = "localLayer1";

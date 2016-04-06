@@ -45,6 +45,18 @@ public class GenericTopologyProvider extends TopologyProvider {
     private HashMap<String, Link> links = new HashMap<String, Link>();
     private HashMap<String, Node> nodeByPort = new HashMap<String, Node>();
 
+
+    /**
+     * Instantiate a GenericTopologyProvider from a Container.
+     * @param topologyContainer
+     */
+    public GenericTopologyProvider(Container topologyContainer) {
+
+    }
+
+    public GenericTopologyProvider() {
+
+    }
     /**
      * Returns a HashMap of List of Links that connects ESnet internal node to each other. The map is indexed by
      * the name of the node as found in the topology.
