@@ -108,7 +108,6 @@ public class Topology extends Container {
         return new GenericGraph(this);
     }
 
-
     public List<Link> computePath(String srcNodeName, String dstNodeName) throws InstantiationException, IOException {
         Node srcNode = (Node) this.loadResource(srcNodeName);
         Node dstNode = (Node) this.loadResource(dstNodeName);

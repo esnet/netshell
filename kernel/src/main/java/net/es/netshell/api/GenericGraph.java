@@ -63,13 +63,12 @@ public class GenericGraph extends DefaultListenableGraph<Node, Link> implements 
                 Link link = (Link) l;
                 this.linkIndex.put(link.getResourceName(), link);
                 String srcNodeName = Link.nameToSrcNode(link.getResourceName());
-                String dstNodeName = Link.nameToSrcNode(link.getResourceName());
+                String dstNodeName = Link.nameToDstNode(link.getResourceName());
                 Node srcNode = this.nodeIndex.get(srcNodeName);
                 Node dstNode = this.nodeIndex.get(dstNodeName);
                 this.addEdge(srcNode,dstNode,link);
             }
         }
-
     }
 
     @Override
