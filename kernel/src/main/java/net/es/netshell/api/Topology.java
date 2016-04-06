@@ -46,17 +46,17 @@ public class Topology extends Container {
         HashMap<String, Object> q2 = new HashMap<String,Object>();
         q2.put("resourceType", ResourceTypes.HOST);
         q.add(q2);
-        query.put("$or",q);
-        List<Resource> nodes = this.findResources(this,query);
+        query.put("$or", q);
+        List<Resource> nodes = this.loadResources(query);
         return nodes;
     }
 
     @JsonIgnore
-    public synchronized List<Resource> getLins() throws IOException, InstantiationException {
+    public synchronized List<Resource> getLinks() throws IOException, InstantiationException {
         HashMap<String, Object> query = new HashMap<String,Object>();
         query.put("resourceType",ResourceTypes.LINK);
-        List<Resource> nodes = this.findResources(this,query);
-        return nodes;
+        List<Resource> links = this.findResources(this,query);
+        return links;
     }
 
 
@@ -85,19 +85,19 @@ public class Topology extends Container {
         return (Topology) container;
     }
 
-    public static Topology findTopology(String name) throws InstantiationException {
-        return Topology.findTopology(KernelThread.currentKernelThread().getUser().getName(),name);
+    public static Topology getTopology(String name) throws InstantiationException {
+        return Topology.getTopology(KernelThread.currentKernelThread().getUser().getName(), name);
     }
 
-    public static Topology findTopology(String name, Class topologyClass) throws InstantiationException {
-        return Topology.findTopology(KernelThread.currentKernelThread().getUser().getName(),name,topologyClass);
+    public static Topology getTopology(String name, Class topologyClass) throws InstantiationException {
+        return Topology.getTopology(KernelThread.currentKernelThread().getUser().getName(), name, topologyClass);
     }
 
-    public static Topology findTopology(String owner, String name) throws InstantiationException {
-        return Topology.findTopology(owner, name, Topology.class);
+    public static Topology getTopology(String owner, String name) throws InstantiationException {
+        return Topology.getTopology(owner, name, Topology.class);
     }
 
-    public static Topology findTopology(String owner, String name, Class topologyClass)
+    public static Topology getTopology(String owner, String name, Class topologyClass)
             throws InstantiationException {
         return (Topology) Container.findByName(owner,name,name,topologyClass);
     }

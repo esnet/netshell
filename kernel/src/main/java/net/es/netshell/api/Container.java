@@ -105,13 +105,11 @@ public class Container extends Resource {
         return null;
     }
 
-    final public List<Resource> loadResources(String name, HashMap<String,Object> query)
+    final public List<Resource> loadResources(HashMap<String,Object> query)
             throws InstantiationException, IOException {
-        if (this.resources.containsKey(name)) {
-            List<Resource> resources = Resource.findResources(this, query);
-            return resources;
-        }
-        return null;
+
+        List<Resource> resources = Resource.findResources(this, query);
+        return resources;
     }
 
     final public void deleteResource(Resource resource) throws InstantiationException, IOException {

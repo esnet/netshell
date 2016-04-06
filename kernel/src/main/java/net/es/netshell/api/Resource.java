@@ -209,7 +209,7 @@ public class Resource extends PersistentObject {
         // Not in the cache. Must load it from the database
         HashMap<String, Object> query = new HashMap<String,Object>();
         query.put("resourceName",name);
-        List<PersistentObject> objs = PersistentObject.find(containerOwner,containerName, query);
+        List<PersistentObject> objs = PersistentObject.find(containerOwner,containerName, query,resourceClass);
         // Translates object types and prunes what is not a Resource.
         ArrayList<Resource> resources = new ArrayList<Resource>();
         if (objs.size() > 0) {
@@ -231,11 +231,9 @@ public class Resource extends PersistentObject {
         // Translates object types and prunes what is not a Resource.
         ArrayList<Resource> resources = new ArrayList<Resource>();
         for (PersistentObject obj : objs) {
-            if (obj instanceof Resource) {
-                resources.add((Resource) obj);
-            }
+            resources.add((Resource) obj);
         }
-        return null;
+        return resources;
     }
 
     public void save(Container container) throws IOException {
