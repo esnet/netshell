@@ -27,6 +27,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -38,7 +39,7 @@ public class ACL extends PersistentObject {
         super();
     }
 
-    public void checkAcces(User currentUser, Resource resource, HashMap<String, Object> accessQuery) {
+    public void checkAcces(User currentUser, Resource resource, Map<String, Object> accessQuery) {
         throw new SecurityException("Not authorized");
     }
 

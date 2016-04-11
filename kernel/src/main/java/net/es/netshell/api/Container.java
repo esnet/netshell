@@ -50,15 +50,6 @@ public class Container extends Resource {
 
     private HashMap<String,String> resources = new HashMap<String,String>();
 
-
-    public HashMap<String, String> getResources() {
-        return resources;
-    }
-
-    public void setResources(HashMap<String, String> resources) {
-        this.resources = resources;
-    }
-
     /**
      * Creates a ResourceAnchor for the given resource.
      * @param resource
@@ -97,6 +88,14 @@ public class Container extends Resource {
         this.save(this);
     }
 
+    final public void saveResources(List<Resource> resources) throws IOException {
+        for (Resource resource : resources) {
+            this.resources.put(resource.getResourceName(), resource.getResourceClassName());
+            resource.save(this);
+        }
+        this.save(this);
+    }
+
     final public Resource loadResource(String name) throws InstantiationException {
         if (this.resources.containsKey(name)) {
             Resource resource = Resource.findByName(this, name);
@@ -105,7 +104,7 @@ public class Container extends Resource {
         return null;
     }
 
-    final public List<Resource> loadResources(HashMap<String,Object> query)
+    final public List<Resource> loadResources(Map<String,Object> query)
             throws InstantiationException, IOException {
 
         List<Resource> resources = Resource.findResources(this, query);
@@ -159,7 +158,7 @@ public class Container extends Resource {
     @JsonIgnore
     public static final Container getContainer(String name) {
         User user = KernelThread.currentKernelThread().getUser();
-        return Container.getContainer(user.getName(),name);
+        return Container.getContainer(user.getName(), name);
     }
 
     @JsonIgnore
@@ -220,6 +219,11 @@ public class Container extends Resource {
      */
     public void save() throws IOException {
         this.saveResource(this);
+    }
+
+    public void insert(Container container, Map<String,Object> query) throws IOException, InstantiationException {
+        List<Resource> resources = container.loadResources(query);
+        this.saveResources(resources);
     }
 }
 

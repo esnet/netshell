@@ -38,7 +38,7 @@ public class PersistentObject implements Serializable {
 
     private String resourceClassName = this.getClass().getCanonicalName();
     private String eid = this.eid = null;
-    private HashMap<String,Object> properties = new HashMap<String,Object>();
+    private Map<String,Object> properties = new HashMap<String,Object>();
 
     public final String getResourceClassName() {
         return resourceClassName;
@@ -70,14 +70,14 @@ public class PersistentObject implements Serializable {
         this.resourceClassName = resourceClassName;
     }
 
-    public final HashMap<String, Object> getProperties() {
+    public final Map<String, Object> getProperties() {
         if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
             throw new SecurityException("not authorized");
         }
         return this.properties;
     }
 
-    public final void setProperties(HashMap<String, Object> properties) {
+    public final void setProperties(Map<String, Object> properties) {
         if (! KernelThread.currentKernelThread().getUser().isPrivileged())  {
             throw new SecurityException("not authorized");
         }

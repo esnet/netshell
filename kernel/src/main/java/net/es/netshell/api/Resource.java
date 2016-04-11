@@ -37,9 +37,9 @@ public class Resource extends PersistentObject {
     private String resourceName;
     private String description;
     private ResourceAnchor parentResourceAnchor;
-    private HashMap<String, ResourceAnchor> childrenResourceAnchors;
+    private Map<String, ResourceAnchor> childrenResourceAnchors;
     private String owner;
-    private  HashMap<User,HashMap<String,ACL>> acls = new HashMap<User,HashMap<String,ACL>>();
+    private  Map<User,Map<String,ACL>> acls = new HashMap<User,Map<String,ACL>>();
     private String resourceType;
 
     @JsonIgnore
@@ -146,7 +146,7 @@ public class Resource extends PersistentObject {
         this.resourceName = resourceName;
     }
 
-    public final synchronized void setChildrenResourceAnchors(HashMap<String, ResourceAnchor> childrenResourceAnchors) {
+    public final synchronized void setChildrenResourceAnchors(Map<String, ResourceAnchor> childrenResourceAnchors) {
         this.childrenResourceAnchors = childrenResourceAnchors;
     }
 
@@ -158,7 +158,7 @@ public class Resource extends PersistentObject {
         return this.parentResourceAnchor;
     }
 
-    public final synchronized HashMap<String, ResourceAnchor> getChildrenResourceAnchors() {
+    public final synchronized Map<String, ResourceAnchor> getChildrenResourceAnchors() {
         return this.childrenResourceAnchors;
     }
 
@@ -170,16 +170,10 @@ public class Resource extends PersistentObject {
     }
 
     static public Resource findByName(Container container, String name) throws InstantiationException {
-        if (! container.getResources().containsKey(name)) {
-            return null;
-        }
         return Resource.findByName(container.getOwner(), container.getResourceName(), name, null);
     }
 
     static public Resource findByName(Container container, String name, Class resourceClass) throws InstantiationException {
-        if (! container.getResources().containsKey(name)) {
-            return null;
-        }
         return Resource.findByName(container.getOwner(), container.getResourceName(), name, resourceClass);
     }
 
@@ -207,7 +201,7 @@ public class Resource extends PersistentObject {
         }
 
         // Not in the cache. Must load it from the database
-        HashMap<String, Object> query = new HashMap<String,Object>();
+        Map<String, Object> query = new HashMap<String,Object>();
         query.put("resourceName",name);
         List<PersistentObject> objs = PersistentObject.find(containerOwner,containerName, query,resourceClass);
         // Translates object types and prunes what is not a Resource.
@@ -222,7 +216,7 @@ public class Resource extends PersistentObject {
         return null;
     }
 
-    static public List<Resource> findResources(Container container, HashMap<String,Object> query)
+    static public List<Resource> findResources(Container container, Map<String,Object> query)
             throws InstantiationException, IOException {
         // Since the query is complex, it needs to be done by the database. This means that the cache
         // must first be sync'ed.
@@ -248,7 +242,7 @@ public class Resource extends PersistentObject {
         }
     }
 
-    public final HashMap<User,HashMap<String,ACL>> getAcls() {
+    public final Map<User,Map<String,ACL>> getAcls() {
         User user =  KernelThread.currentKernelThread().getUser();
         if (user.isPrivileged() || (user.getName() == this.owner)) {
             // Can get acls
@@ -258,7 +252,7 @@ public class Resource extends PersistentObject {
         }
     }
 
-    public final void setAcls(HashMap<User,HashMap<String,ACL>>acls) {
+    public final void setAcls(Map<User,Map<String,ACL>>acls) {
         User user =  KernelThread.currentKernelThread().getUser();
         if (user.isPrivileged() || (user.getName() == this.owner)) {
             // Can set acls
@@ -268,7 +262,7 @@ public class Resource extends PersistentObject {
         }
     }
 
-    public final void checkAccess(Class aclClass, HashMap<String, Object> accessQuery) {
+    public final void checkAccess(Class aclClass, Map<String, Object> accessQuery) {
         User currentUser = KernelThread.currentKernelThread().getUser();
         if (this.owner == currentUser.getName() || currentUser.isPrivileged()) {
             // Owner has all access rights
@@ -321,7 +315,7 @@ public class Resource extends PersistentObject {
         if (this.owner == null || this.owner == currentUser.getName() || currentUser.isPrivileged()) {
             // Only the owner can manipulate the ACLs. When the object is being created and not
             // assigned to an owner yet, this operation is allowed.
-            HashMap <String,ACL> userAcls;
+            Map <String,ACL> userAcls;
             if (this.acls.containsKey(user)) {
                 userAcls = this.acls.get(user);
             } else {
@@ -340,7 +334,7 @@ public class Resource extends PersistentObject {
         if (this.owner == null || this.owner == currentUser.getName() || currentUser.isPrivileged()) {
             // Only the owner can manipulate the ACLs. When the object is being created and not
             // assigned to an owner yet, this operation is allowed.
-            HashMap<Class, ACL> userAcls;
+            Map<Class, ACL> userAcls;
             if (this.acls.containsKey(user) &&
                     this.acls.get(user).containsKey(ResourceACL.class)) {
                 this.acls.get(user).remove(ResourceACL.class);
