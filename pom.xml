@@ -35,7 +35,7 @@
         <module>kernel</module>
         <module>python</module>
         <module>controller</module>
-        <module>odl-corsa</module>
+        <!-- <module>odl-corsa</module> -->
         <module>odl-mdsal</module>
         <module>odl-corsa-intf</module>
     </modules>
