@@ -40,6 +40,7 @@
 	    <bundle>wrap:mvn:com.jcraft/jsch/0.1.51</bundle>
 	    <bundle>mvn:com.google.guava/guava/18.0</bundle>
         <bundle>mvn:org.mongodb/mongo-java-driver/3.2.2</bundle>
+        <bundle>mvn:org.mockito/mockito-all/1.10.19</bundle>
     </feature>
     <feature name="netshell-python" version="1.0.0-SNAPSHOT" description="ESnet NetShell Python Bundle">
         <feature version="1.0.0-SNAPSHOT">netshell-kernel</feature>

@@ -393,7 +393,7 @@ public class PythonShell {
 		    if (path.exists()) {
 			    return path.toString();
 		    }
-		    path = new File(BootStrap.rootPath.resolve("bin").resolve(command).toString());
+		    path = new File(BootStrap.rootPath.resolve("/python").resolve(command).toString());
 		    if (path.exists()) {
 			    return path.toString();
 		    }
