@@ -59,7 +59,7 @@ public final class BootStrap implements Runnable {
 
     // We need to be sure the global configuration gets instantiated before the security manager,
     // because the former controls the initialization actions of the latter.
-    private static final GlobalConfiguration masterConfiguration = NetShellConfiguration.getInstance().getGlobal();
+    private static GlobalConfiguration masterConfiguration;
     private static KernelSecurityManager securityManager = null;
 
     public final static Path rootPath = BootStrap.toRootRealPath();
@@ -70,11 +70,19 @@ public final class BootStrap implements Runnable {
 
         Path realPathName;
         try {
-            if (masterConfiguration.getRootDirectory() != null) {
-                realPathName = Paths.get(
-                        new File(masterConfiguration.getRootDirectory()).getCanonicalFile().toString());
+            if (NetShellConfiguration.getInstance() != null) {
+                BootStrap.masterConfiguration = NetShellConfiguration.getInstance().getGlobal();
+                if (masterConfiguration == null) {
+                    realPathName =  Paths.get("/");
+                }  else if (masterConfiguration.getRootDirectory() != null) {
+                    realPathName = Paths.get(
+                            new File(masterConfiguration.getRootDirectory()).getCanonicalFile().toString());
+                } else {
+                    realPathName = Paths.get(new File(DefaultValues.NETSHELL_DEFAULT_ROOTDIR).getCanonicalFile().toString());
+                }
             } else {
-                realPathName = Paths.get(new File(DefaultValues.NETSHELL_DEFAULT_ROOTDIR).getCanonicalFile().toString());
+                // There is not a configuration file. This is typical of running JUnit tests
+                realPathName = Paths.get("/");
             }
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
@@ -109,7 +117,9 @@ public final class BootStrap implements Runnable {
     }
 
     public void init() {
-
+        if (NetShellConfiguration.getInstance() != null) {
+            BootStrap.masterConfiguration = NetShellConfiguration.getInstance().getGlobal();
+        }
         BootStrap.securityManager = new KernelSecurityManager();
         BootStrap.thread = new Thread(BootStrap.getBootStrap().getSecurityManager().getNetShellRootThreadGroup(),
                                       this,

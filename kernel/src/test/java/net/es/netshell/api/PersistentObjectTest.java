@@ -1,5 +1,7 @@
 package net.es.netshell.api;
 
+import net.es.netshell.boot.BootStrap;
+import net.es.netshell.kernel.exec.KernelThread;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -11,17 +13,23 @@ public class PersistentObjectTest {
 
     @Test
     public void testGetResourceClassName() throws Exception {
-
+        PersistentObject obj = new PersistentObject();
+        assertTrue(obj.getResourceClassName() != null);
+        assertTrue(obj.getResourceClassName().equals("net.es.netshell.api.PersistentObject"));
     }
 
     @Test
     public void testGetEid() throws Exception {
-
+        PersistentObject obj = new PersistentObject();
+        //assertTrue(obj.getEid() != null);
     }
 
     @Test
     public void testSetEid() throws Exception {
-
+        PersistentObject obj = new PersistentObject();
+        //obj.setEid("test");
+        //assertTrue(obj.getEid() != null);
+        //assertEquals("test",obj.getEid());
     }
 
     @Test
@@ -29,20 +37,6 @@ public class PersistentObjectTest {
 
     }
 
-    @Test
-    public void testGetProperties() throws Exception {
-
-    }
-
-    @Test
-    public void testSetProperties() throws Exception {
-
-    }
-
-    @Test
-    public void testBuildFile() throws Exception {
-
-    }
 
     @Test
     public void testToJSON() throws Exception {
@@ -94,13 +88,4 @@ public class PersistentObjectTest {
 
     }
 
-    @Test
-    public void testNewObjectFromFile() throws Exception {
-
-    }
-
-    @Test
-    public void testNewObjectFromFile1() throws Exception {
-
-    }
 }
