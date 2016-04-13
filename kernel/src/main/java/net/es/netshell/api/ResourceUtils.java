@@ -27,22 +27,6 @@ import java.util.regex.Pattern;
  */
 public class ResourceUtils {
 
-
-    /**
-     * Verifies that a name is valid for a ResourceName. ResourceName can be used as part of an URL
-     * @param name
-     * @return
-     */
-    public static boolean isValidResourceName(String name) {
-        if (name == null) {
-            // This can happen when creating a new Resource
-            return true;
-        }
-        Pattern pattern = Pattern.compile("[<>?]");
-        Matcher matcher = pattern.matcher(name);
-        return ! matcher.find();
-    }
-
     /**
      * Special handling of characters such as *
      * @param name

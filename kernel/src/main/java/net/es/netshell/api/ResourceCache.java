@@ -44,6 +44,7 @@ public class ResourceCache {
                     cache.sync();
                     Thread.sleep(this.cache.getWriterInterval());
                 } catch (Exception e) {
+                    System.out.println("Exception " + e.getMessage());
                     Thread.dumpStack();
                     return;
                 }
@@ -90,6 +91,7 @@ public class ResourceCache {
                     cache.sync();
                     Thread.sleep(this.cache.getLimiterInterval());
                 } catch (Exception e) {
+                    System.out.println("Exception " + e.getMessage());
                     Thread.dumpStack();
                     return;
                 }

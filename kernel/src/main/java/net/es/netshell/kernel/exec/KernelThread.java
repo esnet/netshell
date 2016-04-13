@@ -116,7 +116,8 @@ public final class  KernelThread {
      * @return the privilege status of the KernelThread.
      */
     public synchronized boolean isPrivileged() {
-        return this.privileged;
+        return this.privileged ||
+                (KernelThread.currentKernelThread().getUser() != null &&KernelThread.currentKernelThread().getUser().isPrivileged() );
     }
 
     /**

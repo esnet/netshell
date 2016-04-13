@@ -72,7 +72,14 @@ public class MongoDBProviderTest {
         Resource resource = new Resource("test");
         provider.store("admin","collection",resource);
         // Check db saved it.
-        verify(collection,atLeastOnce()).replaceOne(any(Document.class),any(Document.class),any(UpdateOptions.class));
+        verify(collection,atLeastOnce()).replaceOne(any(Document.class), any(Document.class), any(UpdateOptions.class));
+    }
+
+    @Test
+    public void testDupResourceStore() throws Exception {
+        Resource resource1 = new Resource("test");
+        Resource resource2 = new Resource("test");
+        provider.store("admin","collection",resource1);
     }
 
     @Test

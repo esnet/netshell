@@ -35,7 +35,6 @@ import java.util.*;
 )
 public class Resource extends PersistentObject {
 
-    private String resourceName;
     private String description;
     private ResourceAnchor parentResourceAnchor;
     private Map<String, ResourceAnchor> childrenResourceAnchors;
@@ -54,20 +53,14 @@ public class Resource extends PersistentObject {
     }
 
     public Resource(String resourceName) {
-        this.checkValidResourceName(resourceName);
+        super(resourceName);
         this.setCreationStackTrace();
-        this.resourceName = resourceName;
     }
 
     public Resource(String resourceName,String resourceClassName) {
-        this.checkValidResourceName(resourceName);
+        super(resourceName);
         this.setCreationStackTrace();
-        this.resourceName = resourceName;
         this.setResourceClassName(resourceClassName);
-    }
-
-    public String getResourceName() {
-        return resourceName;
     }
 
     public String getDescription() {
@@ -94,29 +87,13 @@ public class Resource extends PersistentObject {
     }
 
     public Resource (Resource object) {
+        super (object.getResourceName());
         this.setCreationStackTrace();
-        this.resourceName = object.getResourceName();
         if (object.getParentResourceAnchor() != null) {
             this.setParentResourceAnchor(object.getParentResourceAnchor());
         }
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || ! (o instanceof Resource)) return false;
-
-        Resource resource = (Resource) o;
-        return resourceName.equals(resource.resourceName);
-    }
-
-    @Override
-    public int hashCode() {
-        if (this.getResourceName() == null) {
-            return super.hashCode();
-        }
-        return resourceName.hashCode();
-    }
 
     @JsonIgnore
     public final String getCreationStackTrace() {
@@ -136,16 +113,6 @@ public class Resource extends PersistentObject {
         // this.creationStackTrace = Arrays.toString(Thread.currentThread().getStackTrace());
     }
 
-    @Override
-    public String toString() {
-        return this.resourceName;
-    }
-
-    public final synchronized void setResourceName (String resourceName) {
-        this.checkValidResourceName(resourceName);
-        this.resourceName = resourceName;
-    }
-
     public final synchronized void setChildrenResourceAnchors(Map<String, ResourceAnchor> childrenResourceAnchors) {
         this.childrenResourceAnchors = childrenResourceAnchors;
     }
@@ -160,13 +127,6 @@ public class Resource extends PersistentObject {
 
     public final synchronized Map<String, ResourceAnchor> getChildrenResourceAnchors() {
         return this.childrenResourceAnchors;
-    }
-
-    private void checkValidResourceName(String name) {
-        if (ResourceUtils.isValidResourceName(name)) {
-            return;
-        }
-        throw new RuntimeException(name + " is invalid");
     }
 
     static public Resource findByName(Container container, String name) throws InstantiationException {
@@ -269,14 +229,14 @@ public class Resource extends PersistentObject {
             return;
         }
         if ( ! this.acls.containsKey(currentUser)) {
-            throw new SecurityException("not authorized");
+            throw new SecurityException("check access - not authorized");
         }
         if (this.acls.get(currentUser).containsKey(aclClass)) {
             ACL acl = this.acls.get(currentUser).get(aclClass);
             acl.checkAcces(currentUser, this, accessQuery);
             return;
         }
-        throw new SecurityException("not authorized");
+        throw new SecurityException("check access - not authorized");
     }
 
     public final String getOwner() {
@@ -289,7 +249,7 @@ public class Resource extends PersistentObject {
             this.owner = owner;
             return;
         }
-        throw new SecurityException("not wuthorized");
+        throw new SecurityException("set owner - not authorized");
     }
 
     @JsonIgnore
@@ -306,7 +266,7 @@ public class Resource extends PersistentObject {
             }
             return null;
         }
-        throw new SecurityException("not allowed");
+        throw new SecurityException("get resource - not allowed");
     }
 
     @JsonIgnore
@@ -358,12 +318,9 @@ public class Resource extends PersistentObject {
         }
         try {
             Resource resource = container.loadResource(anchor.getResourceName());
-            if ((resource != null) && resource.getEid().equals(anchor.getEid())) {
-                return resource;
-            }
+            return resource;
         } catch (InstantiationException e) {
             return null;
         }
-        return null;
     }
 }

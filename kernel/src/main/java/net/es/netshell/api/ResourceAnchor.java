@@ -23,30 +23,26 @@ public class ResourceAnchor {
     private String containerOwner;
     private String containerName;
     private String resourceName;
-    private String eid;
 
     public ResourceAnchor() {
     }
 
-    public ResourceAnchor(String containerOwner, String containerName, String resourceName, String eid) {
+    public ResourceAnchor(String containerOwner, String containerName, String resourceName) {
         this.containerOwner = containerOwner;
         this.containerName = containerName;
         this.resourceName = resourceName;
-        this.eid = eid;
     }
 
     public ResourceAnchor(String containerOwner, String containerName, Resource resource) {
         this.containerOwner = containerOwner;
         this.containerName = containerName;
         this.resourceName = resource.getResourceName();
-        this.eid = resource.getEid();
     }
 
     public ResourceAnchor(Container container, Resource resource) {
         this.containerOwner = container.getOwner();
         this.containerName = container.getResourceName();
         this.resourceName = resource.getResourceName();
-        this.eid = resource.getEid();
     }
 
     public String getContainerOwner() {
@@ -73,11 +69,4 @@ public class ResourceAnchor {
         this.resourceName = resourceName;
     }
 
-    public String getEid() {
-        return eid;
-    }
-
-    public void setEid(String eid) {
-        this.eid = eid;
-    }
 }

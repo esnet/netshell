@@ -70,7 +70,7 @@ public final class MongoDBProvider implements DataBase {
     public final MongoClient getClient()
     {
         if (!KernelThread.currentKernelThread().isPrivileged()) {
-            throw new SecurityException("not authorized");
+            throw new SecurityException("get db client - not authorized");
         }
         return this.client;
     }
@@ -89,7 +89,7 @@ public final class MongoDBProvider implements DataBase {
 
     public final MongoDatabase getDatabase() {
         if (!KernelThread.currentKernelThread().isPrivileged()) {
-            throw new SecurityException("not authorized");
+            throw new SecurityException("get database - not authorized");
         }
         return this.db;
     }
@@ -97,7 +97,7 @@ public final class MongoDBProvider implements DataBase {
     @Override
     public final void store(List<ResourceAnchor> anchors) throws IOException {
         if (!KernelThread.currentKernelThread().isPrivileged()) {
-            throw new SecurityException("not authorized");
+            throw new SecurityException("store db list - not authorized");
         }
         HashMap<String,ArrayList<WriteModel>>  collectionRequests = new HashMap<String,ArrayList<WriteModel>>();
         // Build the bulk requests per collection
@@ -116,7 +116,7 @@ public final class MongoDBProvider implements DataBase {
                 // Likely to be in the Resource cache. Otherwise replace by itself.
                 Resource resource = Resource.findByName(user, collection, anchor.getResourceName());
                 Document doc = Document.parse(resource.saveToJSON());
-                Document query = new Document("eid",resource.getEid());
+                Document query = new Document("resourceName",resource.getResourceName());
 ;
                 ReplaceOneModel<Document> request = new ReplaceOneModel<Document>(query,doc);
                 request.getOptions().upsert(true);
@@ -143,14 +143,14 @@ public final class MongoDBProvider implements DataBase {
     public final void store(String user, String collection, PersistentObject obj) throws IOException {
         String collectionName = user + "_" + collection;
         if (!KernelThread.currentKernelThread().isPrivileged()) {
-            throw new SecurityException("not authorized");
+            throw new SecurityException("store db one - not authorized");
         }
         MongoCollection mongoCollection = this.db.getCollection(collectionName);
         if (mongoCollection == null) {
             throw new RuntimeErrorException(new Error("Could not store into collection " + collectionName));
         }
         Document doc = Document.parse(obj.saveToJSON());
-        Document query = new Document("eid",obj.getEid());
+        Document query = new Document("resourceName",obj.getResourceName());
         UpdateOptions options = new UpdateOptions();
         options.upsert(true);
         mongoCollection.replaceOne(query, doc, options);
@@ -160,20 +160,20 @@ public final class MongoDBProvider implements DataBase {
     public void delete(String user, String name, PersistentObject obj) throws InstantiationException {
         String collectionName = user + "_" + name;
         if (!KernelThread.currentKernelThread().isPrivileged()) {
-            throw new SecurityException("not authorized");
+            throw new SecurityException("delete db one - not authorized");
         }
         MongoCollection mongoCollection = this.db.getCollection(collectionName);
         if (mongoCollection == null) {
             throw new RuntimeErrorException(new Error("Could not store into collection " + collectionName));
         }
-        Document query = new Document("eid",obj.getEid());
+        Document query = new Document("resourceName",obj.getResourceName());
         mongoCollection.deleteMany(query);
     }
 
     @Override
     public final void delete(List<ResourceAnchor> anchors) throws IOException {
         if (!KernelThread.currentKernelThread().isPrivileged()) {
-            throw new SecurityException("not authorized");
+            throw new SecurityException("delete db list - not authorized");
         }
         HashMap<String,ArrayList<WriteModel>>  collectionRequests = new HashMap<String,ArrayList<WriteModel>>();
         // Build the bulk requests per collection
@@ -188,7 +188,7 @@ public final class MongoDBProvider implements DataBase {
             } else {
                 requests = collectionRequests.get(collectionName);
             }
-            Document query = new Document("eid",anchor.getEid());
+            Document query = new Document("resourceName",anchor.getResourceName());
             DeleteOneModel request = new DeleteOneModel(query);;
             requests.add(request);
         }
@@ -211,7 +211,7 @@ public final class MongoDBProvider implements DataBase {
     public final void createCollection(String user, String name) {
         String collectionName = user + "_" + name;
         if (!KernelThread.currentKernelThread().isPrivileged()) {
-            throw new SecurityException("not authorized");
+            throw new SecurityException("create collection - not authorized");
         }
         this.db.createCollection(collectionName);
         MongoCollection collection = this.db.getCollection(collectionName);
@@ -224,7 +224,7 @@ public final class MongoDBProvider implements DataBase {
     public final void deleteCollection(String user,String name) {
         String collectionName = user + "_" + name;
         if (!KernelThread.currentKernelThread().isPrivileged()) {
-            throw new SecurityException("not authorized");
+            throw new SecurityException("delete collection - not authorized");
         }
         MongoCollection collection = this.db.getCollection(collectionName);
         if (collection == null) {

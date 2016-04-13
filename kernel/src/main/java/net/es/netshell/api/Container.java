@@ -59,13 +59,10 @@ public class Container extends Resource {
     @JsonIgnore
     public ResourceAnchor getResourceAnchor(Resource resource) throws InstantiationException {
         Resource stored = Resource.findByName(this, resource.getResourceName());
-        if (! stored.getEid().equals(resource.getEid())) {
-            throw new SecurityException("incorrect eid");
-        }
+
         ResourceAnchor anchor = new ResourceAnchor(this.getOwner(),
                                                    this.getResourceName(),
-                                                   resource.getResourceName(),
-                                                   resource.getEid());
+                                                   resource.getResourceName());
         return anchor;
     }
 
@@ -194,17 +191,11 @@ public class Container extends Resource {
     public static final Resource fromAnchor(ResourceAnchor anchor) throws InstantiationException {
         Container container = Container.getContainer(anchor.getContainerOwner(),anchor.getContainerName());
         Resource resource = container.loadResource(anchor.getResourceName());
-        if (resource != null) {
-            if (resource.getEid().equals(anchor.getEid()))  {
-                return resource;
-            }
-            throw new SecurityException("invalid eid");
-        }
-        return null;
+        return resource;
     }
     /**
      * Returns the resource referred by the resource anchor. The anchor is provided as a Map containing the
-     * values of the keys containerOwner, containerName, resourceName, eid.
+     * values of the keys containerOwner, containerName, resourceName.
      * @param anchorMap
      * @return the Resource referred by the resource anchor.
      * @throws InstantiationException if the resource cannot be loaded from the database.
@@ -216,8 +207,7 @@ public class Container extends Resource {
             String containerOwner = anchorMap.get("containerOwner");
             String containerName = anchorMap.get("containerName");
             String resourceName = anchorMap.get("resourceName");
-            String eid = anchorMap.get("eid");
-            ResourceAnchor anchor = new ResourceAnchor(containerOwner,containerName,resourceName,eid);
+            ResourceAnchor anchor = new ResourceAnchor(containerOwner,containerName,resourceName);
             return Container.fromAnchor(anchor);
         } catch (Exception e) {
             throw new InstantiationException(e.getMessage());

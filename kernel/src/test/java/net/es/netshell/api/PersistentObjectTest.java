@@ -19,20 +19,6 @@ public class PersistentObjectTest {
     }
 
     @Test
-    public void testGetEid() throws Exception {
-        PersistentObject obj = new PersistentObject();
-        assertTrue(obj.getEid() != null);
-    }
-
-    @Test
-    public void testSetEid() throws Exception {
-        PersistentObject obj = new PersistentObject();
-        obj.setEid("test");
-        assertTrue(obj.getEid() != null);
-        assertEquals("test",obj.getEid());
-    }
-
-    @Test
     public void testSetResourceClassName() throws Exception {
 
     }
