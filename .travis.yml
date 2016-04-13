@@ -19,4 +19,5 @@ before_script:
   - mongo mydb_test --eval 'db.addUser("travis", "test");'
 
 
-script: mvn clean test
+script:
+  - mvn test
