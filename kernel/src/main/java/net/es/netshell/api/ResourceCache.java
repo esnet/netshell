@@ -44,7 +44,8 @@ public class ResourceCache {
                     cache.sync();
                     Thread.sleep(this.cache.getWriterInterval());
                 } catch (Exception e) {
-                    System.out.println("ResourceCache.Writer exception " + e);
+                    Thread.dumpStack();
+                    return;
                 }
             }
         }
@@ -89,7 +90,8 @@ public class ResourceCache {
                     cache.sync();
                     Thread.sleep(this.cache.getLimiterInterval());
                 } catch (Exception e) {
-                    System.out.println("ResourceCache.Limiter exception " + e);
+                    Thread.dumpStack();
+                    return;
                 }
             }
         }
@@ -223,7 +225,6 @@ public class ResourceCache {
         Set<Map.Entry<String, Boolean>> entries = this.cacheUsage.entrySet();
 
         ArrayList<ResourceAnchor> toSave = new ArrayList<ResourceAnchor>();
-
         // Filters out the dirty resources
         for (Map.Entry<String, Boolean> entry : entries) {
             String id = entry.getKey();
@@ -237,10 +238,8 @@ public class ResourceCache {
                 toSave.add(anchor);
             }
         }
-
         // Save dirty resource in bulk per collection
         PersistentObject.save(toSave);
-
         // Reset dirty flag
         for (ResourceAnchor anchor : toSave) {
             String id = anchor.getContainerOwner() + "--" + anchor.getContainerName() + "--" + anchor.getResourceName();

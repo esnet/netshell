@@ -22,6 +22,7 @@ import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.users.User;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
+import java.awt.image.Kernel;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.*;
@@ -49,7 +50,6 @@ public class Resource extends PersistentObject {
 
     public Resource() {
         super();
-        //this.resourceType=ResourceTypes.RESOURCE;
         // this.setCreationStackTrace();
     }
 
@@ -125,7 +125,7 @@ public class Resource extends PersistentObject {
 
     @JsonIgnore
     public static ResourceCache getCache() {
-        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+        if (!KernelThread.currentKernelThread().isPrivileged()) {
             throw new SecurityException("not authorized to get Resource cache");
         }
         return Resource.cache;
@@ -244,7 +244,7 @@ public class Resource extends PersistentObject {
 
     public final Map<User,Map<String,ACL>> getAcls() {
         User user =  KernelThread.currentKernelThread().getUser();
-        if (user.isPrivileged() || (user.getName() == this.owner)) {
+        if (KernelThread.currentKernelThread().isPrivileged() || (user.getName() == this.owner)) {
             // Can get acls
             return this.acls;
         } else {
@@ -254,7 +254,7 @@ public class Resource extends PersistentObject {
 
     public final void setAcls(Map<User,Map<String,ACL>>acls) {
         User user =  KernelThread.currentKernelThread().getUser();
-        if (user.isPrivileged() || (user.getName() == this.owner)) {
+        if (KernelThread.currentKernelThread().isPrivileged() || (user.getName() == this.owner)) {
             // Can set acls
             this.acls = acls;
         } else {
@@ -264,7 +264,7 @@ public class Resource extends PersistentObject {
 
     public final void checkAccess(Class aclClass, Map<String, Object> accessQuery) {
         User currentUser = KernelThread.currentKernelThread().getUser();
-        if (this.owner == currentUser.getName() || currentUser.isPrivileged()) {
+        if (KernelThread.currentKernelThread().isPrivileged() || this.owner == currentUser.getName()) {
             // Owner has all access rights
             return;
         }
@@ -284,7 +284,7 @@ public class Resource extends PersistentObject {
     }
 
     public final void setOwner(String owner) {
-        if (KernelThread.currentKernelThread().getUser().isPrivileged()) {
+        if (KernelThread.currentKernelThread().isPrivileged()) {
             // setting the owner of a resource is restricted to privileged threads.
             this.owner = owner;
             return;
@@ -295,7 +295,7 @@ public class Resource extends PersistentObject {
     @JsonIgnore
     public synchronized final ResourceACL getResourceACL(User user) {
         User currentUser = KernelThread.currentKernelThread().getUser();
-        if (this.owner == null || this.owner == currentUser.getName() || currentUser.isPrivileged()) {
+        if (KernelThread.currentKernelThread().isPrivileged() || this.owner == null || this.owner == currentUser.getName()) {
             // Only the owner can manipulate the ACLs. When the object is being created and not
             // assigned to an owner yet, this operation is allowed.
             if ( ! this.acls.containsKey(user)) {
@@ -312,7 +312,7 @@ public class Resource extends PersistentObject {
     @JsonIgnore
     public synchronized final void setResourceACL(User user, ResourceACL acl) {
         User currentUser = KernelThread.currentKernelThread().getUser();
-        if (this.owner == null || this.owner == currentUser.getName() || currentUser.isPrivileged()) {
+        if (KernelThread.currentKernelThread().isPrivileged() || this.owner == null || this.owner == currentUser.getName()) {
             // Only the owner can manipulate the ACLs. When the object is being created and not
             // assigned to an owner yet, this operation is allowed.
             Map <String,ACL> userAcls;
@@ -331,7 +331,7 @@ public class Resource extends PersistentObject {
     @JsonIgnore
     public synchronized final void removeResourceACL(User user) {
         User currentUser = KernelThread.currentKernelThread().getUser();
-        if (this.owner == null || this.owner == currentUser.getName() || currentUser.isPrivileged()) {
+        if (KernelThread.currentKernelThread().isPrivileged() || this.owner == null || this.owner == currentUser.getName()) {
             // Only the owner can manipulate the ACLs. When the object is being created and not
             // assigned to an owner yet, this operation is allowed.
             Map<Class, ACL> userAcls;

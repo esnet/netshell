@@ -53,6 +53,10 @@ public final class MongoDBProvider implements DataBase {
     private ServerAddress serverAddress;
     private HashMap<String,MongoCollection>  collections = new HashMap<String,MongoCollection>();
 
+    public MongoDBProvider(MongoDatabase db) {
+        this.db = db;
+    }
+
     public MongoDBProvider(String host, int port, String dbName, String mongoUser, String password) {
         this.serverAddress = new ServerAddress(host,port);
         ArrayList<MongoCredential> creds = new ArrayList<MongoCredential>();
@@ -65,7 +69,7 @@ public final class MongoDBProvider implements DataBase {
 
     public final MongoClient getClient()
     {
-        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+        if (!KernelThread.currentKernelThread().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
         return this.client;
@@ -84,7 +88,7 @@ public final class MongoDBProvider implements DataBase {
     }
 
     public final MongoDatabase getDatabase() {
-        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+        if (!KernelThread.currentKernelThread().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
         return this.db;
@@ -92,7 +96,7 @@ public final class MongoDBProvider implements DataBase {
 
     @Override
     public final void store(List<ResourceAnchor> anchors) throws IOException {
-        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+        if (!KernelThread.currentKernelThread().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
         HashMap<String,ArrayList<WriteModel>>  collectionRequests = new HashMap<String,ArrayList<WriteModel>>();
@@ -138,7 +142,7 @@ public final class MongoDBProvider implements DataBase {
     @Override
     public final void store(String user, String collection, PersistentObject obj) throws IOException {
         String collectionName = user + "_" + collection;
-        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+        if (!KernelThread.currentKernelThread().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
         MongoCollection mongoCollection = this.db.getCollection(collectionName);
@@ -155,7 +159,7 @@ public final class MongoDBProvider implements DataBase {
     @Override
     public void delete(String user, String name, PersistentObject obj) throws InstantiationException {
         String collectionName = user + "_" + name;
-        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+        if (!KernelThread.currentKernelThread().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
         MongoCollection mongoCollection = this.db.getCollection(collectionName);
@@ -168,7 +172,7 @@ public final class MongoDBProvider implements DataBase {
 
     @Override
     public final void delete(List<ResourceAnchor> anchors) throws IOException {
-        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+        if (!KernelThread.currentKernelThread().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
         HashMap<String,ArrayList<WriteModel>>  collectionRequests = new HashMap<String,ArrayList<WriteModel>>();
@@ -206,7 +210,7 @@ public final class MongoDBProvider implements DataBase {
     @Override
     public final void createCollection(String user, String name) {
         String collectionName = user + "_" + name;
-        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+        if (!KernelThread.currentKernelThread().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
         this.db.createCollection(collectionName);
@@ -219,7 +223,7 @@ public final class MongoDBProvider implements DataBase {
     @Override
     public final void deleteCollection(String user,String name) {
         String collectionName = user + "_" + name;
-        if (!KernelThread.currentKernelThread().getUser().isPrivileged()) {
+        if (!KernelThread.currentKernelThread().isPrivileged()) {
             throw new SecurityException("not authorized");
         }
         MongoCollection collection = this.db.getCollection(collectionName);

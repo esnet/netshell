@@ -126,7 +126,7 @@ public class Container extends Resource {
                                                    Class containerClass)
             throws IOException,IllegalAccessException, InstantiationException {
 
-        if (BootStrap.getBootStrap().getDataBase().collectionExists(user,name)) {
+        if (BootStrap.getBootStrap().getDataBase().collectionExists(user, name)) {
             return null;
         }
         BootStrap.getBootStrap().getDataBase().createCollection(user, name);
@@ -152,13 +152,25 @@ public class Container extends Resource {
 
     public static final Container createContainer (String name) throws IOException {
         User user = KernelThread.currentKernelThread().getUser();
-        return Container.createContainer(user.getName(), name);
+        String userName;
+        if (user == null) {
+            userName = "admin";
+        } else {
+            userName = user.getName();
+        }
+        return Container.createContainer(userName, name);
     }
 
     @JsonIgnore
     public static final Container getContainer(String name) {
         User user = KernelThread.currentKernelThread().getUser();
-        return Container.getContainer(user.getName(), name);
+        String userName;
+        if (user == null) {
+            userName = "admin";
+        } else {
+            userName = user.getName();
+        }
+        return Container.getContainer(userName, name);
     }
 
     @JsonIgnore

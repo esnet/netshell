@@ -35,6 +35,8 @@ import net.es.netshell.sshd.SShd;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.xml.crypto.Data;
 import java.lang.Thread;
 
 import java.io.File;
@@ -116,6 +118,20 @@ public final class BootStrap implements Runnable {
         return this.dbClient;
     }
 
+    public void setDataBase(DataBase dbClient) {
+        if (KernelThread.currentKernelThread().isPrivileged()) {
+            this.dbClient =  dbClient;
+        } else {
+            throw new SecurityException("not authorized");
+        }
+    }
+    public static void setSingleton(BootStrap bootStrap) {
+        if (KernelThread.currentKernelThread().isPrivileged()) {
+            BootStrap.bootStrap =  bootStrap;
+        } else {
+            throw new SecurityException("not authorized");
+        }
+    }
     public void init() {
         if (NetShellConfiguration.getInstance() != null) {
             BootStrap.masterConfiguration = NetShellConfiguration.getInstance().getGlobal();
@@ -171,6 +187,11 @@ public final class BootStrap implements Runnable {
     private BootStrap (String[] args, BundleContext bundleContext) {
         this.args = args;
         this.bundleContext = bundleContext;
+    }
+
+    public BootStrap() {
+        // Stub construction to be used with JUnit tests
+
     }
 
 
