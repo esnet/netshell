@@ -1,5 +1,5 @@
 /*
- * ESnet Network Operating System (ENOS) Copyright (c) 2015, The Regents
+ * ESnet Network Operating System (ENOS) Copyright (c) 2016, The Regents
  * of the University of California, through Lawrence Berkeley National
  * Laboratory (subject to receipt of any required approvals from the
  * U.S. Dept. of Energy).  All rights reserved.
@@ -15,6 +15,7 @@
  * irrevocable, worldwide license in the Software to reproduce,
  * distribute copies to the public, prepare derivative works, and perform
  * publicly and display publicly, and to permit other to do so.
+ *
  */
 package net.es.netshell.api;
 
@@ -97,11 +98,8 @@ public class Container extends Resource {
     }
 
     final public Resource loadResource(String name) throws InstantiationException {
-        if (this.resources.containsKey(name)) {
             Resource resource = Resource.findByName(this, name);
             return resource;
-        }
-        return null;
     }
 
     final public List<Resource> loadResources(Map<String,Object> query)
