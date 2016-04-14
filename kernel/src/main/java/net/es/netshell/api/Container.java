@@ -17,6 +17,7 @@
  * publicly and display publicly, and to permit other to do so.
  *
  */
+
 package net.es.netshell.api;
 
 import com.mongodb.client.FindIterable;
@@ -49,8 +50,6 @@ public class Container extends Resource {
         super(name);
     }
 
-    private HashMap<String,String> resources = new HashMap<String,String>();
-
     /**
      * Creates a ResourceAnchor for the given resource.
      * @param resource
@@ -81,14 +80,12 @@ public class Container extends Resource {
     }
 
     final public void saveResource(Resource resource) throws IOException {
-        this.resources.put(resource.getResourceName(),resource.getResourceClassName());
         resource.save(this);
         this.save(this);
     }
 
     final public void saveResources(List<Resource> resources) throws IOException {
         for (Resource resource : resources) {
-            this.resources.put(resource.getResourceName(), resource.getResourceClassName());
             resource.save(this);
         }
         this.save(this);
