@@ -148,6 +148,8 @@ public final class BootStrap implements Runnable {
     public static void main(String[] args, BundleContext bundleContext) throws NetShellException {
 
         final Logger logger = LoggerFactory.getLogger(BootStrap.class);
+        // Initialize BootStrap
+        BootStrap.getBootStrap(args, bundleContext);
         BootStrap.rootPath= BootStrap.toRootRealPath();
         // Set default logging level.
         // TODO:  This doesn't work.  It appears that setting the default logging level has no effect, possibly because all the various loggers have already been created?
@@ -176,10 +178,6 @@ public final class BootStrap implements Runnable {
             logger.error("NetShell root directory " + BootStrap.rootPath + " not found");
             throw new NetShellException("NetShell root directory " + BootStrap.rootPath + " not found");
         }
-
-        BootStrap.getBootStrap().args = args;
-        BootStrap.getBootStrap().bundleContext = bundleContext;
-
         logger.info("Bootstrap thread exits");
     }
 
@@ -188,9 +186,15 @@ public final class BootStrap implements Runnable {
 
     }
 
-
     public static BootStrap getBootStrap() {
+        return BootStrap.getBootStrap(null,null);
+    }
+    public static BootStrap getBootStrap(String[] args, BundleContext bundleContext) {
         String defaultLogLevel = "warn";
+        if (BootStrap.bootStrap != null && (args != null || bundleContext != null)) {
+            BootStrap.bootStrap.args = args;
+            BootStrap.bootStrap.bundleContext = bundleContext;
+        }
         if (NetShellConfiguration.getInstance() != null && NetShellConfiguration.getInstance().getGlobal() != null) {
             defaultLogLevel = NetShellConfiguration.getInstance().getGlobal().getDefaultLogLevel();
         }
@@ -200,6 +204,8 @@ public final class BootStrap implements Runnable {
         }
         if (BootStrap.bootStrap == null) {
             BootStrap.bootStrap = new BootStrap();
+            BootStrap.bootStrap.args = args;
+            BootStrap.bootStrap.bundleContext = bundleContext;
             BootStrap.rootPath= BootStrap.toRootRealPath();
             BootStrap.bootStrap.init();
         }
