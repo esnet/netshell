@@ -209,6 +209,10 @@ public final class BootStrap implements Runnable {
             BootStrap.rootPath= BootStrap.toRootRealPath();
             BootStrap.bootStrap.init();
         }
+        if (BootStrap.bootStrap != null && (args != null || bundleContext != null)) {
+            BootStrap.bootStrap.args = args;
+            BootStrap.bootStrap.bundleContext = bundleContext;
+        }
         return BootStrap.bootStrap;
     }
 
