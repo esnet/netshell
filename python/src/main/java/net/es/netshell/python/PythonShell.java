@@ -42,6 +42,7 @@ import org.python.core.PyDictionary;
 import org.python.core.PySystemState;
 import org.python.core.PyFile;
 import org.python.core.Options;
+import org.python.util.JLineConsole;
 import org.python.util.PythonInterpreter;
 import org.python.util.InteractiveConsole;
 import org.slf4j.Logger;
@@ -78,7 +79,6 @@ public class PythonShell {
     public static void runInit() {
         String args[] = new String[2];
         args[1] = PythonShell.INIT_SCRIPT;
-
         PythonShell.startPython(args, System.in, System.out, System.err);
     }
 
@@ -425,10 +425,6 @@ public class PythonShell {
         BundleContext bc = BootStrap.getBootStrap().getBundleContext();
         Bundle [] bundles = bc.getBundles();
 
-        if (sys == null) {
-            System.out.println("SYS IS NULL");
-        }
-
         sys.setClassLoader(new OsgiBundlesClassLoader(bundles, PythonShell.class.getClassLoader()));
         logger.debug("Jython class loader now: " + sys.getClassLoader().getClass().getName());
         logger.debug("Jython class loader parent now: " + sys.getClassLoader().getParent().getClass().getName());
@@ -508,6 +504,13 @@ public class PythonShell {
             // But we also need to trim some gunk away.
             names.add(s.trim());
         }
+    }
+
+    public static void main (String[] args) {
+        InteractiveConsole console = new InteractiveConsole();
+        InteractiveConsole.initialize(System.getProperties(), null, new String[0]);
+        console.interact();
+        Runtime.getRuntime().exit(0);
     }
 
 
