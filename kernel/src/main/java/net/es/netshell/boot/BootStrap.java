@@ -177,17 +177,10 @@ public final class BootStrap implements Runnable {
             throw new NetShellException("NetShell root directory " + BootStrap.rootPath + " not found");
         }
 
-        BootStrap.bootStrap = new BootStrap(args, bundleContext);
-        BootStrap.bootStrap.init();
-        if (bundleContext != null){
-            BootStrap.bootStrap.postInitialization();
-        }
-        logger.info("Bootstrap thread exits");
-    }
+        BootStrap.getBootStrap().args = args;
+        BootStrap.getBootStrap().bundleContext = bundleContext;
 
-    private BootStrap (String[] args, BundleContext bundleContext) {
-        this.args = args;
-        this.bundleContext = bundleContext;
+        logger.info("Bootstrap thread exits");
     }
 
     public BootStrap() {
