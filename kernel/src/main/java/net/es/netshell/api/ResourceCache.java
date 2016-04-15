@@ -1,5 +1,6 @@
 package net.es.netshell.api;
 
+import net.es.netshell.boot.BootStrap;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.io.IOException;
@@ -41,10 +42,13 @@ public class ResourceCache {
         public void run() {
             while (true) {
                 try {
-                    cache.sync();
                     Thread.sleep(this.cache.getWriterInterval());
+                    cache.sync();
+                } catch (IOException e) {
+                    // Connection problem with the database connection. This can happen, wait
+                    // and try later.
                 } catch (Exception e) {
-                    System.out.println("Exception " + e.getMessage());
+                    System.out.println("Exception " + e);
                     Thread.dumpStack();
                     return;
                 }
@@ -79,6 +83,7 @@ public class ResourceCache {
         public void run() {
             while (true) {
                 try {
+                    Thread.sleep(this.cache.getLimiterInterval());
                     int usedPercent = this.usedPercent();
                     if (usedPercent >= this.cache.getMaxUsedPercent()) {
                         // Try first to run the JVM Garbage Collector.
@@ -89,9 +94,11 @@ public class ResourceCache {
                         }
                     }
                     cache.sync();
-                    Thread.sleep(this.cache.getLimiterInterval());
+                } catch (IOException e) {
+                    // Connection problem with the database connection. This can happen, wait
+                    // and try later.
                 } catch (Exception e) {
-                    System.out.println("Exception " + e.getMessage());
+                    System.out.println("Exception " + e);
                     Thread.dumpStack();
                     return;
                 }
@@ -100,15 +107,22 @@ public class ResourceCache {
     }
 
     public ResourceCache() {
+        this.init();
         this.writer = new Writer(this);
         this.limiter = new Limiter(this);
     }
 
     public ResourceCache(long writerInterval,long limiterInterval,int maxUsedPercent) {
+        this.init();
         this.writerInterval = writerInterval;
         this.limiterInterval = limiterInterval;
         this.limiter = new Limiter(this);
         this.writer = new Writer(this);
+    }
+
+    private void init() {
+        // Make sure BootStrap is loaded.
+        BootStrap.getBootStrap();
     }
 
     public HashMap<String, Resource> getCache() {

@@ -159,6 +159,9 @@ public class PersistentObject implements Serializable {
             throw new SecurityException("save one - not authorized");
         }
         DataBase db = BootStrap.getBootStrap().getDataBase();
+        if (db == null) {
+            throw new IOException("no connection to Database");
+        }
         db.store(user, collection, this);
     }
 
@@ -172,6 +175,9 @@ public class PersistentObject implements Serializable {
             throw new SecurityException("save multi - not authorized");
         }
         DataBase db = BootStrap.getBootStrap().getDataBase();
+        if (db == null) {
+            throw new IOException("no connection to Database");
+        }
         db.store(resourceAnchors);
     }
 
@@ -192,6 +198,9 @@ public class PersistentObject implements Serializable {
             throw new SecurityException("delete list - not authorized");
         }
         DataBase db = BootStrap.getBootStrap().getDataBase();
+        if (db == null) {
+            throw new IOException("no connection to Database");
+        }
         db.delete(resourceAnchors);
     }
 
@@ -263,6 +272,9 @@ public class PersistentObject implements Serializable {
         }
         try {
             DataBase db = BootStrap.getBootStrap().getDataBase();
+            if (db == null) {
+                throw new IOException("no connection to Database");
+            }
             List<String> res = db.find(user,name, query);
             ArrayList<PersistentObject> objects = new ArrayList<PersistentObject>();
             for (String json : res) {

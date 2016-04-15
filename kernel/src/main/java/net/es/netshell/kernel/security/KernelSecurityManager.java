@@ -49,20 +49,19 @@ public class KernelSecurityManager extends SecurityManager {
     private boolean isDebug = false;
 
 	public KernelSecurityManager() {
-
-		this.preloadClasses();
-		this.initializePreAuthorized();
-
-		// Figure out the NetShell root directory.
-		String rootdir = NetShellConfiguration.getInstance().getGlobal().getRootDirectory();
-		this.rootPath = Paths.get(rootdir).normalize();
-
-        if (NetShellConfiguration.getInstance().getGlobal().getSecurityManagerDisabled() != 0) {
+        if (NetShellConfiguration.getInstance() == null ||
+                NetShellConfiguration.getInstance().getGlobal() == null
+                || NetShellConfiguration.getInstance().getGlobal().getSecurityManagerDisabled() != 0) {
             logger.warn("NetShell SecurityManager is currently disabled.  No security checks will be run.  MUST NOT BE USED IN PRODUCTION.");
             return;
-        } else {
-            System.setSecurityManager(this);
         }
+		this.preloadClasses();
+		this.initializePreAuthorized();
+        // Figure out the NetShell root directory.
+        String rootdir = NetShellConfiguration.getInstance().getGlobal().getRootDirectory();
+        this.rootPath = Paths.get(rootdir).normalize();
+        System.setSecurityManager(this);
+
 	}
 
 	@Override

@@ -3,9 +3,7 @@ package net.es.netshell.mongodb;
 import com.mongodb.Block;
 import com.mongodb.Function;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.UpdateOptions;
 import net.es.netshell.api.Node;
 import net.es.netshell.api.PersistentObject;
@@ -19,7 +17,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
@@ -70,17 +70,12 @@ public class MongoDBProviderTest {
     @Test
     public void testSimpleStore() throws Exception {
         Resource resource = new Resource("test");
-        provider.store("admin","collection",resource);
+        resource.getProperties().put("key", "value1");
+        provider.store("admin", "collection", resource);
         // Check db saved it.
         verify(collection,atLeastOnce()).replaceOne(any(Document.class), any(Document.class), any(UpdateOptions.class));
     }
 
-    @Test
-    public void testDupResourceStore() throws Exception {
-        Resource resource1 = new Resource("test");
-        Resource resource2 = new Resource("test");
-        provider.store("admin","collection",resource1);
-    }
 
     @Test
     public void testStore1() throws Exception {

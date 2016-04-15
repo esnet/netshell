@@ -36,7 +36,6 @@ import com.mongodb.client.MongoCollection;
 import net.es.netshell.api.Resource;
 import net.es.netshell.api.ResourceAnchor;
 import net.es.netshell.kernel.exec.KernelThread;
-import net.es.netshell.kernel.users.User;
 import org.bson.Document;
 
 import javax.management.RuntimeErrorException;
@@ -250,10 +249,10 @@ public final class MongoDBProvider implements DataBase {
         } else {
             Document queryDocument = new Document(query);
             results = collection.find(queryDocument);
-            for (Document doc : results) {
-                doc.remove("_id");
-                res.add(doc.toJson());
-            }
+        }
+        for (Document doc : results) {
+            doc.remove("_id");
+            res.add(doc.toJson());
         }
         return res;
     }

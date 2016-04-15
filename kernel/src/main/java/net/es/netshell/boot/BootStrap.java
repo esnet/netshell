@@ -64,7 +64,7 @@ public final class BootStrap implements Runnable {
     private static GlobalConfiguration masterConfiguration;
     private static KernelSecurityManager securityManager = null;
 
-    public final static Path rootPath = BootStrap.toRootRealPath();
+    public static Path rootPath;
 
     final private Logger logger = LoggerFactory.getLogger(BootStrap.class);
 
@@ -119,44 +119,47 @@ public final class BootStrap implements Runnable {
     }
 
     public void setDataBase(DataBase dbClient) {
-        if (KernelThread.currentKernelThread().isPrivileged()) {
-            this.dbClient =  dbClient;
-        } else {
-            throw new SecurityException("not authorized");
-        }
+        this.dbClient =  dbClient;
     }
     public static void setSingleton(BootStrap bootStrap) {
-        if (KernelThread.currentKernelThread().isPrivileged()) {
-            BootStrap.bootStrap =  bootStrap;
-        } else {
-            throw new SecurityException("not authorized");
-        }
+         BootStrap.bootStrap =  bootStrap;
     }
+
     public void init() {
         if (NetShellConfiguration.getInstance() != null) {
             BootStrap.masterConfiguration = NetShellConfiguration.getInstance().getGlobal();
         }
         BootStrap.securityManager = new KernelSecurityManager();
-        BootStrap.thread = new Thread(BootStrap.getBootStrap().getSecurityManager().getNetShellRootThreadGroup(),
+        BootStrap.thread = new Thread(this.getSecurityManager().getNetShellRootThreadGroup(),
                                       this,
                                       "NetShell Bootstrap");
         logger.info("Starting BootStrap thread");
         logger.info("Current directory: {}", System.getProperty("user.dir"));
         BootStrap.thread.start();
+    }
 
+    public static void main(String[] args) {
+        try {
+            BootStrap.main(args,null);
+        } catch (NetShellException e) {
+            e.printStackTrace();
+        }
     }
     public static void main(String[] args, BundleContext bundleContext) throws NetShellException {
 
         final Logger logger = LoggerFactory.getLogger(BootStrap.class);
-
+        BootStrap.rootPath= BootStrap.toRootRealPath();
         // Set default logging level.
         // TODO:  This doesn't work.  It appears that setting the default logging level has no effect, possibly because all the various loggers have already been created?
-        String defaultLogLevel = NetShellConfiguration.getInstance().getGlobal().getDefaultLogLevel();
+
+        String defaultLogLevel = "warn";
+        if (NetShellConfiguration.getInstance() != null && NetShellConfiguration.getInstance().getGlobal() != null) {
+            defaultLogLevel = NetShellConfiguration.getInstance().getGlobal().getDefaultLogLevel();
+        }
         Logger rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         if (rootLogger instanceof ch.qos.logback.classic.Logger) {
             ((ch.qos.logback.classic.Logger) rootLogger).setLevel(ch.qos.logback.classic.Level.toLevel(defaultLogLevel));
         }
-
 
         // Make sure the root directory exists and that we can write to it.
         File root = new File(BootStrap.rootPath.toString());
@@ -174,13 +177,11 @@ public final class BootStrap implements Runnable {
             throw new NetShellException("NetShell root directory " + BootStrap.rootPath + " not found");
         }
 
-        NetShellConfiguration netShellConfiguration = NetShellConfiguration.getInstance();
-
-
         BootStrap.bootStrap = new BootStrap(args, bundleContext);
         BootStrap.bootStrap.init();
-        BootStrap.bootStrap.postInitialization();
-
+        if (bundleContext != null){
+            BootStrap.bootStrap.postInitialization();
+        }
         logger.info("Bootstrap thread exits");
     }
 
@@ -196,11 +197,26 @@ public final class BootStrap implements Runnable {
 
 
     public static BootStrap getBootStrap() {
+        String defaultLogLevel = "warn";
+        if (NetShellConfiguration.getInstance() != null && NetShellConfiguration.getInstance().getGlobal() != null) {
+            defaultLogLevel = NetShellConfiguration.getInstance().getGlobal().getDefaultLogLevel();
+        }
+        Logger rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        if (rootLogger instanceof ch.qos.logback.classic.Logger) {
+            ((ch.qos.logback.classic.Logger) rootLogger).setLevel(ch.qos.logback.classic.Level.toLevel(defaultLogLevel));
+        }
+        if (BootStrap.bootStrap == null) {
+            BootStrap.bootStrap = new BootStrap();
+            BootStrap.rootPath= BootStrap.toRootRealPath();
+            BootStrap.bootStrap.init();
+        }
         return BootStrap.bootStrap;
     }
 
     public void startServices() {
-
+        if (NetShellConfiguration.getInstance() == null ||  NetShellConfiguration.getInstance().getGlobal() == null) {
+            // return;
+        }
         // Start sshd if it's not disabled.
         int sshDisabled = NetShellConfiguration.getInstance().getGlobal().getSshDisabled();
         if (sshDisabled == 0) {

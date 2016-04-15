@@ -26,6 +26,7 @@ package net.es.netshell.kernel.exec;
 import net.es.netshell.api.NetShellException;
 import net.es.netshell.api.FileUtils;
 import net.es.netshell.boot.BootStrap;
+import net.es.netshell.configuration.NetShellConfiguration;
 import net.es.netshell.kernel.exec.annotations.SysCall;
 import net.es.netshell.kernel.security.AllowedSysCalls;
 import net.es.netshell.kernel.security.FileACL;
@@ -58,7 +59,7 @@ public final class  KernelThread {
 
     private Thread thread = null;
 
-    private boolean privileged = false;
+    private boolean privileged = true;
     private User user = null;
     private String currentDirectory = null;
 
@@ -78,7 +79,11 @@ public final class  KernelThread {
             // Threads in the root ThreadGroup run as privileged
             this.privileged = true;
         } else {
-            this.privileged = false;
+            if (NetShellConfiguration.getInstance().getGlobal().getSecurityManagerDisabled() != 0) {
+                this.privileged = true;
+            } else {
+                this.privileged = false;
+            }
         }
     }
 
@@ -116,8 +121,10 @@ public final class  KernelThread {
      * @return the privilege status of the KernelThread.
      */
     public synchronized boolean isPrivileged() {
+
         return this.privileged ||
-                (KernelThread.currentKernelThread().getUser() != null &&KernelThread.currentKernelThread().getUser().isPrivileged() );
+                (KernelThread.currentKernelThread().getUser() != null
+                        && KernelThread.currentKernelThread().getUser().isPrivileged() );
     }
 
     /**
@@ -181,11 +188,6 @@ public final class  KernelThread {
         if (this.user == null) {
             // Retrieve, when possible, the User associated to this thread
             this.user = User.getUser(Thread.currentThread().getThreadGroup());
-            if (this.user != null) {
-                logger.info("Adopting thread " + Thread.currentThread().getId() + " user= " + this.user.getName());
-            } else {
-                logger.warn("Cannot find user for thread " + Thread.currentThread().getId());
-            }
         }
 
         return this.user;
