@@ -25,6 +25,7 @@ import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.security.ExitSecurityException;
 import net.es.netshell.kernel.users.User;
 import net.es.netshell.osgi.OsgiBundlesClassLoader;
+import net.es.netshell.shell.ShellCommandsFactory;
 import net.es.netshell.shell.ShellInputStream;;
 import net.es.netshell.shell.TabFilteringInputStream;
 import net.es.netshell.shell.annotations.ShellCommand;
@@ -178,7 +179,10 @@ public class PythonShell {
         systemState.stdout = new PyFile(out, "<stdout>", "w" + mode, buffering, false);
         systemState.stderr = new PyFile(err, "<stderr>", "w" + mode, 0, false);
         python = new PythonInterpreter(sessionLocals,systemState);
-        osgiSetup(python.getSystemState());
+        if (BootStrap.getBootStrap().getPythonService() == null) {
+            // The module is deployed as an OSGI bundle
+            osgiSetup(python.getSystemState());
+        }
         return python;
     }
 
@@ -324,7 +328,9 @@ public class PythonShell {
                 InteractiveConsole.initialize(System.getProperties(),
                         null, new String[0]);
 
-                osgiSetup(console.getSystemState());
+                if (BootStrap.getBootStrap().getPythonService() == null) {
+                    osgiSetup(console.getSystemState());
+                }
                 // Start the interactive session
                 if (in instanceof ShellInputStream) {
                     ((ShellInputStream) in).setEofHack(true);
@@ -507,6 +513,9 @@ public class PythonShell {
     }
 
     public static void main (String[] args) {
+        // Register to the NetShell
+        ShellCommandsFactory.registerShellModule(PythonShell.class);
+        BootStrap.getBootStrap().setPythonService(new PythonShellServiceImpl());
         InteractiveConsole console = new InteractiveConsole();
         InteractiveConsole.initialize(System.getProperties(), null, new String[0]);
         console.interact();

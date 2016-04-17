@@ -58,6 +58,8 @@ public final class BootStrap implements Runnable {
     private static Thread thread;
     private BundleContext bundleContext;
     private DataBase dbClient = null;
+    private PythonShellService pythonService;
+    private boolean isStandAlone = false;
 
     // We need to be sure the global configuration gets instantiated before the security manager,
     // because the former controls the initialization actions of the latter.
@@ -125,9 +127,22 @@ public final class BootStrap implements Runnable {
          BootStrap.bootStrap =  bootStrap;
     }
 
+    public PythonShellService getPythonService() {
+        return pythonService;
+    }
+
+    public void setPythonService(PythonShellService pythonService) {
+        this.pythonService = pythonService;
+    }
+
+    public boolean isStandAlone() {
+        return this.isStandAlone;
+    }
+
     public void init() {
         if (NetShellConfiguration.getInstance() != null) {
             BootStrap.masterConfiguration = NetShellConfiguration.getInstance().getGlobal();
+            this.isStandAlone = BootStrap.masterConfiguration.isStandalone();
         }
         BootStrap.securityManager = new KernelSecurityManager();
         BootStrap.thread = new Thread(this.getSecurityManager().getNetShellRootThreadGroup(),

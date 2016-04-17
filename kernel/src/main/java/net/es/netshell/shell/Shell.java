@@ -226,37 +226,39 @@ public class Shell {
                     // There are probably better ways to implement this, for example using
                     // some of the dependency injection frameworks.
                     BundleContext context = BootStrap.getBootStrap().getBundleContext();
+                    PythonShellService ps=null;
                     if (context != null) {
                         ServiceReference ref = context.getServiceReference(PythonShellService.class.getName());
                         if (ref != null) {
                             // Found an instance of the PythonShellService that we can use.
-                            PythonShellService ps = (PythonShellService) context.getService(ref);
-
-                            // Try to see if a python program exist with that name
-                            String path = ps.getProgramPath(args[0]);
-                            if (path != null) {
-                                // There is a python command of that name execute it. A new String[] with the first
-                                // element set to "python" must be created in order to simulate the python command line.
-                                String[] newArgs = new String[args.length + 1];
-                                newArgs[0] = "python";
-                                // Set the full path
-                                newArgs[1] = path;
-
-                                // Place old args into newArgs.
-                                for (int i = 1; i < args.length; i++) {
-                                    newArgs[i + 1] = args[i];
-                                }
-                                try {
-                                    ps.startPython(newArgs, this.in, this.out, this.out);
-                                } catch (Exception e) {
-                                    // This is a catch all. Make sure that the thread recovers in a correct state
-                                    this.print(e.toString());
-                                }
-                                continue;
-                            }
+                            ps = (PythonShellService) context.getService(ref);
                         }
                     } else {
-                        // PythonShell.startPython
+                        ps = BootStrap.getBootStrap().getPythonService();
+                    }
+                    if (ps != null) {
+                        // Try to see if a python program exist with that name
+                        String path = ps.getProgramPath(args[0]);
+                        if (path != null) {
+                            // There is a python command of that name execute it. A new String[] with the first
+                            // element set to "python" must be created in order to simulate the python command line.
+                            String[] newArgs = new String[args.length + 1];
+                            newArgs[0] = "python";
+                            // Set the full path
+                            newArgs[1] = path;
+
+                            // Place old args into newArgs.
+                            for (int i = 1; i < args.length; i++) {
+                                newArgs[i + 1] = args[i];
+                            }
+                            try {
+                                ps.startPython(newArgs, this.in, this.out, this.out);
+                            } catch (Exception e) {
+                                // This is a catch all. Make sure that the thread recovers in a correct state
+                                this.print(e.toString());
+                            }
+                            continue;
+                        }
                     }
                     // Nonexistent command
                     this.print(args[0] + " is an invalid command");

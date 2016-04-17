@@ -20,6 +20,7 @@
 package net.es.netshell.kernel.users;
 
 import net.es.netshell.api.*;
+import net.es.netshell.boot.BootStrap;
 import net.es.netshell.configuration.NetShellConfiguration;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.exec.annotations.SysCall;
@@ -71,15 +72,17 @@ public final class Users {
         // Figure out the NetShell root directory.
         String NetShellRootDir = NetShellConfiguration.getInstance().getGlobal().getRootDirectory();
         this.NetShellRootPath = Paths.get(NetShellRootDir).normalize();
-        this.passwordFilePath = FileUtils.toRealPath("/etc/netshell.users");
 
-        // Read user file or create it if necessary
-        try {
-            this.readUserFile();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (!BootStrap.getBootStrap().isStandAlone()) {
+            this.passwordFilePath = FileUtils.toRealPath("/etc/netshell.users");
+
+            // Read user file or create it if necessary
+            try {
+                this.readUserFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-
     }
 
 
@@ -93,10 +96,19 @@ public final class Users {
      * @return true if user exists
      */
     public boolean userExists(String user) {
-        return Users.getUsers().passwords.containsKey(user);
+        if(BootStrap.getBootStrap().isStandAlone()) {
+            String currentUser = System.getProperty("user.name");
+            return currentUser.equals(user);
+        } else {
+            return Users.getUsers().passwords.containsKey(user);
+        }
     }
 
     public boolean authUser (String userName, String password) {
+        if (BootStrap.getBootStrap().isStandAlone()) {
+            // Forbid password auth in standalone
+            return false;
+        }
         Method method = null;
         try {
             method = KernelThread.getSysCallMethod(this.getClass(), "do_authUser");
@@ -122,7 +134,9 @@ public final class Users {
     )
     public void  do_authUser (String user, String password) throws NonExistentUserException, UserException,UserClassException {
         logger.info("do_authUser entry");
-
+        if (BootStrap.getBootStrap().isStandAlone()) {
+            throw new SecurityException("not allowed");
+        }
         // Read file.
         try {
             this.readUserFile();
@@ -221,6 +235,9 @@ public final class Users {
             name="do_setPassword"
     )
     public void do_setPassword(String userName, String newPassword) throws NonExistentUserException, IOException {
+        if (BootStrap.getBootStrap().isStandAlone()) {
+            throw new SecurityException("not allowed");
+        }
         logger.info("do_setPassword entry");
 
 	    try {
@@ -243,6 +260,9 @@ public final class Users {
 
 
     public CommandResponse createUser(UserProfile newUser) {
+        if (BootStrap.getBootStrap().isStandAlone()) {
+            throw new SecurityException("not allowed");
+        }
         Method method = null;
         CommandResponse commandResponse;
         String resMessage = null;
@@ -295,7 +315,9 @@ public final class Users {
     )
     public void do_createUser (UserProfile newUser, boolean createContainer) throws UserAlreadyExistException, UserException, UserClassException, IOException {
         logger.info("do_createUser entry");
-
+        if (BootStrap.getBootStrap().isStandAlone()) {
+            throw new SecurityException("not allowed");
+        }
         String username = newUser.getName();
         String password = newUser.getPassword();
         String privilege = newUser.getPrivilege();

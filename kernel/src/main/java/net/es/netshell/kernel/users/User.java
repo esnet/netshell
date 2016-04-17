@@ -62,6 +62,17 @@ public class User {
         User.usersByGroup.put(this.threadGroup.getName(), new WeakReference<User>(this));
     }
 
+    public User (String name, String home) {
+        this.name = name;
+        // Set home directory.
+        this.homePath = Paths.get(home);
+        User.users.put(this.name, new WeakReference<User>(this));
+        this.privileged = true;
+        // Create the user ThreadGroup
+        this.threadGroup = Thread.currentThread().getThreadGroup();
+        User.usersByGroup.put(this.threadGroup.getName(), new WeakReference<User>(this));
+    }
+
     public String getName() {
         return name;
     }
@@ -71,6 +82,17 @@ public class User {
             WeakReference weakRef = User.users.get(username);
             if (weakRef != null) {
                 return (User) weakRef.get();
+            }
+            // User has not login yet. If NetShell is running as a standalone, users are the host users.
+            // Only allow the host's user who is running NetShell.
+            if (BootStrap.getBootStrap().isStandAlone()) {
+                // Netshell users are the host users. Only allow the host's user who is running NetShell.
+                String currentUser = System.getProperty("user.name");
+                if (currentUser.equals(username)) {
+                    String home = System.getProperty("user.home");
+                    User user = new User(username,home);
+                    return user;
+                }
             }
             return null;
         }

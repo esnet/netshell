@@ -318,7 +318,7 @@ public class PersistentObject implements Serializable {
         }
         File file = PersistentObject.buildFile(fileName);
         if ( ! file.exists() ) {
-            throw new InstantiationException(fileName + "file does not exist.");
+            throw new InstantiationException(fileName + " file does not exist.");
         }
         try {;
             ObjectMapper mapper = new ObjectMapper();

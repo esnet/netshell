@@ -25,6 +25,7 @@ package net.es.netshell.sshd;
 
 import net.es.netshell.boot.BootStrap;
 import net.es.netshell.configuration.NetShellConfiguration;
+import net.es.netshell.configuration.GlobalConfiguration;
 import net.es.netshell.kernel.users.Users;
 import org.apache.mina.util.Base64;
 import org.apache.sshd.SshServer;
@@ -43,6 +44,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.interfaces.DSAPublicKey;
@@ -54,6 +56,7 @@ import java.security.spec.RSAPublicKeySpec;
 public class SShd {
 
     private static SShd sshd = null;
+    private static int DEFAULT_PORT = 8000;
     private SshServer sshServer = null;
     public static final Session.AttributeKey<TokenId> TOKEN_ID = new Session.AttributeKey<TokenId>();
     private final Logger logger = LoggerFactory.getLogger(SShd.class);
@@ -245,8 +248,12 @@ public class SShd {
         // ThreadPool.
         this.sshServer.setIoServiceFactoryFactory(new SshdServiceFactoryFactory());
 
-        int sshPort = NetShellConfiguration.getInstance().getGlobal().getSshPort();
-        this.sshServer.setPort(sshPort);
+        int sshPort = 0;
+        if (NetShellConfiguration.getInstance().getGlobal() == null) {
+            this.sshServer.setPort(SShd.DEFAULT_PORT);
+        } else {
+            this.sshServer.setPort(NetShellConfiguration.getInstance().getGlobal().getSshPort());
+        }
 
         int sshIdleTimeout = NetShellConfiguration.getInstance().getGlobal().getSshIdleTimeout();
         this.sshServer.getProperties().put(sshServer.IDLE_TIMEOUT, Integer.toString(sshIdleTimeout));
@@ -275,7 +282,13 @@ public class SShd {
         PublickeyAuthenticator publickeyAuth = new NetShellPublickeyAuthenticator();
         this.sshServer.setPublickeyAuthenticator(publickeyAuth);
 
-        String hostKeyFileName = BootStrap.rootPath.resolve("etc").resolve("hostkey.ser").toString();
+        String hostKeyFileName = null;
+        if (BootStrap.getBootStrap().isStandAlone()) {
+            String currentUserHome = System.getProperty("user.home");
+            hostKeyFileName = Paths.get(currentUserHome,".ssh/netshell-hostkey.ser").toString();
+        }  else {
+            hostKeyFileName = BootStrap.rootPath.resolve("etc").resolve("hostkey.ser").toString();
+        }
         File hostKeyFile = new File(hostKeyFileName);
         logger.info("Host key file is {}", hostKeyFile);
 

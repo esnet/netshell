@@ -41,7 +41,6 @@ public class NetShellConfiguration extends PersistentObject {
     @JsonIgnore
     private final static Logger logger = LoggerFactory.getLogger(NetShellConfiguration.class);
 
-
     private GlobalConfiguration global;
 
 
@@ -90,7 +89,6 @@ public class NetShellConfiguration extends PersistentObject {
     private static NetShellConfiguration loadConfiguration () {
 
         String configurationFilePath = System.getProperty(PropertyKeys.NETSHELL_CONFIGURATION);
-
         if (configurationFilePath == null) {
             logger.info("No configuration file property!");
             configurationFilePath = DEFAULT_FILENAME;
@@ -101,6 +99,7 @@ public class NetShellConfiguration extends PersistentObject {
         try {
             netShellConfiguration = (NetShellConfiguration) PersistentObject.newObjectFromFile(configurationFilePath,
                                                                                                NetShellConfiguration.class);
+
         } catch (InstantiationException e) {
             // This is a new instance. Can set
             netShellConfiguration.canSet = true;

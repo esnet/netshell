@@ -72,8 +72,10 @@ public final class  KernelThread {
     public KernelThread (Thread thread) throws SecurityException {
         this.thread = thread;
         this.init();
-        if ((BootStrap.getBootStrap() == null)
-           || (BootStrap.getBootStrap().getSecurityManager() == null)
+        if (BootStrap.getBootStrap() == null) {
+            return;
+        }
+        if ((BootStrap.getBootStrap().getSecurityManager() == null)
            || (this.thread.getThreadGroup() == null)
            || this.thread.getThreadGroup().equals(BootStrap.getBootStrap().getSecurityManager().getNetShellRootThreadGroup())) {
             // Threads in the root ThreadGroup run as privileged

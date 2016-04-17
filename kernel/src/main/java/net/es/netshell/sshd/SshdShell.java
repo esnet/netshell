@@ -111,7 +111,7 @@ public class SshdShell extends Shell implements Command, SessionAware, FileSyste
             return;
         }
         User user = User.getUser(tokenId.username);
-        if (user == null) {
+        if (user == null ) {
             // First login from this user
             user = new User(tokenId.username);
         }

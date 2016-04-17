@@ -41,6 +41,7 @@ public class GlobalConfiguration {
     private String dbUser = "enos";
     private String dbUserPassword =  "enos";
     private String dbName = "enos";
+    private boolean standalone = false;
     @JsonIgnore
     private boolean canSet = true;
 
@@ -88,6 +89,14 @@ public class GlobalConfiguration {
 
     public int getDbPort() {
         return dbPort;
+    }
+
+    public boolean isStandalone() {
+        return standalone;
+    }
+
+    public void setStandalone(boolean standalone) {
+        this.standalone = standalone;
     }
 
     public String getDbName() {
