@@ -243,14 +243,8 @@ public class PythonShell {
             }
         }
     }
-    @ShellCommand(
-            name="python",
-            forwardLines=false,
-            shortHelp="Invoke interactive Python shell",
-            longHelp="EOF in the shell exits the shell and returns control to the top-level\n" +
-                    "NetShell."
-    )
-    public static void startPython (String[] args, InputStream in, OutputStream out, OutputStream err) {
+
+    public static void startPython (InputStream fileInputStream, String[] args, InputStream in, OutputStream out, OutputStream err) {
         if (in instanceof ShellInputStream) {
             if (((ShellInputStream) in).getSourceInputStream() instanceof TabFilteringInputStream) {
                 ((TabFilteringInputStream) ((ShellInputStream) in).getSourceInputStream()).setFilters(true);
@@ -297,17 +291,21 @@ public class PythonShell {
                 }
                 argv += "]";
                 python.exec(argv);
-                if (args[1].startsWith(BootStrap.rootPath.toString())) {
-                    // The file path already contains the NetShell Root.
-                    filePath = args[1];
+                if (fileInputStream != null) {
+                    python.execfile(fileInputStream);
                 } else {
-                    // Need to prefix the file path with NetShell Root.
-                    filePath = BootStrap.rootPath.toString() + args[1];
-                }
-                if (! new File(filePath).exists()) {
-                    err.write((args[1] + " not found.\n").getBytes());
-                } else {
-                    python.execfile(filePath);
+                    if (args[1].startsWith(BootStrap.rootPath.toString())) {
+                        // The file path already contains the NetShell Root.
+                        filePath = args[1];
+                    } else {
+                        // Need to prefix the file path with NetShell Root.
+                        filePath = BootStrap.rootPath.toString() + args[1];
+                    }
+                    if (!new File(filePath).exists()) {
+                        err.write((args[1] + " not found.\n").getBytes());
+                    } else {
+                        python.execfile(filePath);
+                    }
                 }
 
             } else {
@@ -321,7 +319,9 @@ public class PythonShell {
                 console.setOut(out);
                 console.setErr(err);
                 console.setIn(in);
-                console.getSystemState().path = systemState.path;
+                if (systemState != null) {
+                    console.getSystemState().path = systemState.path;
+                } else
                 if (System.getProperty("python.home") == null) {
                     System.setProperty("python.home", "");
                 }
@@ -363,6 +363,17 @@ public class PythonShell {
         }
 
         logger.debug("Exiting Python");
+    }
+
+    @ShellCommand(
+            name="python",
+            forwardLines=false,
+            shortHelp="Invoke interactive Python shell",
+            longHelp="EOF in the shell exits the shell and returns control to the top-level\n" +
+                    "NetShell."
+    )
+    public static void startPython(String[] args, InputStream in, OutputStream out, OutputStream err) {
+        PythonShell.startPython(null,args,in,out,err);
     }
 
     private static void execProfile(PyDictionary locals, InputStream in, OutputStream out, OutputStream err) {

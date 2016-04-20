@@ -19,6 +19,7 @@
 
 package net.es.netshell.shell;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -28,4 +29,6 @@ import java.io.OutputStream;
 public interface PythonShellService {
     public void startPython(String[] args, InputStream in, OutputStream out, OutputStream err);
     public String getProgramPath(String cmd);
+
+    public void startPython(InputStream cmdInputStream, String[] args, InputStream in, OutputStream out, OutputStream err);
 }

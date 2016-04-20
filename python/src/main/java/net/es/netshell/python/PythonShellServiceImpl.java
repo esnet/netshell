@@ -20,6 +20,7 @@ package net.es.netshell.python;
 
 import net.es.netshell.shell.PythonShellService;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -40,5 +41,10 @@ public class PythonShellServiceImpl implements PythonShellService {
     @Override
     public String getProgramPath(String cmd) {
         return PythonShell.getProgramPath(cmd);
+    }
+
+    @Override
+    public void startPython(InputStream cmdInputStream, String[] args, InputStream in, OutputStream out, OutputStream err) {
+        PythonShell.startPython(cmdInputStream,args,in,out,err);
     }
 }
