@@ -265,32 +265,35 @@ public class Shell {
                     }
                     // Search in the resource's /Lib
                     ClassLoader cl = Shell.class.getClassLoader();
-                    String jarFileName = cl.getResource("Lib").getFile();
-                    jarFileName = jarFileName.substring(5, jarFileName.length() - 5);
-                    JarFile jarFile = new JarFile(jarFileName);
-                    Enumeration<JarEntry> entries = jarFile.entries();
-                    String cmd =args[0] + ".py";
-                    System.out.println("### 1 " + cmd);
-                    while(entries.hasMoreElements()) {
-                        JarEntry entry = entries.nextElement();
-                        if (Paths.get(entry.getName()).getFileName().toString().equals(cmd)) {
-                            // There is a python command of that name execute it. A new String[] with the first
-                            // element set to "python" must be created in order to simulate the python command line.
-                            String[] newArgs = new String[args.length + 1];
-                            newArgs[0] = "python";
-                            // Set the full path
-                            newArgs[1] = entry.getName();
+                    if (cl.getResource("Lib") != null) {
+                        String jarFileName = cl.getResource("Lib").getFile();
+                        jarFileName = jarFileName.substring(5, jarFileName.length() - 5);
+                        JarFile jarFile = null;
+                        jarFile = new JarFile(jarFileName);
 
-                            // Place old args into newArgs.
-                            for (int i = 1; i < args.length; i++) {
-                                newArgs[i + 1] = args[i];
-                            }
-                            try {
-                                InputStream cmdInputStream = cl.getResourceAsStream(entry.getName());
-                                ps.startPython(cmdInputStream, newArgs, this.in, this.out, this.out);
-                            } catch (Exception e) {
-                                // This is a catch all. Make sure that the thread recovers in a correct state
-                                this.print(e.toString());
+                        Enumeration<JarEntry> entries = jarFile.entries();
+                        String cmd = args[0] + ".py";
+                        while (entries.hasMoreElements()) {
+                            JarEntry entry = entries.nextElement();
+                            if (Paths.get(entry.getName()).getFileName().toString().equals(cmd)) {
+                                // There is a python command of that name execute it. A new String[] with the first
+                                // element set to "python" must be created in order to simulate the python command line.
+                                String[] newArgs = new String[args.length + 1];
+                                newArgs[0] = "python";
+                                // Set the full path
+                                newArgs[1] = entry.getName();
+
+                                // Place old args into newArgs.
+                                for (int i = 1; i < args.length; i++) {
+                                    newArgs[i + 1] = args[i];
+                                }
+                                try {
+                                    InputStream cmdInputStream = cl.getResourceAsStream(entry.getName());
+                                    ps.startPython(cmdInputStream, newArgs, this.in, this.out, this.out);
+                                } catch (Exception e) {
+                                    // This is a catch all. Make sure that the thread recovers in a correct state
+                                    this.print(e.toString());
+                                }
                             }
                         }
                     }
