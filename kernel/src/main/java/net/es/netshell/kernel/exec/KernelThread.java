@@ -73,6 +73,7 @@ public final class  KernelThread {
         this.thread = thread;
         this.init();
         if (BootStrap.getBootStrap() == null) {
+            this.privileged = true;
             return;
         }
         if ((BootStrap.getBootStrap().getSecurityManager() == null)
@@ -81,10 +82,14 @@ public final class  KernelThread {
             // Threads in the root ThreadGroup run as privileged
             this.privileged = true;
         } else {
-            if (NetShellConfiguration.getInstance().getGlobal().getSecurityManagerDisabled() != 0) {
+            if (NetShellConfiguration.getInstance().getGlobal() == null) {
                 this.privileged = true;
             } else {
-                this.privileged = false;
+                if (NetShellConfiguration.getInstance().getGlobal().getSecurityManagerDisabled() != 0) {
+                    this.privileged = true;
+                } else {
+                    this.privileged = false;
+                }
             }
         }
     }

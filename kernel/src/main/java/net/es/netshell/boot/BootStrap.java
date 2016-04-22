@@ -142,7 +142,9 @@ public final class BootStrap implements Runnable {
     public void init() {
         if (NetShellConfiguration.getInstance() != null) {
             BootStrap.masterConfiguration = NetShellConfiguration.getInstance().getGlobal();
-            this.isStandAlone = BootStrap.masterConfiguration.isStandalone();
+            if (BootStrap.masterConfiguration != null) {
+                this.isStandAlone = BootStrap.masterConfiguration.isStandalone();
+            }
         }
         BootStrap.securityManager = new KernelSecurityManager();
         BootStrap.thread = new Thread(this.getSecurityManager().getNetShellRootThreadGroup(),

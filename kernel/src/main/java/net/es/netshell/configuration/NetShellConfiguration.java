@@ -55,6 +55,7 @@ public class NetShellConfiguration extends PersistentObject {
                 // No configuration file. Create an empty configuration.
                 if (instance == null) {
                     instance = new NetShellConfiguration(true);
+                    instance.global = new GlobalConfiguration();
                 }
             }
         }

@@ -9,6 +9,7 @@ import net.es.netshell.api.Node;
 import net.es.netshell.api.PersistentObject;
 import net.es.netshell.api.Resource;
 import net.es.netshell.boot.BootStrap;
+import net.es.netshell.kernel.exec.KernelThread;
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;

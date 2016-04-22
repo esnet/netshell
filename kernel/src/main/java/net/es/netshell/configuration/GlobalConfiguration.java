@@ -34,14 +34,14 @@ public class GlobalConfiguration {
     private int sshPort = 8000;
     private int sshIdleTimeout = 3600000;
     private int sshNbWorkerThreads = SshdIoServiceFactory.DEFAULT_NB_WORKER_THREADS;
-    private int securityManagerDisabled = 0;
+    private int securityManagerDisabled = 1;
     private int useDB = 0;
     private String dbHost = "localhost";
     private int dbPort = 27017;
     private String dbUser = "enos";
     private String dbUserPassword =  "enos";
     private String dbName = "enos";
-    private boolean standalone = false;
+    private boolean standalone = true;
     @JsonIgnore
     private boolean canSet = true;
 
