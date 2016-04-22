@@ -47,10 +47,15 @@ public class NetShellConfiguration extends PersistentObject {
     public static NetShellConfiguration getInstance() {
         if (instance == null) {
             try {
-                instance = NetShellConfiguration.loadConfiguration();
+                NetShellConfiguration tmp = NetShellConfiguration.loadConfiguration();
+                if (instance == null) {
+                    instance = tmp;
+                }
             } catch (Exception e) {
                 // No configuration file. Create an empty configuration.
-                instance = new NetShellConfiguration(true);
+                if (instance == null) {
+                    instance = new NetShellConfiguration(true);
+                }
             }
         }
         return instance;
