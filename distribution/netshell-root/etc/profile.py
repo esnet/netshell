@@ -20,6 +20,7 @@
 
 import sys
 from net.es.netshell.boot import BootStrap
+from net.es.netshell.kernel.exec import KernelThread
 from java.nio.file import Paths
 from org.python.util import jython
 
