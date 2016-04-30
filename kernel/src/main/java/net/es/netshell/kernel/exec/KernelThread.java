@@ -279,7 +279,6 @@ public final class  KernelThread {
             SysCall syscall = method.getAnnotation(SysCall.class);
             if (syscall != null) {
                if (syscall.name().equals(name)) {
-
                    return method;
                }
             }
@@ -291,7 +290,11 @@ public final class  KernelThread {
     public final synchronized String getCurrentDirectory() {
         if (this.currentDirectory == null) {
             // Default to the home directory of the user
-            this.currentDirectory = FileUtils.normalize(this.user.getHomePath().toString());
+            if (this.user != null) {
+                this.currentDirectory = FileUtils.normalize(this.user.getHomePath().toString());
+            } else {
+                this.currentDirectory = System.getProperty("user.dir");
+            }
         }
         return this.currentDirectory;
     }

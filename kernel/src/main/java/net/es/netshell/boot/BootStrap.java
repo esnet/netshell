@@ -206,12 +206,14 @@ public final class BootStrap implements Runnable {
     public static BootStrap getBootStrap() {
         return BootStrap.getBootStrap(null,null);
     }
+
     public static BootStrap getBootStrap(String[] args, BundleContext bundleContext) {
         String defaultLogLevel = "warn";
         if (BootStrap.bootStrap != null && (args != null || bundleContext != null)) {
             BootStrap.bootStrap.args = args;
             BootStrap.bootStrap.bundleContext = bundleContext;
         }
+
         if (NetShellConfiguration.getInstance() != null && NetShellConfiguration.getInstance().getGlobal() != null) {
             defaultLogLevel = NetShellConfiguration.getInstance().getGlobal().getDefaultLogLevel();
         }

@@ -76,6 +76,7 @@ public class Shell {
 	    if (command != null) {
 		    this.command = command[0];
 	    }
+        this.in = in;
         this.out = out;
     }
 
@@ -97,10 +98,18 @@ public class Shell {
     }
 
     public void startShell() {
+        this.startShell(null);
+
+    }
+
+    public void startShell(String[] args) {
 
         this.kernelThread = KernelThread.currentKernelThread();
-
-        this.setPrompt(kernelThread.getUser().getName() + "@NetShell> ");
+        if (kernelThread.getUser() != null) {
+            this.setPrompt(kernelThread.getUser().getName() + "@NetShell> ");
+        } else {
+            this.setPrompt("NetShell> ");
+        }
 
         this.out = new ShellOutputStream(out);
         if (command == null) {
@@ -115,7 +124,7 @@ public class Shell {
         this.in = new TabFilteringInputStream(this.in);
 
         try {
-                this.consoleReader = new ConsoleReader(this.in, this.out, new NetShellTerminal());
+            this.consoleReader = new ConsoleReader(this.in, this.out, new NetShellTerminal());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -132,41 +141,43 @@ public class Shell {
 	    Method method = null;
 
         while (true) try {
-                /*
-                 * Enable command completion while we try to get a line from the user,
-                 * turn it off immediately afterward to avoid interference with
-                 * possible interactive commands.
-                 */
+            /*
+             * Enable command completion while we try to get a line from the user,
+             * turn it off immediately afterward to avoid interference with
+             * possible interactive commands.
+             */
 
-            String[] args;
+            boolean hadArgs = args != null;
             // If user has entered a command when ssh'ing, execute command, then exit.
             // Otherwise, continue with interactive commands.
-            if (completedCommand) {
-                break;
-            } else if (command == null) {
-                consoleReader.addCompleter(this.argCompleter);
-                consoleReader.addCompleter(this.fileCompleter);
-                ((ShellInputStream) this.in).setEofHack(true);
-                String line = this.consoleReader.readLine(this.prompt);
-                ((ShellInputStream) this.in).setEofHack(false);
-                consoleReader.removeCompleter(this.argCompleter);
-                consoleReader.removeCompleter(this.fileCompleter);
-                if (line == null) {
+            if (! hadArgs) {
+                if (completedCommand) {
+                    break;
+                } else if (command == null) {
+                    consoleReader.addCompleter(this.argCompleter);
+                    consoleReader.addCompleter(this.fileCompleter);
+                    ((ShellInputStream) this.in).setEofHack(true);
+                    String line = this.consoleReader.readLine(this.prompt);
+                    ((ShellInputStream) this.in).setEofHack(false);
+                    consoleReader.removeCompleter(this.argCompleter);
+                    consoleReader.removeCompleter(this.fileCompleter);
+                    if (line == null) {
+                        continue;
+                    }
+                    args = line.trim().split("\\s+");
+                } else {
+                    args = command.split(" ");
+                    completedCommand = true;
+                }
+
+                if (args.length == 0 || (args.length == 1 && args[0].isEmpty())) {
                     continue;
                 }
-                args = line.trim().split("\\s+");
-            } else {
-                args = command.split(" ");
-                completedCommand = true;
-            }
 
-            if (args.length == 0 || (args.length == 1 && args[0].isEmpty())) {
-                continue;
-            }
-
-            // Any line whose first non-whitespace character is a hash sign is a comment.
-            if (args[0].startsWith("#")) {
-                continue;
+                // Any line whose first non-whitespace character is a hash sign is a comment.
+                if (args[0].startsWith("#")) {
+                    continue;
+                }
             }
 
             // The shell has a few built-in command handlers.  Generally these
@@ -216,12 +227,14 @@ public class Shell {
                         this.print(args[1] + " is an invalid command");
                     }
                 }
+                if (hadArgs) {
+                    return;
+                }
                 continue;
             }
 
             method = ShellCommandsFactory.getCommandMethod(args[0]);
             if (method == null) {
-
                 // No shell command exists.  We support running Python programs as direct
                 // shell commands with unqualified pathnames.  First see if we have the
                 // Python shell (from the netshell-python module) available.
@@ -261,10 +274,12 @@ public class Shell {
                             // This is a catch all. Make sure that the thread recovers in a correct state
                             this.print(e.toString());
                         }
+                        if (hadArgs) break;
                         continue;
                     }
                     // Search in the resource's /Lib
                     ClassLoader cl = Shell.class.getClassLoader();
+                    boolean found = false;
                     if (cl.getResource("Lib") != null) {
                         String jarFileName = cl.getResource("Lib").getFile();
                         jarFileName = jarFileName.substring(5, jarFileName.length() - 5);
@@ -278,6 +293,7 @@ public class Shell {
                             if (Paths.get(entry.getName()).getFileName().toString().equals(cmd)) {
                                 // There is a python command of that name execute it. A new String[] with the first
                                 // element set to "python" must be created in order to simulate the python command line.
+                                found = true;
                                 String[] newArgs = new String[args.length + 1];
                                 newArgs[0] = "python";
                                 // Set the full path
@@ -290,20 +306,22 @@ public class Shell {
                                 try {
                                     InputStream cmdInputStream = cl.getResourceAsStream(entry.getName());
                                     ps.startPython(cmdInputStream, newArgs, this.in, this.out, this.out);
+                                    break;
                                 } catch (Exception e) {
                                     // This is a catch all. Make sure that the thread recovers in a correct state
                                     this.print(e.toString());
                                 }
                             }
                         }
+                        if (found) break;
                     }
                 }
                 // Nonexistent command
                 this.print(args[0] + " is an invalid command");
+                if (hadArgs) break;
                 continue;
             }
             try {
-
                 // We found a shell command, prepare to invoke it.
                 ShellCommand command = method.getAnnotation(ShellCommand.class);
                 if (command.forwardLines()) {
@@ -317,6 +335,7 @@ public class Shell {
                 this.argCompleter = new ArgumentCompleter(stringsCompleter, fileCompleter);
             } catch (IllegalAccessException e) {
                 this.print(e.toString());
+                if (hadArgs) break;
                 continue;
             } catch (InvocationTargetException e) {
                 this.print(e.toString() + "\n");
@@ -330,6 +349,7 @@ public class Shell {
                 // This is a catch all. Make sure that the thread recovers in a correct state
                 this.print(e.getMessage());
             }
+            if (hadArgs) break;
         } catch (IOException e) {
             break;
         }

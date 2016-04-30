@@ -52,7 +52,6 @@ public class KernelSecurityManager extends SecurityManager {
         if (NetShellConfiguration.getInstance() == null ||
                 NetShellConfiguration.getInstance().getGlobal() == null
                 || NetShellConfiguration.getInstance().getGlobal().getSecurityManagerDisabled() != 0) {
-            logger.warn("NetShell SecurityManager is currently disabled.  No security checks will be run.  MUST NOT BE USED IN PRODUCTION.");
             return;
         }
 		this.preloadClasses();

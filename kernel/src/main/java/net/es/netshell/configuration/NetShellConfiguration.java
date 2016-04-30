@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 /**
  * Created by lomax on 6/23/14.
@@ -94,12 +95,28 @@ public class NetShellConfiguration extends PersistentObject {
      */
     private static NetShellConfiguration loadConfiguration () {
 
+        NetShellConfiguration netShellConfiguration = null;
         String configurationFilePath = System.getProperty(PropertyKeys.NETSHELL_CONFIGURATION);
+        Boolean isStandAlone = false;
+        if (System.getProperty(PropertyKeys.NETSHELL_STANDALONE) != null) {
+            isStandAlone = Boolean.parseBoolean(System.getProperty(PropertyKeys.NETSHELL_STANDALONE));
+        }
+
+        if ( isStandAlone && (configurationFilePath == null)) {
+            netShellConfiguration = new NetShellConfiguration();
+            GlobalConfiguration globalConfiguration = new GlobalConfiguration();
+            netShellConfiguration.global = globalConfiguration;
+            globalConfiguration.setRootDirectory(Paths.get("/").toString());
+            globalConfiguration.setStandalone(true);
+            globalConfiguration.setDefaultLogLevel("warn");
+            return netShellConfiguration;
+        }
+
+        configurationFilePath = System.getProperty(PropertyKeys.NETSHELL_CONFIGURATION);
         if (configurationFilePath == null) {
-            logger.info("No configuration file property!");
+            logger.debug("No configuration file property!");
             configurationFilePath = DEFAULT_FILENAME;
         }
-        NetShellConfiguration netShellConfiguration = null;
 
         // Read the configuration
         try {

@@ -24,5 +24,7 @@ package net.es.netshell.api;
 public final class PropertyKeys {
     /* NetShell configuration file */
     public static final String NETSHELL_CONFIGURATION = "netshell.configuration";
-
+    public static final String NETSHELL_STANDALONE = "netshell.standalone";
+    public static final String NETSHELL_SERVER = "netshell.server";
+    public static final String NETSHELL_SHELL = "netshell.shell";
 }

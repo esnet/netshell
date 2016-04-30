@@ -20,11 +20,13 @@
 
 package net.es.netshell.python;
 
+import net.es.netshell.api.PropertyKeys;
 import net.es.netshell.boot.BootStrap;
 import net.es.netshell.kernel.exec.KernelThread;
 import net.es.netshell.kernel.security.ExitSecurityException;
 import net.es.netshell.kernel.users.User;
 import net.es.netshell.osgi.OsgiBundlesClassLoader;
+import net.es.netshell.shell.Shell;
 import net.es.netshell.shell.ShellCommandsFactory;
 import net.es.netshell.shell.ShellInputStream;;
 import net.es.netshell.shell.TabFilteringInputStream;
@@ -138,14 +140,7 @@ public class PythonShell {
                 }
                 // Execute the global profile.py
                 String filePath = BootStrap.rootPath.toString() + PythonShell.PROFILE_SCRIPT;
-                if (! new File(filePath).exists()) {
-                    try {
-                        err.write((PythonShell.PROFILE_SCRIPT + " not found.\n").getBytes());
-                        err.flush();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                } else {
+                if (new File(filePath).exists()) {
                     try {
                         PythonInterpreter python = PythonShell.getPythonInterpreter(in,out,err,sessionLocals);
                         python.execfile(filePath);
@@ -418,7 +413,13 @@ public class PythonShell {
 	    }
 
 	    try {
-		    Path normalized = KernelThread.currentKernelThread().getUser().getHomePath().normalize().toRealPath();
+		    Path normalized = null;
+            if ((KernelThread.currentKernelThread() != null) &&
+                    (KernelThread.currentKernelThread().getUser() != null)) {
+                normalized = KernelThread.currentKernelThread().getUser().getHomePath().normalize().toRealPath();
+            } else {
+                normalized = Paths.get(System.getProperty("user.dir"));
+            }
 		    path = new File(normalized.resolve(command).toString());
 		    if (path.exists()) {
 			    return path.toString();
@@ -527,9 +528,49 @@ public class PythonShell {
         // Register to the NetShell
         ShellCommandsFactory.registerShellModule(PythonShell.class);
         BootStrap.getBootStrap().setPythonService(new PythonShellServiceImpl());
-        InteractiveConsole console = new InteractiveConsole();
-        InteractiveConsole.initialize(System.getProperties(), null, new String[0]);
-        console.interact();
+        boolean isServer = false;
+        if (System.getProperty(PropertyKeys.NETSHELL_SERVER) != null) {
+            isServer = Boolean.parseBoolean(System.getProperty(PropertyKeys.NETSHELL_SERVER));
+        }
+        if (isServer) {
+            synchronized (BootStrap.getBootStrap()) {
+                try {
+                    BootStrap.getBootStrap().wait();
+                } catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            String shell = System.getProperty(PropertyKeys.NETSHELL_SHELL,"netshell");
+            if (shell.equals("python")) {
+                InteractiveConsole console = new InteractiveConsole();
+                InteractiveConsole.initialize(System.getProperties(), null, new String[0]);
+                if ((args.length == 1) && (args[0].endsWith(".py"))) {
+                    try {
+                        FileInputStream fileIn = new FileInputStream(args[0]);
+                        console.execfile(fileIn);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    console.interact();
+                }
+            } else if (shell.equals("netshell")) {
+                try {
+                    Shell s = null;
+                    if (args.length > 0) {
+                        s = new Shell(System.in,System.out,args);
+                    } else {
+                        s = new Shell(System.in,System.out,null);
+                    }
+                    s.startShell();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                System.out.println("invalid value for "+ PropertyKeys.NETSHELL_SHELL);
+            }
+        }
         Runtime.getRuntime().exit(0);
     }
 
