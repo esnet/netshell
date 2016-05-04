@@ -63,7 +63,6 @@ public final class MongoDBProvider implements DataBase {
         creds.add(enosCred);
         this.client = new MongoClient(this.serverAddress,creds);
         this.db = client.getDatabase(dbName);
-        System.out.println("Connected to MongoDB.");
     }
 
     public final MongoClient getClient()
