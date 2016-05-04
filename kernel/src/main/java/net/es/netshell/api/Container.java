@@ -154,7 +154,7 @@ public class Container extends Resource {
     }
 
     @JsonIgnore
-    public static final Container getContainer(String name) {
+    public static final Container getContainer(String name) throws IOException {
         User user = KernelThread.currentKernelThread().getUser();
         String userName;
         if (user == null) {
@@ -166,13 +166,24 @@ public class Container extends Resource {
     }
 
     @JsonIgnore
-    public static final Container getContainer(String user,String name) {
+    public static final Container getContainer(String user,String name) throws IOException {
         // First check the Resource cach
         Container container = null;
         try {
             container = (Container) Resource.findByName(user, name, name);
         } catch (InstantiationException e) {
-            return null;
+            // Could not instanciate container, assume it was not created
+        }
+        if (container == null) {
+            Container.createContainer(user,name);
+            try {
+                container = (Container) Resource.findByName(user, name, name);
+            } catch (InstantiationException e) {
+                throw new IOException("cannot create container");
+            }
+        }
+        if (container == null) {
+            throw new IOException("Cannot find container");
         }
         return container;
     }
@@ -185,8 +196,8 @@ public class Container extends Resource {
      * @throws SecurityException if the anchor is invalid
      */
     @JsonIgnore
-    public static final Resource fromAnchor(ResourceAnchor anchor) throws InstantiationException {
-        Container container = Container.getContainer(anchor.getContainerOwner(),anchor.getContainerName());
+    public static final Resource fromAnchor(ResourceAnchor anchor) throws InstantiationException, IOException {
+        Container container = Container.getContainer(anchor.getContainerOwner(), anchor.getContainerName());
         Resource resource = container.loadResource(anchor.getResourceName());
         return resource;
     }

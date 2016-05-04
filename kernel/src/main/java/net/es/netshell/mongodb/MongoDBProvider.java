@@ -65,8 +65,7 @@ public final class MongoDBProvider implements DataBase {
         this.db = client.getDatabase(dbName);
     }
 
-    public final MongoClient getClient()
-    {
+    public final MongoClient getClient() {
         if (!KernelThread.currentKernelThread().isPrivileged()) {
             throw new SecurityException("get db client - not authorized");
         }

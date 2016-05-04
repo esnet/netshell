@@ -311,7 +311,7 @@ public class Resource extends PersistentObject {
      * @param anchor
      * @return
      */
-    public final static Resource toResource(ResourceAnchor anchor) {
+    public final static Resource toResource(ResourceAnchor anchor) throws IOException {
         Container container = Container.getContainer(anchor.getContainerOwner(),anchor.getContainerName());
         if (container == null) {
             return null;
