@@ -197,7 +197,18 @@ public class Resource extends PersistentObject {
     public void delete(Container container) throws IOException {
         try {
             super.delete(container.getOwner(),container.getResourceName());
+            Resource.cache.removeCachedObject(container,this.getResourceName());
         } catch (InstantiationException e) {
+            throw new IOException(e.getMessage());
+        }
+    }
+
+    public static void delete(Container container, String resourceName) throws IOException {
+        try {
+            PersistentObject.delete(container.getOwner(),container.getResourceName(),resourceName);
+            Resource.cache.removeCachedObject(container, resourceName);
+        } catch (InstantiationException e) {
+            e.printStackTrace();
             throw new IOException(e.getMessage());
         }
     }

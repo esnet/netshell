@@ -168,6 +168,20 @@ public final class MongoDBProvider implements DataBase {
     }
 
     @Override
+    public void delete(String user, String name, String objName) throws InstantiationException {
+        String collectionName = user + "_" + name;
+        if (!KernelThread.currentKernelThread().isPrivileged()) {
+            throw new SecurityException("delete db one - not authorized");
+        }
+        MongoCollection mongoCollection = this.db.getCollection(collectionName);
+        if (mongoCollection == null) {
+            throw new RuntimeErrorException(new Error("Could not store into collection " + collectionName));
+        }
+        Document query = new Document("resourceName",objName);
+        mongoCollection.deleteMany(query);
+    }
+
+    @Override
     public final void delete(List<ResourceAnchor> anchors) throws IOException {
         if (!KernelThread.currentKernelThread().isPrivileged()) {
             throw new SecurityException("delete db list - not authorized");

@@ -213,6 +213,11 @@ public class PersistentObject implements Serializable {
         db.delete(user, collection, this);
     }
 
+    public static void delete(String owner, String containerName, String resourceName) throws InstantiationException {
+        DataBase db = BootStrap.getBootStrap().getDataBase();
+        db.delete(owner, containerName, resourceName);
+    }
+
     private static final String getClassName (String filename) throws IOException {
         // Without loading the file, retrieve the className
         File file = PersistentObject.buildFile(filename);

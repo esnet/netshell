@@ -107,6 +107,10 @@ public class Container extends Resource {
         resource.delete(this);
     }
 
+    final public void deleteResource(String resourceName) throws InstantiationException {
+        Resource.delete(this.getOwner(),this.getResourceName(),resourceName);
+    }
+
     public void deleteContainer() {
         DataBase db = BootStrap.getBootStrap().getDataBase();
         db.deleteCollection(this.getOwner(), this.getResourceName());

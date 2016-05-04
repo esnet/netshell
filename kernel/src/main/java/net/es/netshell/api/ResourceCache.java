@@ -199,6 +199,11 @@ public class ResourceCache {
         return resource;
     }
 
+    public synchronized void removeCachedObject(Container container, String name) {
+        if (this.cache.containsKey(name)) this.cache.remove(name);
+        if (this.cacheUsage.containsKey(name)) this.cacheUsage.remove(name);
+    }
+
     public synchronized Resource getCachedObject(Container container, String name) {
         return this.getCachedObject(container.getOwner(), container.getResourceName(), name);
     }
