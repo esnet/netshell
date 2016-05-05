@@ -104,6 +104,10 @@ public class Shell {
 
     public void startShell(String[] args) {
 
+        // Figure out if we were called with arguments (non-interactive shell) or not
+        // (interactive shell expecting user input)
+        boolean hadArgs = args != null;
+
         this.kernelThread = KernelThread.currentKernelThread();
         if (kernelThread.getUser() != null) {
             this.setPrompt(kernelThread.getUser().getName() + "@NetShell> ");
@@ -147,10 +151,6 @@ public class Shell {
                  * possible interactive commands.
                  */
 
-                boolean hadArgs = args != null;
-                if (hadArgs) {
-                    System.out.println("#### args " + args.length + " " + args[0]);
-                }
                 // If user has entered a command when ssh'ing, execute command, then exit.
                 // Otherwise, continue with interactive commands.
                 if (!hadArgs) {
