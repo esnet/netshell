@@ -162,25 +162,40 @@ public class Controller {
         // XXX When we move the SdnController stuff to a different bundle, this code should be
         // a part of the activator of that bundle.
         //
-        // XXX When we start up a Karaf container that has netshell-controller already loaded,
-        // there appears to be a (not yet well understood) race condition with the startup of the ODL
+        // When we start up a Karaf container that has netshell-controller already loaded,
+        // there appears to be a possible race condition with the startup of the ODL
         // MD-SAL and ODL Corsa bundles.  The symptom is that SdnController doesn't get
-        // PacketReceived notifications.  If we delay the instantiation of the SdnController object
-        // by 20 seconds, this appears to let things settle down so that notifications work.
-        try {
-            Thread.sleep(20000);
-        }
-        catch (InterruptedException e) {
-        }
+        // PacketReceived notifications.  We make sure that the callback setting actually succeeds
+        // and if not we wait a second and try again (giving up after 60 seconds).
         try {
             SdnController sdncont = new SdnController();
-            sdncont.setCallback();
-            Thread sdnthr = new Thread(sdncont);
-            sdnthr.start();
+            boolean ok = false;
+            Integer countdown = new Integer(60);
+            while (!ok) {
+                boolean rc = sdncont.setCallback();
+                logger.info("sdncont.setCallback returns " + (rc ? "true" : "false") + " with countdown " + countdown.toString());
+
+                if (rc) {
+                    ok = true;
+                }
+                else {
+                    if (countdown-- < 0) {
+                        break;
+                    }
+                    Thread.sleep(1000);
+                }
+            }
+            if (ok) {
+                Thread sdnthr = new Thread(sdncont);
+                sdnthr.start();
+            }
+            else {
+                throw new RuntimeException("Can't set SdnController callback");
+            }
         }
         catch (Exception e) {
             e.printStackTrace();
-            logger.error("Unable to start SDNController instance");
+            logger.error("Unable to start SdnController instance");
         }
     }
     public static Controller getInstance() { return instance; }
