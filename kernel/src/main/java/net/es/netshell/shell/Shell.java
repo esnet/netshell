@@ -194,11 +194,8 @@ public class Shell {
                     // short help.
                     if (args.length == 1) {
                         String[] cmds = commandNames.toArray(new String[commandNames.size()]);
-
                         Arrays.sort(cmds);
-
                         for (String n : cmds) {
-
                             Method m = ShellCommandsFactory.getCommandMethod(n);
                             ShellCommand command = m.getAnnotation(ShellCommand.class);
                             //Make sure user has privilege needed to view help for privileged commands
@@ -274,7 +271,9 @@ public class Shell {
                                 // This is a catch all. Make sure that the thread recovers in a correct state
                                 this.print(e.toString());
                             }
-                            if (hadArgs) break;
+                            if (hadArgs) {
+                                break;
+                            }
                             continue;
                         }
                         // Search in the resource's /Lib
@@ -313,7 +312,7 @@ public class Shell {
                                     }
                                 }
                             }
-                            if (found) break;
+                            if (found) continue;
                         }
                     }
                     // Nonexistent command
