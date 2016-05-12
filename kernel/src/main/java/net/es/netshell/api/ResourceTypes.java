@@ -36,6 +36,6 @@ public class ResourceTypes {
     final public static String LINK = "Link" ;
     final public static String USER = "User" ;
     final public static String TOPOLOGY = "Topology" ;
-
+    final public static String SLICE = "Slice" ;
 
 }

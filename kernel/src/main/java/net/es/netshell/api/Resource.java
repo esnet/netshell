@@ -334,4 +334,32 @@ public class Resource extends PersistentObject {
             return null;
         }
     }
+
+    public String toPrettyString() {
+        String display = "resourceName: " + this.getResourceName();
+        display += "\nresourceType: " + this.getResourceType();
+        display += "\ndescription:  " + this.getDescription();
+        display += "\nowner:        " + this.getOwner();
+        display += "\nacl:          " + this.getAcls();
+        if (this.getParentResourceAnchor() != null) {
+            display += "\nparent resource:\n" + this.getParentResourceAnchor().toPrettyString();
+        }  else {
+            display += "\nno parent";
+        }
+        if (this.getChildrenResourceAnchors() != null && this.getChildrenResourceAnchors().size() > 0) {
+            display += "\nchildren resources:\n";
+            for (ResourceAnchor anchor : this.getChildrenResourceAnchors().values())  {
+                display += "\n" + anchor.toPrettyString() + "\n";
+            }
+        } else {
+            display += "\nno child";
+        }
+        display += "\nproperties:\n";
+        for (Map.Entry <String,Object> entry : this.getProperties().entrySet()) {
+            display += "\n\t" + entry.getKey() + ": " + entry.getValue().toString();
+
+        }
+        display += "\n";
+        return display;
+    }
 }

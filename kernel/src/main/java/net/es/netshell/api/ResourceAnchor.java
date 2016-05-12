@@ -69,4 +69,11 @@ public class ResourceAnchor {
         this.resourceName = resourceName;
     }
 
+    public String toPrettyString() {
+        String display = "\tcontainer owner: " + this.containerOwner;
+        display += "\n\tcontainer name: " + this.containerName;
+        display += "\n\tresource name: "  + this.resourceName;
+        return display;
+    }
+
 }
