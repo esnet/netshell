@@ -23,7 +23,6 @@ package net.es.netshell.controller.core;
 import net.es.netshell.controller.impl.SdnController;
 import net.es.netshell.odlcorsa.OdlCorsaIntf;
 import net.es.netshell.odlmdsal.impl.OdlMdsalImpl;
-import net.es.netshell.osgi.OsgiBundlesClassLoader;
 import org.opendaylight.openflowplugin.api.OFConstants;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
