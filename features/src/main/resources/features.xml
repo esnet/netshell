@@ -34,7 +34,7 @@
 	    <bundle>mvn:ch.qos.logback/logback-core/1.1.2</bundle>
 	    <bundle>mvn:ch.qos.logback/logback-classic/1.1.2</bundle>
         <bundle>mvn:com.rabbitmq/amqp-client/3.5.3</bundle>
-        <bundle>mvn:net.es/netshell-kernel/1.0-SNAPSHOT</bundle>
+        <bundle>mvn:net.es/netshell-kernel/1.0.0-SNAPSHOT</bundle>
 	    <bundle>wrap:mvn:org.libvirt/libvirt/0.5.1</bundle>
 	    <bundle>mvn:net.java.dev.jna/jna/4.0.0</bundle>
 	    <bundle>wrap:mvn:com.jcraft/jsch/0.1.51</bundle>
@@ -45,38 +45,38 @@
     <feature name="netshell-python" version="1.0.0-SNAPSHOT" description="ESnet NetShell Python Bundle">
         <feature version="1.0.0-SNAPSHOT">netshell-kernel</feature>
         <bundle>wrap:mvn:org.python/jython-standalone/2.7.0$Export-Package=!jline,*</bundle>
-        <bundle>mvn:net.es/netshell-python/1.0-SNAPSHOT</bundle>
+        <bundle>mvn:net.es/netshell-python/1.0.0-SNAPSHOT</bundle>
     </feature>
     <feature name="netshell-controller" version="1.0.0-SNAPSHOT" description="ESnet NetShell Controller Driver">
         <feature version="1.0.0-SNAPSHOT">netshell-kernel</feature>
         <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
         <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
         <bundle>mvn:com.rabbitmq/amqp-client/3.5.3</bundle>
-        <bundle>mvn:net.es/netshell-controller-intf/1.0-SNAPSHOT</bundle>
-        <bundle>mvn:net.es/netshell-controller/1.0-SNAPSHOT</bundle>
+        <bundle>mvn:net.es/netshell-controller-intf/1.0.0-SNAPSHOT</bundle>
+        <bundle>mvn:net.es/netshell-controller/1.0.0-SNAPSHOT</bundle>
     </feature>
-    <feature name="netshell-odl-mdsal" version="1.0.0-SNAPSHOT" description="ESnet Netshell OpenDaylight (MD-SAL) Integration Bundle">
-        <bundle>mvn:net.es/netshell-odl-mdsal/1.0-SNAPSHOT</bundle>
+    <feature name="netshell-odl-mdsal" version="1.0.0-SNAPSHOT" description="ESnet NetShell OpenDaylight (MD-SAL) Integration">
+        <bundle>mvn:net.es/netshell-odl-mdsal/1.0.0-SNAPSHOT</bundle>
         <!-- Should really put etc/opendaylight/karaf into a definition of some sort -->
         <configfile finalname="etc/opendaylight/karaf/84-netshell-mdsal.xml">mvn:net.es/netshell-odl-mdsal/${project.version}/xml/config</configfile>
     </feature>
-    <feature name="netshell-odl-corsa-intf" version="1.0.0-SNAPSHOT" description="ESnet Netshell OpenDaylight (Corsa) Integration Interfaces">
-        <bundle>mvn:net.es/netshell-odl-corsa-intf/1.0-SNAPSHOT</bundle>
+    <feature name="netshell-odl-corsa-intf" version="1.0.0-SNAPSHOT" description="ESnet NetShell OpenDaylight (Corsa) Integration Interfaces">
+        <bundle>mvn:net.es/netshell-odl-corsa-intf/1.0.0-SNAPSHOT</bundle>
     </feature>
-    <feature name="netshell-odl-corsa" version="1.0.0-SNAPSHOT" description="ESnet Netshell OpenDaylight (Corsa) Integration Bundle">
+    <feature name="netshell-odl-corsa" version="1.0.0-SNAPSHOT" description="ESnet NetShell OpenDaylight (Corsa) Integration">
         <feature version="0.1.1">corsa-sdx3-api</feature>
         <feature version="1.0.0-SNAPSHOT">netshell-odl-corsa-intf</feature>
-        <bundle>mvn:net.es/netshell-odl-corsa/1.0-SNAPSHOT</bundle>
+        <bundle>mvn:net.es/netshell-odl-corsa/1.0.0-SNAPSHOT</bundle>
         <!-- Should really put etc/opendaylight/karaf into a definition of some sort -->
         <configfile finalname="etc/opendaylight/karaf/85-netshell-corsa.xml">mvn:net.es/netshell-odl-corsa/${project.version}/xml/config</configfile>
     </feature>
-    <feature name="netshell-odl-provider" version="1.0.0-SNAPSHOT" description="ESnet Netshell OpenDaylight Provider">
+    <feature name="netshell-odl-provider" version="1.0.0-SNAPSHOT" description="ESnet NetShell OpenDaylight Provider">
         <feature version="1.0.0-SNAPSHOT">netshell-odl-mdsal</feature>
         <feature version="1.0.0-SNAPSHOT">netshell-odl-corsa-intf</feature>
         <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
         <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
         <bundle>mvn:com.rabbitmq/amqp-client/3.5.3</bundle>
         <bundle>mvn:net.es/netshell-controller-intf/1.0-SNAPSHOT</bundle>
-        <bundle>mvn:net.es/netshell-odl-provider/1.0-SNAPSHOT</bundle>
+        <bundle>mvn:net.es/netshell-odl-provider/1.0.0-SNAPSHOT</bundle>
     </feature>
 </features>

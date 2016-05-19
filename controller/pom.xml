@@ -19,6 +19,7 @@
   ~ publicly and display publicly, and to permit other to do so.
   ~
   -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -26,7 +27,7 @@
 
     <groupId>net.es</groupId>
     <artifactId>netshell-controller</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -66,13 +67,13 @@
         <dependency>
             <groupId>net.es</groupId>
             <artifactId>netshell-kernel</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>net.es</groupId>
             <artifactId>netshell-controller-intf</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <!-- RabbitMQ only needed for SDN Controller -->
@@ -95,9 +96,8 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Name>ESnet NetShell API and Generic Controller</Bundle-Name>
+                        <Bundle-Name>ESnet NetShell Controller Driver</Bundle-Name>
                         <Bundle-Version>1.0-SNAPSHOT</Bundle-Version>
-                        <Bundle-Activator>net.es.netshell.controller.core.Activator</Bundle-Activator>
                         <Import-Package>*</Import-Package>
                     </instructions>
                 </configuration>
