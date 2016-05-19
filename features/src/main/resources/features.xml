@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ ESnet Network Operating System (ENOS) Copyright (c) 2015, The Regents
+  ~ ESnet Network Operating System (ENOS) Copyright (c) 2016, The Regents
   ~ of the University of California, through Lawrence Berkeley National
   ~ Laboratory (subject to receipt of any required approvals from the
   ~ U.S. Dept. of Energy).  All rights reserved.
@@ -47,10 +47,12 @@
         <bundle>wrap:mvn:org.python/jython-standalone/2.7.0$Export-Package=!jline,*</bundle>
         <bundle>mvn:net.es/netshell-python/1.0-SNAPSHOT</bundle>
     </feature>
-    <feature name="netshell-controller" version="1.0.0-SNAPSHOT" description="ESnet NetShell Controller API Bundle">
+    <feature name="netshell-controller" version="1.0.0-SNAPSHOT" description="ESnet NetShell Controller Driver">
         <feature version="1.0.0-SNAPSHOT">netshell-kernel</feature>
-        <feature version="1.0.0-SNAPSHOT">netshell-odl-mdsal</feature>
-        <feature version="1.0.0-SNAPSHOT">netshell-odl-corsa-intf</feature>
+        <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
+        <bundle>mvn:com.rabbitmq/amqp-client/3.5.3</bundle>
+        <bundle>mvn:net.es/netshell-controller-intf/1.0-SNAPSHOT</bundle>
         <bundle>mvn:net.es/netshell-controller/1.0-SNAPSHOT</bundle>
     </feature>
     <feature name="netshell-odl-mdsal" version="1.0.0-SNAPSHOT" description="ESnet Netshell OpenDaylight (MD-SAL) Integration Bundle">
@@ -67,5 +69,14 @@
         <bundle>mvn:net.es/netshell-odl-corsa/1.0-SNAPSHOT</bundle>
         <!-- Should really put etc/opendaylight/karaf into a definition of some sort -->
         <configfile finalname="etc/opendaylight/karaf/85-netshell-corsa.xml">mvn:net.es/netshell-odl-corsa/${project.version}/xml/config</configfile>
+    </feature>
+    <feature name="netshell-odl-provider" version="1.0.0-SNAPSHOT" description="ESnet Netshell OpenDaylight Provider">
+        <feature version="1.0.0-SNAPSHOT">netshell-odl-mdsal</feature>
+        <feature version="1.0.0-SNAPSHOT">netshell-odl-corsa-intf</feature>
+        <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
+        <bundle>mvn:com.rabbitmq/amqp-client/3.5.3</bundle>
+        <bundle>mvn:net.es/netshell-controller-intf/1.0-SNAPSHOT</bundle>
+        <bundle>mvn:net.es/netshell-odl-provider/1.0-SNAPSHOT</bundle>
     </feature>
 </features>

@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
   ~ ESnet Network Operating System (ENOS) Copyright (c) 2016, The Regents
   ~ of the University of California, through Lawrence Berkeley National
@@ -19,71 +18,20 @@
   ~ publicly and display publicly, and to permit other to do so.
   ~
   -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>net.es</groupId>
-    <artifactId>netshell-controller</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>net.es.netshell</groupId>
+    <artifactId>netshell-features</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
-
-    <repositories>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>central</id>
-            <name>Maven Repository Switchboard</name>
-            <url>http://repo1.maven.org/maven2</url>
-        </repository>
-        <repository>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>interval:5</updatePolicy>
-            </snapshots>
-            <id>esnet</id>
-            <name>ESnet Private Maven Repository</name>
-            <url>http://downloads.es.net/maven</url>
-	</repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>onejar-maven-plugin.googlecode.com</id>
-            <url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
-        </pluginRepository>
-    </pluginRepositories>
-
-    <dependencies>
-
-        <!-- NetShell -->
-        <dependency>
-            <groupId>net.es</groupId>
-            <artifactId>netshell-kernel</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.es</groupId>
-            <artifactId>netshell-controller-intf</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-
-        <!-- RabbitMQ only needed for SDN Controller -->
-        <dependency>
-            <groupId>com.rabbitmq</groupId>
-            <artifactId>amqp-client</artifactId>
-            <version>3.5.3</version>
-        </dependency>
-
-    </dependencies>
-
 
     <build>
         <plugins>
@@ -95,10 +43,8 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Name>ESnet NetShell API and Generic Controller</Bundle-Name>
+                        <Bundle-Name>ESnet NetShell ODL Provider</Bundle-Name>
                         <Bundle-Version>1.0-SNAPSHOT</Bundle-Version>
-                        <Bundle-Activator>net.es.netshell.controller.core.Activator</Bundle-Activator>
-                        <Import-Package>*</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -110,6 +56,29 @@
                     <source>7</source>
                     <target>7</target>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.9.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-artifacts</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${basedir}/target/classes/features.xml</file>
+                                    <type>xml</type>
+                                    <classifier>features</classifier>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
         <extensions>
