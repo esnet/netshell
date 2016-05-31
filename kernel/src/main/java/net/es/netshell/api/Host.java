@@ -26,26 +26,9 @@ package net.es.netshell.api;
 )
 public class Host extends Node {
 
-    private String name;
-
     public Host ()  { super ();}
 
     public Host (String name) {
         super(name);
-        this.name = name;
-    }
-
-    public Host(Host host) {
-        super(host);
-        this.name = host.name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-        this.setResourceName(name);
     }
 }
