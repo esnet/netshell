@@ -31,14 +31,13 @@ import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFaile
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.openflowplugin.api.OFConstants;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Uri;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.OutputActionCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.SetDlDstActionCaseBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.SetFieldCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.SetVlanIdActionCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.output.action._case.OutputActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.dl.dst.action._case.SetDlDstActionBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.field._case.SetFieldBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.vlan.id.action._case.SetVlanIdActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.Action;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionBuilder;
@@ -56,6 +55,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowCookie;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowModFlags;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.OutputPortValues;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.InstructionsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.MatchBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.instruction.ApplyActionsCaseBuilder;
@@ -575,20 +575,16 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
         // Open vSwitch (and possibly other switches too?) has a restriction that
         // a packet cannot be output to the same port from which it entered the
         // switch.  In the SDN testbed we may very well have reasons for doing
-        // things like this.  If we're asked to set up a flow like this, use an
-        // instruction to overwrite the in_port metadata with something that can't
-        // possibly be the output port.  This allows us to set the output port to
-        // the original input port.  Only do this hack if necessary, both for
-        // runtime performance and to avoid unnecessarily obfuscating the flow
-        // entry.
-        SetFieldBuilder setFieldBuilder = null;
-        if (ncid1.getValue().equals(ncid2.getValue())) {
-            setFieldBuilder = new SetFieldBuilder();
-            setFieldBuilder.setInPort(getLocalNodeConnector(odlNode).getId());
-        }
-
+        // things like this.  If we're asked to set up a flow like this, then forward
+        // to IN_PORT instead, which basically is an override to forward
+        // to the packet's input port.
         OutputActionBuilder outputActionBuilder = new OutputActionBuilder();
-        outputActionBuilder.setOutputNodeConnector(ncid2);
+        if (ncid1.getValue().equals(ncid2.getValue())) {
+            outputActionBuilder.setOutputNodeConnector(new Uri(OutputPortValues.INPORT.toString()));
+        }
+        else {
+            outputActionBuilder.setOutputNodeConnector(ncid2);
+        }
 
         // Actions we need to do:  Do VLAN rewrite
         ActionBuilder ab1 = new ActionBuilder();
@@ -602,29 +598,16 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
         ab2.setOrder(2);
         ab2.setKey(new ActionKey(2));
 
-        // If necessary, do the hack where we need to frob the input port so we
-        // can send a packet back out the same port it came in on.
-        ActionBuilder ab2a = null;
-        if (setFieldBuilder != null) {
-            ab2a = new ActionBuilder();
-            ab2a.setAction(new SetFieldCaseBuilder().setSetField(setFieldBuilder.build()).build());
-            ab2a.setOrder(3);
-            ab2a.setKey(new ActionKey(3));
-        }
-
         // Forward out the destination port
         ActionBuilder ab3 = new ActionBuilder();
         ab3.setAction(new OutputActionCaseBuilder().setOutputAction(outputActionBuilder.build()).build());
-        ab3.setOrder(4);
-        ab3.setKey(new ActionKey(4));
+        ab3.setOrder(3);
+        ab3.setKey(new ActionKey(3));
 
         // Make an action list to hold the actions
         List<Action> actionList = Lists.newArrayList();
         actionList.add(ab1.build());
         actionList.add(ab2.build());
-        if (ab2a != null) {
-            actionList.add(ab2a.build());
-        }
         actionList.add(ab3.build());
 
         // Create APPLY ACTIONS instruction
@@ -718,33 +701,6 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
         List<Action> actionList = Lists.newArrayList();
         int actionNumber = 1;
 
-        // Open vSwitch (and possibly other switches too?) has a restriction that
-        // a packet cannot be output to the same port from which it entered the
-        // switch.  In the SDN testbed we may very well have reasons for doing
-        // things like this.  If we're asked to set up a flow like this, use an
-        // instruction to overwrite the in_port metadata with something that can't
-        // possibly be the output port.  This allows us to set the output port to
-        // the original input port.  Only do this hack if necessary, both for
-        // runtime performance and to avoid unnecessarily obfuscating the flow
-        // entry.
-        boolean needInPortHack = false;
-        for (L2Output o : outputs) {
-            if (ncid1.getValue().equals(o.ncid.getValue())) {
-                needInPortHack = true;
-            }
-        }
-        if (needInPortHack) {
-            SetFieldBuilder setFieldBuilder = new SetFieldBuilder();
-            setFieldBuilder.setInPort(getLocalNodeConnector(odlNode).getId());
-
-            ActionBuilder setFieldActionBuilder = new ActionBuilder();
-            setFieldActionBuilder.setAction(new SetFieldCaseBuilder().setSetField(setFieldBuilder.build()).build());
-            setFieldActionBuilder.setOrder(actionNumber);
-            setFieldActionBuilder.setKey(new ActionKey(actionNumber));
-            actionNumber++;
-            actionList.add(setFieldActionBuilder.build());
-        }
-
         // Iterate over all the outputs, and generate actions.
         for (L2Output o : outputs) {
             // VLAN rewrite
@@ -769,7 +725,17 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
 
             // Output to destination port
             OutputActionBuilder outputActionBuilder = new OutputActionBuilder();
-            outputActionBuilder.setOutputNodeConnector(o.ncid);
+            // Open vSwitch (and possibly other switches too?) has a restriction that
+            // a packet cannot be output to the same port from which it entered the
+            // switch.  In the SDN testbed we may very well have reasons for doing
+            // things like this.  If we're asked to set up a flow like this, use an
+            // output port value that basically means "output to the packet's input port".
+            if (ncid1.getValue().equals(o.ncid.getValue())) {
+                outputActionBuilder.setOutputNodeConnector(new Uri(OutputPortValues.INPORT.toString()));
+            }
+            else {
+                outputActionBuilder.setOutputNodeConnector(o.ncid);
+            }
             ActionBuilder ab3 = new ActionBuilder();
             ab3.setAction(new OutputActionCaseBuilder().setOutputAction(outputActionBuilder.build()).build());
             ab3.setOrder(actionNumber);
