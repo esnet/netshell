@@ -18,25 +18,16 @@
  */
 package net.es.netshell.api;
 
-import java.util.HashMap;
-
-/**
- * Base Node Class
- */
-@ResourceType(
-        type=ResourceTypes.NODE
-)
-public class Node extends Resource {
-
-    public Node (String name) {
-        super (name);
-    }
-
-    public Node () {
-        super();
-    }
-
-    public Node(Node n) {
-        super(n);
-    }
+public class PropertiesKeys {
+    public static String PortKey="Port";
+    public static String PortsKey="Ports";
+    public static String LinkKey="Link";
+    public static String LinksKey="Links";
+    public static String NodeKey="Node";
+    public static String NodesKey="Nodes";
+    public static String HostKey="Host";
+    public static String HostsKey="Hosts";
+    public static String SrcPortKey="SrcPort";
+    public static String DstPortKey="DstPort";
+    public static String VlanKey="VLAN";
 }
