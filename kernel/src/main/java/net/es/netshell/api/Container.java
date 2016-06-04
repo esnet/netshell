@@ -44,10 +44,24 @@ public class Container extends Resource {
 
     public Container() {
         super();
+        User user = KernelThread.currentKernelThread().getUser();
+        String userName;
+        if (user == null) {
+            userName = "admin";
+        } else {
+            userName = user.getName();
+        }
     }
 
     public Container(String name) {
         super(name);
+        User user = KernelThread.currentKernelThread().getUser();
+        String userName;
+        if (user == null) {
+            userName = "admin";
+        } else {
+            userName = user.getName();
+        }
     }
 
     /**
@@ -135,6 +149,7 @@ public class Container extends Resource {
         container.saveResource(container);
         return container;
     }
+
     public static final Container createContainer (String user,String name) throws IOException {
         if (BootStrap.getBootStrap().getDataBase().collectionExists(user,name)) {
             return null;

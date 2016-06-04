@@ -289,6 +289,9 @@ public class Shell {
                             String cmd = args[0] + ".py";
                             while (entries.hasMoreElements()) {
                                 JarEntry entry = entries.nextElement();
+                                if (entry.isDirectory()) {
+                                    continue;
+                                }
                                 if (Paths.get(entry.getName()).getFileName().toString().equals(cmd)) {
                                     // There is a python command of that name execute it. A new String[] with the first
                                     // element set to "python" must be created in order to simulate the python command line.
