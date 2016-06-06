@@ -19,24 +19,24 @@
 #
 
 #
-# ODL + ENOS install / restart script.
-# Takes one argument, which is the pathname to an ODL distribution.
+# ENOS/Netshell install / restart script.
+# Takes one argument, which is the pathname to a Karaf distribution
 #
 KARAF_EXEC="bin/client -u karaf"
 UNTAR="tar -xvf"
 UNZIP="unzip"
 
-ODL_DISTRIBUTION=$1
+KARAF_DISTRIBUTION=$1
 if [ "x$1" == "x" ]; then
-  echo "Must provide pathname to ODL distribution"
+  echo "Must provide pathname to Karaf distribution"
   exit 1
 fi
-ODL_DIR=`echo $ODL_DISTRIBUTION | sed -e 's,.*/,,' | sed -E 's/(.zip|.tar.gz)$//'`
+KARAF_DIR=`echo $KARAF_DISTRIBUTION | sed -e 's,.*/,,' | sed -E 's/(.zip|.tar.gz)$//'`
 
 #
 # Locate and kill old Karafs...
 #
-echo "Kill ODL Karaf..."
+echo "Kill Netshell Karaf..."
 pids=`pidof java`
 for pid in $pids; do
   if ps -hwww $pid | grep karaf; then
@@ -49,24 +49,24 @@ echo "done"
 #
 # Clear out old Karaf
 #
-echo -n "Removing ODL Karaf..."
-rm -rf ${ODL_DIR}
+echo -n "Removing Netshell Karaf..."
+rm -rf ${KARAF_DIR}
 echo "done"
 
 #
 # Unpack Karaf
 #
-echo "Unpack $ODL_DISTRIBUTION..."
-if echo $ODL_DISTRIBUTION | grep -e '.zip$' > /dev/null; then
-  $UNZIP $ODL_DISTRIBUTION
-elif echo $ODL_DISTRIBUTION | grep -e '.tar.gz$' > /dev/null; then
-  $UNTAR $ODL_DISTRIBUTION
+echo "Unpack $KARAF_DISTRIBUTION..."
+if echo $KARAF_DISTRIBUTION | grep -e '.zip$' > /dev/null; then
+  $UNZIP $KARAF_DISTRIBUTION
+elif echo $KARAF_DISTRIBUTION | grep -e '.tar.gz$' > /dev/null; then
+  $UNTAR $KARAF_DISTRIBUTION
 else
   echo "unknown distribution type"
   exit 1
 fi
 
-cd ${ODL_DIR}
+cd ${KARAF_DIR}
 echo "done"
 
 #
@@ -75,7 +75,10 @@ echo "done"
 # From fixup-karaf.sh
 #
 echo -n "Patching org.ops4j.pax.url.mvn.cfg..."
-sed -i.bak -E -e 's/^(org\.ops4j\.pax\.url\.mvn\.localRepository=.*)/#&/' etc/org.ops4j.pax.url.mvn.cfg
+sed -i.bak -E -e 's/^(org\.ops4j\.pax\.url\.mvn\.defaultLocalRepoAsRemote=)(.*)/\1true/' etc/org.ops4j.pax.url.mvn.cfg
+
+echo -n "Patching org.apache.karaf.management.cfg..."
+sed -i.bak -E -e 's/(rmiRegistryPort\s*=\s*)(.*)/\11098/' -e 's/(rmiServerPort\s*=\s*)(.*)/\144443/' etc/org.apache.karaf.management.cfg
 echo "done"
 
 #
@@ -101,21 +104,11 @@ declare -a commands=(
 "+++"
 
 "feature:repo-add mvn:net.es/netshell-features/1.0.0-SNAPSHOT/xml/features"
-"feature:install odl-dlux-core odl-openflowplugin-all"
+"feature:install netshell-kernel netshell-python"
+"feature:install netshell-controller"
 
-"feature:install odl-dlux-all"
-"feature:install odl-openflowplugin-adsal-compatibility odl-nsf-managers"
-"bundle:refresh -f org.apache.sshd.core"
-
-"+++"
-
-"feature:repo-add mvn:com.corsa.pipeline.sdx3/sdx3-features/0.1.1/xml/features"
-"feature:install corsa-sdx3-all"
-
-"feature:install netshell-odl-corsa"
-"feature:install netshell-odl-mdsal"
-"feature:install netshell-odl-provider"
-
+"feature:repo-add mvn:net.es/enos-esnet/1.0-SNAPSHOT/xml/features"
+"feature:install enos-esnet"
 )
 
 numcommands=${#commands[@]}
