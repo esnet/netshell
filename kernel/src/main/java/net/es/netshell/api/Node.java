@@ -18,6 +18,8 @@
  */
 package net.es.netshell.api;
 
+import java.util.HashMap;
+
 /**
  * Base Node Class
  */

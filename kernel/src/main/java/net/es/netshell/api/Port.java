@@ -28,8 +28,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 )
 public class Port extends Resource {
 
-    public static final String PORTS_DIR = "ports";
-
     @JsonIgnore
     private Node node;
 

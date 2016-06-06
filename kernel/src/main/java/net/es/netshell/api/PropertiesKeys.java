@@ -18,17 +18,16 @@
  */
 package net.es.netshell.api;
 
-/**
- * Mostly a stub for now. Perhaps this class is not useful
- */
-@ResourceType(
-        type=ResourceTypes.HOST
-)
-public class Host extends Node {
-
-    public Host ()  { super ();}
-
-    public Host (String name) {
-        super(name);
-    }
+public class PropertiesKeys {
+    public static String PortKey="Port";
+    public static String PortsKey="Ports";
+    public static String LinkKey="Link";
+    public static String LinksKey="Links";
+    public static String NodeKey="Node";
+    public static String NodesKey="Nodes";
+    public static String HostKey="Host";
+    public static String HostsKey="Hosts";
+    public static String SrcPortKey="SrcPort";
+    public static String DstPortKey="DstPort";
+    public static String VlanKey="VLAN";
 }
