@@ -23,8 +23,8 @@
 
     <feature name="netshell-kernel" version="1.0.0-SNAPSHOT" description="ESnet NetShell Kernel">
         <bundle>mvn:joda-time/joda-time/2.3</bundle>
-        <bundle>mvn:org.jgrapht/jgrapht-core</bundle>
-        <bundle>wrap:mvn:org.jgrapht/jgrapht-ext</bundle>
+        <bundle>mvn:org.jgrapht/jgrapht-core/0.9.1</bundle>
+        <bundle>wrap:mvn:org.jgrapht/jgrapht-ext/0.9.1</bundle>
         <bundle>wrap:mvn:jgraph/jgraph/5.8.3.1</bundle>
         <bundle>mvn:commons-codec/commons-codec/1.9</bundle>
         <bundle>wrap:mvn:org.xeustechnologies/jcl-core/2.5</bundle>
