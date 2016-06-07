@@ -22,22 +22,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>netshell</artifactId>
-        <groupId>net.es</groupId>
-        <version>1.0.0-SNAPSHOT</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>net.es</groupId>
+    <parent>
+        <groupId>net.es.netshell</groupId>
+        <artifactId>netshell-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+
+    <groupId>net.es.netshell</groupId>
     <artifactId>netshell-odl-corsa</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-
     <packaging>bundle</packaging>
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
+    <properties>
         <!--
         YANG definitions:  In other examples, etc. these seem to come from somewhere like
         controller/opendaylight/commons/opendaylight/pom.xml.  Not sure what we should
@@ -52,7 +50,6 @@
 
         <generatedConfigPath>${project.build.directory}/generated-sources/config</generatedConfigPath>
         <generatedSalPath>${project.build.directory}/generated-sources/sal</generatedSalPath>
-
     </properties>
 
     <repositories>
@@ -181,13 +178,11 @@
 
         <!-- NetShell -->
         <dependency>
-            <groupId>net.es</groupId>
+            <groupId>net.es.netshell</groupId>
             <artifactId>netshell-odl-corsa-intf</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
-
     </dependencies>
-
 
     <build>
         <plugins>
@@ -281,7 +276,7 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>ESnet NetShell Open Daylight (Corsa) Integration</Bundle-Name>
-                        <Bundle-Version>1.0-SNAPSHOT</Bundle-Version>
+                        <Bundle-Version>${project.version}</Bundle-Version>
                         <Export-Package>net.es.netshell.odlcorsa.impl</Export-Package>
                         <!--
                          Hard-wire some package imports to prevent headers that inexplicably bind to an
@@ -293,26 +288,7 @@
                     </instructions>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.3</version>
-                <configuration>
-                    <source>7</source>
-                    <target>7</target>
-                </configuration>
-            </plugin>
         </plugins>
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-file</artifactId>
-            </extension>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh</artifactId>
-            </extension>
-        </extensions>
     </build>
 
 </project>
