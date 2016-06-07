@@ -103,7 +103,7 @@ echo "done"
 declare -a commands=(
 "+++"
 
-"feature:repo-add mvn:net.es/netshell-features/1.0.0-SNAPSHOT/xml/features"
+"feature:repo-add mvn:net.es.netshell/netshell-features/1.0.0-SNAPSHOT/xml/features"
 "feature:install netshell-kernel netshell-python"
 "feature:install netshell-controller"
 

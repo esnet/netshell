@@ -100,7 +100,7 @@ echo "done"
 declare -a commands=(
 "+++"
 
-"feature:repo-add mvn:net.es/netshell-features/1.0.0-SNAPSHOT/xml/features"
+"feature:repo-add mvn:net.es.netshell/netshell-features/1.0.0-SNAPSHOT/xml/features"
 "feature:install odl-dlux-core odl-openflowplugin-all"
 
 "feature:install odl-dlux-all"
