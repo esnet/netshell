@@ -72,11 +72,36 @@ echo "done"
 #
 # Karaf Pre-Startup Fixups
 #
-# From fixup-karaf.sh
+# Force the use of the Eclipse Equinox OSGi framework (rather than the default Apache Felix).
+# Equinox is the default for Open Daylight.  The two frameworks have at least one important
+# difference, that their framework BundleProtectionDomain express different formats of URIs
+# for the path to an OSGi bundle.  Felix's implementation returns a URI that reflects how a
+# bundle was installed into the OSGi container (for example "mvn:org.example/...").
+# Equinox's class reflects a path on the local filesystem where the bundle contents
+# are cached.
+#
+# This difference has an implication for our Jython support.  To locate certain Python
+# files included in the Jython OSGi bundle, we need to be able to find the path to the
+# Jython JAR file.  This exists in the Karaf's cache, but only the Equinox framework
+# gives us the path we need to find it.  There does not appear to be a way to resolve
+# the URI returned by Felix's BundleProtectionDomain into a pathname on the local filesystem,
+# so we need to force the use of Equinox.
+#
+echo -n "Patching custom.properties..."
+echo "karaf.framework=equinox" >> etc/custom.properties
+echo "done"
+
+#
+# Allow the use of the local .m2/repository Maven cache, extremely useful if not outright required
+# for developers writing OSGi bundles to use with Netshell.
 #
 echo -n "Patching org.ops4j.pax.url.mvn.cfg..."
 sed -i.bak -E -e 's/^(org\.ops4j\.pax\.url\.mvn\.defaultLocalRepoAsRemote=)(.*)/\1true/' etc/org.ops4j.pax.url.mvn.cfg
 
+#
+# Change OSGi server port numbers for this Karaf instance to not collide with the ports being used
+# by an ODL instance (if any) running in a separate Karaf instance running on the same host.
+#
 echo -n "Patching org.apache.karaf.management.cfg..."
 sed -i.bak -E -e 's/(rmiRegistryPort\s*=\s*)(.*)/\11098/' -e 's/(rmiServerPort\s*=\s*)(.*)/\144443/' etc/org.apache.karaf.management.cfg
 echo "done"
@@ -101,6 +126,12 @@ echo "done"
 # Karaf Post-Startup Package Installation
 #
 declare -a commands=(
+"+++"
+
+# Force a refresh of the following bundle's bindings, principally so it can find some
+# Apache MINA packages.  If we don't do this before installing our netshell-kernel
+# bundle, the bundle activator will fail.
+"bundle:refresh -f org.apache.sshd.core"
 "+++"
 
 "feature:repo-add mvn:net.es.netshell/netshell-features/1.0.0-SNAPSHOT/xml/features"
