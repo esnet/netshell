@@ -95,6 +95,9 @@ echo "done"
 # Allow the use of the local .m2/repository Maven cache, extremely useful if not outright required
 # for developers writing OSGi bundles to use with Netshell.
 #
+# XXX This section is a no-op because the definition of org.ops4j.pax.url.mvn.defaultLocalRepoAsRemote
+# is commented out in the default Karaf configuration.
+#
 echo -n "Patching org.ops4j.pax.url.mvn.cfg..."
 sed -i.bak -E -e 's/^(org\.ops4j\.pax\.url\.mvn\.defaultLocalRepoAsRemote=)(.*)/\1true/' etc/org.ops4j.pax.url.mvn.cfg
 
@@ -104,6 +107,9 @@ sed -i.bak -E -e 's/^(org\.ops4j\.pax\.url\.mvn\.defaultLocalRepoAsRemote=)(.*)/
 #
 echo -n "Patching org.apache.karaf.management.cfg..."
 sed -i.bak -E -e 's/(rmiRegistryPort\s*=\s*)(.*)/\11098/' -e 's/(rmiServerPort\s*=\s*)(.*)/\144443/' etc/org.apache.karaf.management.cfg
+echo "done"
+echo -n "Patching org.apache.karaf.shell.cfg..."
+sed -i.bak -E -e 's/(sshPort\s*=\s*)(.*)/\18100/' etc/org.apache.karaf.shell.cfg
 echo "done"
 
 #
