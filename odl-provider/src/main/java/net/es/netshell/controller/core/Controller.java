@@ -20,11 +20,9 @@
 
 package net.es.netshell.controller.core;
 
-import net.es.netshell.boot.BootStrap;
 import net.es.netshell.controller.impl.SdnController;
 import net.es.netshell.odlcorsa.OdlCorsaIntf;
 import net.es.netshell.odlmdsal.impl.OdlMdsalImpl;
-import net.es.netshell.osgi.OsgiBundlesClassLoader;
 import org.opendaylight.openflowplugin.api.OFConstants;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
@@ -56,6 +54,16 @@ public class Controller {
         return OdlMdsalImpl.getInstance();
     }
 
+    private volatile BundleContext bundleContext;
+
+    public BundleContext getBundleContext() {
+        return bundleContext;
+    }
+
+    public void setBundleContext(BundleContext bundleContext) {
+        this.bundleContext = bundleContext;
+    }
+
     /**
      * Get an object that implements the Corsa glue interface.
      * Note that even loading the code/class for the Corsa glue is optional,
@@ -72,7 +80,7 @@ public class Controller {
                 // This is clunky.  We can't do this everytime we need to invoke this method,
                 // maybe need to cache it or something like that?  The difficulty, as always,
                 // is knowing when to invalidate the cache.
-                BundleContext bc = BootStrap.getBootStrap().getBundleContext();
+                BundleContext bc = this.getBundleContext();
                 Bundle[] bundles = bc.getBundles();
                 OsgiBundlesClassLoader classLoader =
                         new OsgiBundlesClassLoader(bundles, OdlCorsaIntf.class.getClassLoader());

@@ -18,43 +18,24 @@
   ~ publicly and display publicly, and to permit other to do so.
   ~
   -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>net.es.netshell</groupId>
-        <artifactId>netshell-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../parent/pom.xml</relativePath>
-    </parent>
+  <parent>
+    <groupId>net.es.netshell</groupId>
+    <artifactId>netshell-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../parent/pom.xml</relativePath>
+  </parent>
 
     <groupId>net.es.netshell</groupId>
-    <artifactId>netshell-python</artifactId>
+    <artifactId>netshell-controller-intf</artifactId>
     <name>${project.artifactId}</name>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
-
-    <repositories>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>central</id>
-            <name>Maven Repository Switchboard</name>
-            <url>http://repo1.maven.org/maven2</url>
-        </repository>
-        <repository>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>interval:5</updatePolicy>
-            </snapshots>
-            <id>esnet</id>
-            <name>ESnet Private Maven Repository</name>
-            <url>http://downloads.es.net/maven</url>
-        </repository>
-    </repositories>
 
     <pluginRepositories>
         <pluginRepository>
@@ -65,22 +46,19 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.python</groupId>
-            <artifactId>jython-standalone</artifactId>
-            <version>2.7.0</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
         </dependency>
-
-        <!-- NetShell -->
         <dependency>
-            <groupId>net.es.netshell</groupId>
-            <artifactId>netshell-kernel</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+            <version>1.9.13</version>
         </dependency>
-        <!-- Mockito -->
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.10.19</version>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.9.13</version>
         </dependency>
     </dependencies>
 
@@ -94,10 +72,8 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Name>ESnet NetShell Python Bundle</Bundle-Name>
+                        <Bundle-Name>ESnet NetShell Controller Interfaces</Bundle-Name>
                         <Bundle-Version>${project.version}</Bundle-Version>
-                        <Bundle-Activator>net.es.netshell.python.PythonActivator</Bundle-Activator>
-                        <Export-Package>net.es.netshell.python</Export-Package>
                         <Import-Package>*</Import-Package>
                     </instructions>
                 </configuration>
