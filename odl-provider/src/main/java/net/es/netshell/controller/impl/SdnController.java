@@ -547,7 +547,7 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
 
             String dpidHexString = String.format("[%02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x]",
                     rep.dpid[0], rep.dpid[1], rep.dpid[2], rep.dpid[3], rep.dpid[4], rep.dpid[5], rep.dpid[6], rep.dpid[7]);
-            logger.info("node " + nodeId + ", dpid " + dpidHexString + ", nodeConnector " + nodeConnectorId + " payload bytes ?");
+            logger.debug("node " + nodeId + ", dpid " + dpidHexString + ", nodeConnector " + nodeConnectorId + " payload bytes ?");
 
             // JSON encode
             String callbackMessage = mapper.writeValueAsString(rep);

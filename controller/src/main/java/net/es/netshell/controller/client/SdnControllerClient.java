@@ -413,7 +413,7 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
                     if (rep.getReplyType().equals(SdnReceivePacketReply.TYPE)) {
                         // Do PACKET_IN processing here.  Log, and invoke callback if it's
                         // been configured.
-                        logger.info("Got PACKET_IN");
+                        logger.debug("Got PACKET_IN");
                         SdnReceivePacketReply packetIn = mapper.readValue(message, SdnReceivePacketReply.class);
                         if (callback != null) {
                             callback.packetInCallback(packetIn.getDpid(), packetIn.getInPort(), packetIn.getPayload());
