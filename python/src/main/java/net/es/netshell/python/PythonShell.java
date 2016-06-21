@@ -186,7 +186,7 @@ public class PythonShell {
             forwardLines=false,
             shortHelp="Manage the python session environment",
             longHelp="Save, load or delete a python environment\n"  +
-                    "\tpyenv save <env_name> [user_name] saves the current environment. If a user name is provided\n" +
+                    "\tpyenv save <env_name> [user_name]\n saves the current environment. If a user name is provided\n" +
                     "\t\tthe environment is saved into the user's environments. This requires privileged access." +
                     "\tpyenv load <env_name> [user_name] next python session will be loaded with the environment.\n" +
                     "\t\tIf a user name is provided tthe environment is saved into the user's environments." +
