@@ -144,7 +144,7 @@ declare -a commands=(
 "feature:install netshell-kernel netshell-python"
 "feature:install netshell-controller"
 
-"feature:repo-add mvn:net.es/enos-esnet/1.0-SNAPSHOT/xml/features"
+"feature:repo-add mvn:net.es.enos/enos-features/1.0.0-SNAPSHOT/xml/features"
 "feature:install enos-esnet"
 )
 
