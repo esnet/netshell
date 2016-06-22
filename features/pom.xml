@@ -47,7 +47,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Name>ESnet NetShell ODL Provider</Bundle-Name>
+                        <Bundle-Name>ESnet NetShell Features</Bundle-Name>
                         <Bundle-Version>${project.version}</Bundle-Version>
                     </instructions>
                 </configuration>
