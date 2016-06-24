@@ -25,5 +25,6 @@ package net.es.netshell.controller.intf;
  */
 public class Common {
     public static final String controllerRequestQueueName = "sdn-controller-request-queue";
-    public static final String receivePacketReplyQueueName = "sdn-controller-packet-in-queue";
+
+    public static final String notificationExchangeName = "netshell-controller-notifications";
 }

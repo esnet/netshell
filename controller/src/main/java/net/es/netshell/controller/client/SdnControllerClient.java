@@ -382,12 +382,15 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
     public void run() {
         try {
             packetInChannel = connection.createChannel();
-            // Create the PACKET_IN queue, non-durable, non-exclusive, non-auto-delete, no other arguments
-            packetInChannel.queueDeclare(Common.receivePacketReplyQueueName, false, false, false, null);
+
+            // Create an emphemeral queue and bind it to the exchange so we can get
+            // notifications.
+            String queueName = packetInChannel.queueDeclare().getQueue();
+            packetInChannel.queueBind(queueName, Common.notificationExchangeName, "");
             packetInChannel.basicQos(1);
-            // Set up consumer to read from this channel
+            // Set up consumer to read from this queue on this channel
             packetInConsumer = new QueueingConsumer(packetInChannel);
-            packetInChannel.basicConsume(Common.receivePacketReplyQueueName, false, packetInConsumer);
+            packetInChannel.basicConsume(queueName, false, packetInConsumer);
         } catch (Exception e) {
             e.printStackTrace();
         }
