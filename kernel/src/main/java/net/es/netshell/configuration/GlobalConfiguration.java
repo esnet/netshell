@@ -17,6 +17,7 @@
  * publicly and display publicly, and to permit other to do so.
  *
  */
+
 package net.es.netshell.configuration;
 
 import net.es.netshell.api.DefaultValues;
@@ -43,6 +44,7 @@ public class GlobalConfiguration {
     private String dbUserPassword =  "enos";
     private String dbName = "enos";
     private boolean standalone = false;
+    private String messagingHost = "localhost";
     @JsonIgnore
     private boolean canSet = true;
 
@@ -103,6 +105,8 @@ public class GlobalConfiguration {
     public String getDbName() {
         return dbName;
     }
+
+    public String getMessagingHost() { return messagingHost; }
 
     public void setDefaultLogLevel(String defaultLogLevel) {
         if (!this.canSet) {

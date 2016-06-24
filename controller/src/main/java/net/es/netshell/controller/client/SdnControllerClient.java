@@ -25,6 +25,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
+import net.es.netshell.configuration.NetShellConfiguration;
 import net.es.netshell.controller.intf.*;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -85,7 +86,12 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
         try {
             // Get a connection to the AMPQ broker (RabbitMQ server)
             factory = new ConnectionFactory();
-            factory.setHost("localhost");
+            String rabbitmqHost = "localhost";
+            if (NetShellConfiguration.getInstance() != null && NetShellConfiguration.getInstance().getGlobal() != null) {
+                rabbitmqHost = NetShellConfiguration.getInstance().getGlobal().getMessagingHost();
+            }
+            factory.setHost(rabbitmqHost);
+
             connection = factory.newConnection();
             replyChannel = connection.createChannel();
 
@@ -97,7 +103,7 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
             // JSON parser setup
             mapper = new ObjectMapper();
 
-            logger.info(SdnControllerClient.class.getName() + " ready");
+            logger.info(SdnControllerClient.class.getName() + " ready with connection to " + rabbitmqHost);
 
         } catch (Exception e) {
             e.printStackTrace();
