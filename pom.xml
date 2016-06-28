@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ ESnet Network Operating System (ENOS) Copyright (c) 2015, The Regents
+  ~ ESnet Network Operating System (ENOS) Copyright (c) 2016, The Regents
   ~ of the University of California, through Lawrence Berkeley National
   ~ Laboratory (subject to receipt of any required approvals from the
   ~ U.S. Dept. of Energy).  All rights reserved.
@@ -21,15 +21,19 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>net.es.netshell</groupId>
+        <artifactId>netshell-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>parent</relativePath>
+    </parent>
+
     <groupId>net.es.netshell</groupId>
-    <artifactId>NETSHELL</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <artifactId>netshell</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>${project.artifactId}</name>
     <packaging>pom</packaging>
-    <name>NETSHELL project</name>
-    <properties>
-       <netshell.version>0.0.1-SNAPSHOT</netshell.version>
-       <java.version>1.7</java.version>
-    </properties>
 
     <profiles>
         <profile>
@@ -40,12 +44,16 @@
                 </property>
             </activation>
                 <modules>
+                    <module>parent</module>
                     <module>kernel</module>
                     <module>python</module>
+                    <module>controller-intf</module>
                     <module>controller</module>
-                    <module>odl-corsa</module>
                     <module>odl-mdsal</module>
                     <module>odl-corsa-intf</module>
+                    <module>odl-corsa</module>
+                    <module>odl-provider</module>
+                    <module>features</module>
                 </modules>
         </profile>
         <profile>
@@ -54,24 +62,16 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
                 <modules>
+                    <module>parent</module>
                     <module>kernel</module>
                     <module>python</module>
+                    <module>controller-intf</module>
                     <module>controller</module>
                     <module>odl-mdsal</module>
                     <module>odl-corsa-intf</module>
+                    <module>odl-provider</module>
+                    <module>features</module>
                 </modules>
         </profile>
     </profiles>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-               <plugin>
-                   <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>2.3.2</version>
-               </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
  </project>

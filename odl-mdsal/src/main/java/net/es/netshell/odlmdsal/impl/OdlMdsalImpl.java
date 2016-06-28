@@ -238,7 +238,7 @@ public class OdlMdsalImpl implements AutoCloseable, PacketProcessingListener {
      */
     @Override
     public void onPacketReceived(PacketReceived notification) {
-        logger.info("Received data packet " + notification.getIngress().getValue().toString());
+        logger.debug("Received data packet " + notification.getIngress().getValue().toString());
         if (packetInCallback != null) {
             packetInCallback.callback(notification);
         }

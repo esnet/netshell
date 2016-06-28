@@ -19,7 +19,7 @@
 #
 
 #
-# ENOS/Netshell install / restart script.
+# ODL + ENOS install / restart script.
 # Takes one argument, which is the pathname to an ODL distribution.
 #
 KARAF_EXEC="bin/client -u karaf"
@@ -100,7 +100,7 @@ echo "done"
 declare -a commands=(
 "+++"
 
-"feature:repo-add mvn:net.es/netshell-kernel/1.0-SNAPSHOT/xml/features"
+"feature:repo-add mvn:net.es.netshell/netshell-features/1.0.0-SNAPSHOT/xml/features"
 "feature:install odl-dlux-core odl-openflowplugin-all"
 
 "feature:install odl-dlux-all"
@@ -112,13 +112,10 @@ declare -a commands=(
 "feature:repo-add mvn:com.corsa.pipeline.sdx3/sdx3-features/0.1.1/xml/features"
 "feature:install corsa-sdx3-all"
 
-"feature:install netshell-kernel netshell-python"
 "feature:install netshell-odl-corsa"
 "feature:install netshell-odl-mdsal"
-"feature:install netshell-controller"
+"feature:install netshell-odl-provider"
 
-"feature:repo-add mvn:net.es/enos-esnet/1.0-SNAPSHOT/xml/features"
-"feature:install enos-esnet"
 )
 
 numcommands=${#commands[@]}

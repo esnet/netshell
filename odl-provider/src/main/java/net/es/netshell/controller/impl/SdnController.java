@@ -87,6 +87,9 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
             consumer = new QueueingConsumer(channel);
             channel.basicConsume(Common.controllerRequestQueueName, false, consumer);
 
+            // Create exchange for notifications
+            channel.exchangeDeclare(Common.notificationExchangeName, "fanout");
+
             // XXX we need to do some error-checking here to handle the case that the AMPQ server is dead
             // or unreachable.
 
@@ -547,7 +550,7 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
 
             String dpidHexString = String.format("[%02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x]",
                     rep.dpid[0], rep.dpid[1], rep.dpid[2], rep.dpid[3], rep.dpid[4], rep.dpid[5], rep.dpid[6], rep.dpid[7]);
-            logger.info("node " + nodeId + ", dpid " + dpidHexString + ", nodeConnector " + nodeConnectorId + " payload bytes ?");
+            logger.debug("node " + nodeId + ", dpid " + dpidHexString + ", nodeConnector " + nodeConnectorId + " payload bytes ?");
 
             // JSON encode
             String callbackMessage = mapper.writeValueAsString(rep);
@@ -558,7 +561,7 @@ public class SdnController implements Runnable, AutoCloseable, OdlMdsalImpl.Call
             BasicProperties props = new BasicProperties.Builder().expiration("30000").build();
 
             // Send it.
-            channel.basicPublish("", Common.receivePacketReplyQueueName, props, callbackMessage.getBytes("UTF-8"));
+            channel.basicPublish(Common.notificationExchangeName, "", props, callbackMessage.getBytes("UTF-8"));
 
         }
         catch (Exception e) {

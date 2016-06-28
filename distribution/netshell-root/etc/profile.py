@@ -44,10 +44,11 @@ if not jythonjar + "/Lib" in sys.path:
     sys.path.append(jythonjar + '/Lib/site-packages')
 
 if not sys.netshell_root.toString() + "/lib" in sys.path:
-	sys.path.append (sys.netshell_root.toString() + "/lib")
+    sys.path.append (sys.netshell_root.toString() + "/lib")
 
 # Make sure user home directory is in the path
-homepath = KernelThread.currentKernelThread().getUser().getHomePath().toString()
-if homepath not in sys.path:
-    sys.path = sys.path + [ homepath ]
+if KernelThread.currentKernelThread().getUser() is not None:
+    homepath = KernelThread.currentKernelThread().getUser().getHomePath().toString()
+    if homepath not in sys.path:
+        sys.path = sys.path + [ homepath ]
 

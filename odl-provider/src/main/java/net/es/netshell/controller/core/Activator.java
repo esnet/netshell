@@ -17,6 +17,7 @@
  * publicly and display publicly, and to permit other to do so.
  *
  */
+
 package net.es.netshell.controller.core;
 
 import org.osgi.framework.BundleActivator;
@@ -27,13 +28,14 @@ import org.osgi.framework.BundleContext;
  */
 public class Activator implements BundleActivator {
 
-    BundleContext bundleContext;
+    private BundleContext bundleContext;
 
     @Override
     public void start(BundleContext bundleContext) throws Exception {
         this.bundleContext = bundleContext;
 
         Controller controller = new Controller();
+        controller.setBundleContext(this.bundleContext);
 
         System.out.println("NetShell Generic Controller and API: started");
     }

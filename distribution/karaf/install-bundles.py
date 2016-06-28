@@ -27,7 +27,7 @@ username="karaf"
 password="karaf"
 port=8101
 cmds = [
-("feature:repo-add mvn:net.es/netshell-kernel/1.0-SNAPSHOT/xml/features",1),
+("feature:repo-add mvn:net.es.netshell/netshell-features/1.0.0-SNAPSHOT/xml/features",1),
 ("feature:install odl-dlux-core odl-openflowplugin-all",3),
 ("feature:install odl-dlux-all",2),
 ("feature:install odl-openflowplugin-adsal-compatibility odl-nsf-managers",20),
@@ -38,7 +38,7 @@ cmds = [
 ("feature:install netshell-odl-corsa",2),
 ("feature:install netshell-odl-mdsal",2),
 ("feature:install netshell-controller",2),
-("feature:repo-add mvn:net.es/enos-esnet/1.0-SNAPSHOT/xml/features",2),
+("feature:repo-add mvn:net.es.enos/enos-features/1.0.0-SNAPSHOT/xml/features",2),
 ("feature:install enos-esnet",5)
 ]
 

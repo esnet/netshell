@@ -25,6 +25,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
+import net.es.netshell.configuration.NetShellConfiguration;
 import net.es.netshell.controller.intf.*;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -85,7 +86,12 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
         try {
             // Get a connection to the AMPQ broker (RabbitMQ server)
             factory = new ConnectionFactory();
-            factory.setHost("localhost");
+            String rabbitmqHost = "localhost";
+            if (NetShellConfiguration.getInstance() != null && NetShellConfiguration.getInstance().getGlobal() != null) {
+                rabbitmqHost = NetShellConfiguration.getInstance().getGlobal().getMessagingHost();
+            }
+            factory.setHost(rabbitmqHost);
+
             connection = factory.newConnection();
             replyChannel = connection.createChannel();
 
@@ -97,7 +103,7 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
             // JSON parser setup
             mapper = new ObjectMapper();
 
-            logger.info(SdnControllerClient.class.getName() + " ready");
+            logger.info(SdnControllerClient.class.getName() + " ready with connection to " + rabbitmqHost);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -382,12 +388,15 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
     public void run() {
         try {
             packetInChannel = connection.createChannel();
-            // Create the PACKET_IN queue, non-durable, non-exclusive, non-auto-delete, no other arguments
-            packetInChannel.queueDeclare(Common.receivePacketReplyQueueName, false, false, false, null);
+
+            // Create an emphemeral queue and bind it to the exchange so we can get
+            // notifications.
+            String queueName = packetInChannel.queueDeclare().getQueue();
+            packetInChannel.queueBind(queueName, Common.notificationExchangeName, "");
             packetInChannel.basicQos(1);
-            // Set up consumer to read from this channel
+            // Set up consumer to read from this queue on this channel
             packetInConsumer = new QueueingConsumer(packetInChannel);
-            packetInChannel.basicConsume(Common.receivePacketReplyQueueName, false, packetInConsumer);
+            packetInChannel.basicConsume(queueName, false, packetInConsumer);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -413,7 +422,7 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
                     if (rep.getReplyType().equals(SdnReceivePacketReply.TYPE)) {
                         // Do PACKET_IN processing here.  Log, and invoke callback if it's
                         // been configured.
-                        logger.info("Got PACKET_IN");
+                        logger.debug("Got PACKET_IN");
                         SdnReceivePacketReply packetIn = mapper.readValue(message, SdnReceivePacketReply.class);
                         if (callback != null) {
                             callback.packetInCallback(packetIn.getDpid(), packetIn.getInPort(), packetIn.getPayload());
