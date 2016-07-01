@@ -65,7 +65,7 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
         this.callback = null;
     }
 
-    public class SdnControllerClientFlowHandleImpl  extends Resource implements SdnControllerClientFlowHandle {
+    class SdnControllerClientFlowHandleImpl  extends Resource implements SdnControllerClientFlowHandle {
         public boolean valid;
         public byte[] dpid;
         public short tableId;
@@ -119,7 +119,8 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
             this.valid = false;
         }
     }
-    static public SdnControllerClientFlowHandle handleFromJSON(String json) {
+    public SdnControllerClientFlowHandle handleFromJSON(String json) {
+        if (json == null) return new SdnControllerClientFlowHandleImpl();
         try {
             SdnControllerClientFlowHandleImpl handle = (SdnControllerClientFlowHandleImpl) Resource.newObjectFromJSON(json);
             return handle;
