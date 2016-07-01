@@ -25,12 +25,15 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
+import net.es.netshell.api.PersistentObject;
+import net.es.netshell.api.Resource;
 import net.es.netshell.configuration.NetShellConfiguration;
 import net.es.netshell.controller.intf.*;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.UUID;
 
@@ -62,23 +65,78 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
         this.callback = null;
     }
 
-    public class SdnControllerClientFlowHandleImpl implements SdnControllerClientFlowHandle {
+    public class SdnControllerClientFlowHandleImpl  extends Resource implements SdnControllerClientFlowHandle {
         public boolean valid;
-
         public byte[] dpid;
         public short tableId;
         public String flowId;
 
-        SdnControllerClientFlowHandleImpl() {
+
+        public SdnControllerClientFlowHandleImpl() {
+            super();
+        }
+
+        SdnControllerClientFlowHandleImpl(String flowId) {
+            super (flowId);
+            this.flowId = flowId;
             this.valid = true;
+        }
+
+        public void setValid(boolean valid) {
+            this.valid = valid;
         }
 
         public boolean isValid() {
             return this.valid;
         }
 
+        public byte[] getDpid() {
+            return dpid;
+        }
+
+        public void setDpid(byte[] dpid) {
+            this.dpid = dpid;
+        }
+
+        public short getTableId() {
+            return tableId;
+        }
+
+        public void setTableId(short tableId) {
+            this.tableId = tableId;
+        }
+
+        public String getFlowId() {
+            return flowId;
+        }
+
+        public void setFlowId(String flowId) {
+            this.setResourceName(flowId);
+            this.flowId = flowId;
+        }
+
         public void invalidate() {
             this.valid = false;
+        }
+    }
+    static public SdnControllerClientFlowHandle handleFromJSON(String json) {
+        try {
+            SdnControllerClientFlowHandleImpl handle = (SdnControllerClientFlowHandleImpl) Resource.newObjectFromJSON(json);
+            return handle;
+        } catch (InstantiationException e) {
+            return null;
+        }
+    }
+
+    public String handleToJSON(SdnControllerClientFlowHandle handle) {
+        if ( ! (handle instanceof SdnControllerClientFlowHandleImpl)) {
+            return null;
+        }
+
+        try {
+            return ((SdnControllerClientFlowHandleImpl) handle).saveToJSON();
+        } catch (IOException e) {
+            return null;
         }
     }
 
@@ -272,10 +330,9 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
             }
             else {
                 // Set dpid, table, flowid
-                SdnControllerClientFlowHandleImpl fhi = new SdnControllerClientFlowHandleImpl();
+                SdnControllerClientFlowHandleImpl fhi = new SdnControllerClientFlowHandleImpl(rep.getFlowId());
                 fhi.dpid = rep.getDpid();
                 fhi.tableId = rep.getTableId();
-                fhi.flowId = rep.getFlowId();
                 return fhi;
             }
         } catch (Exception e) {
@@ -320,10 +377,9 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
             }
             else {
                 // Set dpid, table, flowid
-                SdnControllerClientFlowHandleImpl fhi = new SdnControllerClientFlowHandleImpl();
+                SdnControllerClientFlowHandleImpl fhi = new SdnControllerClientFlowHandleImpl(rep.getFlowId());
                 fhi.dpid = rep.getDpid();
                 fhi.tableId = rep.getTableId();
-                fhi.flowId = rep.getFlowId();
                 return fhi;
             }
         } catch (Exception e) {
