@@ -62,7 +62,7 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
         this.callback = null;
     }
 
-    class SdnControllerClientFlowHandleImpl implements SdnControllerClientFlowHandle {
+    public class SdnControllerClientFlowHandleImpl implements SdnControllerClientFlowHandle {
         public boolean valid;
 
         public byte[] dpid;
