@@ -275,7 +275,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Name>ESnet NetShell Open Daylight (Corsa) Integration</Bundle-Name>
+                        <Bundle-Name>ESnet :: NetShell :: Open Daylight (Corsa) Integration</Bundle-Name>
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Export-Package>net.es.netshell.odlcorsa.impl</Export-Package>
                         <!--

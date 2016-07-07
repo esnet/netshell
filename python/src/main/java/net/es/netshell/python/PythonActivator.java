@@ -19,13 +19,12 @@
  */
 package net.es.netshell.python;
 
+import java.util.Hashtable;
 import net.es.netshell.shell.PythonShellService;
 import net.es.netshell.shell.ShellCommandsFactory;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-
-import java.util.Hashtable;
 
 /**
  * Created by bmah on 12/4/14.
@@ -36,6 +35,7 @@ public class PythonActivator implements BundleActivator{
     static BundleContext bundleContext;
     static ServiceRegistration registration;
 
+    @Override
     public void start(BundleContext b) {
         System.out.println("Hello Python");
 
@@ -58,6 +58,8 @@ public class PythonActivator implements BundleActivator{
         // lomax@es.net TODO
         PythonShell.runInit();
     }
+    
+    @Override
     public void stop(BundleContext b) {
         ShellCommandsFactory.unregisterShellModule(PythonShell.class);
         registration.unregister();

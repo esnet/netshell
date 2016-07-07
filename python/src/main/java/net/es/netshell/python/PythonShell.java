@@ -20,6 +20,16 @@
 
 package net.es.netshell.python;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;import java.util.Dictionary;
+import java.util.HashMap;
 import net.es.netshell.api.PropertyKeys;
 import net.es.netshell.boot.BootStrap;
 import net.es.netshell.kernel.exec.KernelThread;
@@ -28,26 +38,17 @@ import net.es.netshell.kernel.users.User;
 import net.es.netshell.osgi.OsgiBundlesClassLoader;
 import net.es.netshell.shell.Shell;
 import net.es.netshell.shell.ShellCommandsFactory;
-import net.es.netshell.shell.ShellInputStream;;
+import net.es.netshell.shell.ShellInputStream;
 import net.es.netshell.shell.TabFilteringInputStream;
 import net.es.netshell.shell.annotations.ShellCommand;
-
-import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.HashMap;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.python.core.PyDictionary;
-import org.python.core.PySystemState;
-import org.python.core.PyFile;
 import org.python.core.Options;
-import org.python.util.JLineConsole;
-import org.python.util.PythonInterpreter;
+import org.python.core.PyDictionary;
+import org.python.core.PyFile;
+import org.python.core.PySystemState;
 import org.python.util.InteractiveConsole;
+import org.python.util.PythonInterpreter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
