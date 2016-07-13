@@ -20,30 +20,28 @@
 
 package net.es.netshell.shell;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import jline.console.ConsoleReader;
-
 import jline.console.completer.ArgumentCompleter;
 import jline.console.completer.StringsCompleter;
 import net.es.netshell.boot.BootStrap;
 import net.es.netshell.kernel.exec.KernelThread;
-//import net.es.netshell.python.PythonShell;
 import net.es.netshell.shell.annotations.ShellCommand;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-
-import java.io.*;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Set;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 public class Shell {
 

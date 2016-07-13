@@ -28,32 +28,36 @@ import org.osgi.framework.BundleContext;
  * Runs the old BootStrap main function in a thread.
  */
 public class BootActivator implements BundleActivator, Runnable {
-
-    BundleContext context;
+    private BundleContext context;
 
     /**
      * OSGi start function
      * Starts up a new thread, inside which we run the old Bootstrap main.
-     * @param b
+     * @param bc
      */
-    public void start(BundleContext b) {
+    @Override
+    public void start(BundleContext bc) {
         System.out.println("NetShell is starting");
+
+        // save bundle context to pass to BootStrap
+        context = bc;
 
         // If nobody specified a location for the configuration file, set one.
         if (System.getProperty(PropertyKeys.NETSHELL_CONFIGURATION) == null) {
             System.setProperty(PropertyKeys.NETSHELL_CONFIGURATION, "./netshell.json");
         }
-        context = b;    // save bundle context to pass to BootStrap
+
         Thread t = new Thread(this);
         t.start();
     }
 
-    public void stop(BundleContext b) {
-
-        System.out.println("Goodbye NetShell");
+    @Override
+    public void stop(BundleContext bc) {
         BootStrap.getBootStrap().shutdown();
+        System.out.println("Goodbye NetShell");
     }
 
+    @Override
     public void run() {
         try {
             String[] argv = null;
