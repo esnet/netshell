@@ -65,60 +65,7 @@ public class SdnControllerClient implements Runnable, AutoCloseable {
         this.callback = null;
     }
 
-    class SdnControllerClientFlowHandleImpl  extends Resource implements SdnControllerClientFlowHandle {
-        public boolean valid;
-        public byte[] dpid;
-        public short tableId;
-        public String flowId;
 
-
-        public SdnControllerClientFlowHandleImpl() {
-            super();
-        }
-
-        SdnControllerClientFlowHandleImpl(String flowId) {
-            super (flowId);
-            this.flowId = flowId;
-            this.valid = true;
-        }
-
-        public void setValid(boolean valid) {
-            this.valid = valid;
-        }
-
-        public boolean isValid() {
-            return this.valid;
-        }
-
-        public byte[] getDpid() {
-            return dpid;
-        }
-
-        public void setDpid(byte[] dpid) {
-            this.dpid = dpid;
-        }
-
-        public short getTableId() {
-            return tableId;
-        }
-
-        public void setTableId(short tableId) {
-            this.tableId = tableId;
-        }
-
-        public String getFlowId() {
-            return flowId;
-        }
-
-        public void setFlowId(String flowId) {
-            this.setResourceName(flowId);
-            this.flowId = flowId;
-        }
-
-        public void invalidate() {
-            this.valid = false;
-        }
-    }
     public SdnControllerClientFlowHandle handleFromJSON(String json) {
         if (json == null) return new SdnControllerClientFlowHandleImpl();
         try {
