@@ -1,3 +1,6 @@
+** NOTE: NETSHELL IS NO LONGER ACTIVELY MAINTAINED **
+=====================================================
+
 netshell
 ========
 
